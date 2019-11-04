@@ -1,0 +1,17 @@
+{
+  "name": "raytracer-rust-wasm",
+  "version": "0.1.0",
+  "description": "<div align=\"center\">",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "start": "parcel index.html --open"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel-bundler": "^1.12.4",
+    "parcel-plugin-wasm.rs": "^1.2.15"
+  }
+}
