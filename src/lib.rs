@@ -14,6 +14,12 @@ extern {
 }
 
 #[wasm_bindgen]
+#[cfg(target_arch = "wasm32")]
 pub fn greet() {
-    alert("Hello, raytracer-rust-wasm!");
+    alert("Hello, raytracer for wasm!");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn greet() {
+    println!("Hello, raytracer without wasm!");
 }

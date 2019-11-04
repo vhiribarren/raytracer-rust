@@ -1,5 +1,5 @@
 [package]
-name = "raytracer-rust-wasm"
+name = "raytracer"
 version = "0.1.0"
 authors = ["Vincent Hiribarren <vhiribarren@users.noreply.github.com>"]
 edition = "2018"
