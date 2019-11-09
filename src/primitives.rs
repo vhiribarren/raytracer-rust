@@ -2,7 +2,6 @@ trait Collision {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
 }
 
-
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Vec3 {
     pub x: f64,
@@ -11,9 +10,8 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-
     pub fn dot_product(&self, other: Vec3) -> f64 {
-        self.x*other.x + self.y*other.y + self.z*other.z
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 
     pub fn norm(&self) -> f64 {
@@ -22,9 +20,12 @@ impl Vec3 {
 
     pub fn normalize(&self) -> Vec3 {
         let norm = self.norm();
-        Vec3 { x: self.x / norm, y: self.y/norm, z: self.z/norm }
+        Vec3 {
+            x: self.x / norm,
+            y: self.y / norm,
+            z: self.z / norm,
+        }
     }
-
 }
 
 impl std::ops::Add<Vec3> for Vec3 {
@@ -60,20 +61,17 @@ impl std::ops::Mul<Vec3> for f64 {
     }
 }
 
-
 #[derive(Debug)]
 pub struct Ray {
     pub source: Vec3,
     pub direction: Vec3,
 }
 
-
 #[derive(Debug)]
 pub struct Plane {
     pub center: Vec3,
     pub normal: Vec3,
 }
-
 
 #[derive(Debug)]
 pub struct Sphere {
@@ -84,14 +82,17 @@ pub struct Sphere {
 impl Default for Sphere {
     fn default() -> Self {
         Sphere {
-            center: Vec3 {x: 0.0, y: 0.0, z: 0.0},
-            radius: 1.0
+            center: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            radius: 1.0,
         }
     }
 }
 
 impl Collision for Sphere {
-
     #[allow(non_snake_case)]
     fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
         // http://mathinfo.univ-reims.fr/image/siRendu/Documents/2004-Chap6-RayTracing.pdf
@@ -110,15 +111,10 @@ impl Collision for Sphere {
             return None;
         }
         let q = (r_square - m_square).sqrt();
-        let t: f64 = if l_square > r_square {
-            d - q
-        } else {
-            d + q
-        };
-        Some(A + t*u)
+        let t: f64 = if l_square > r_square { d - q } else { d + q };
+        Some(A + t * u)
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -127,33 +123,50 @@ mod tests {
 
     #[test]
     fn unit_sphere_values() {
-        let sphere: Sphere = Default::default();            // Given a unit sphere
-        assert!( (sphere.radius - 1.0).abs() < EPSILON );   // Then it has a radius of 1
-        assert!( (sphere.center.x - 0.0).abs() < EPSILON ); // And a x value of 0
-        assert!( (sphere.center.y - 0.0).abs() < EPSILON ); // And a y value of 0
-        assert!( (sphere.center.z - 0.0).abs() < EPSILON ); // And a z value of 0
+        let sphere: Sphere = Default::default(); // Given a unit sphere
+        assert!((sphere.radius - 1.0).abs() < EPSILON); // Then it has a radius of 1
+        assert!((sphere.center.x - 0.0).abs() < EPSILON); // And a x value of 0
+        assert!((sphere.center.y - 0.0).abs() < EPSILON); // And a y value of 0
+        assert!((sphere.center.z - 0.0).abs() < EPSILON); // And a z value of 0
     }
 
     #[test]
     fn ray_sphere_collision() {
-        let sphere: Sphere = Default::default();            // Given a unit sphere
-        let ray: Ray = Ray {                                // If we launch a ray in front of it
-            source: Vec3 { x: 0.0, y: 0.0, z: -2.0},
-            direction: Vec3 { x: 0.0, y: 0.0, z: 1.0},
+        let sphere: Sphere = Default::default(); // Given a unit sphere
+        let ray: Ray = Ray {
+            // If we launch a ray in front of it
+            source: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: -2.0,
+            },
+            direction: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 1.0,
+            },
         };
         let result = sphere.check_collision(&ray);
-        assert!(result.is_some());                          // There is a collision
+        assert!(result.is_some()); // There is a collision
         println!("{:?}", result);
     }
 
     #[test]
     fn ray_sphere_no_collision() {
-        let sphere: Sphere = Default::default();            // Given a unit sphere
-        let ray: Ray = Ray {                                // If we launch a ray next to it and orthogonally
-            source: Vec3 { x: 2.0, y: 0.0, z: -2.0},
-            direction: Vec3 { x: 0.0, y: 0.0, z: 1.0},
+        let sphere: Sphere = Default::default(); // Given a unit sphere
+        let ray: Ray = Ray {
+            // If we launch a ray next to it and orthogonally
+            source: Vec3 {
+                x: 2.0,
+                y: 0.0,
+                z: -2.0,
+            },
+            direction: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 1.0,
+            },
         };
-        assert!(sphere.check_collision(&ray).is_none());    // There is no collision
+        assert!(sphere.check_collision(&ray).is_none()); // There is no collision
     }
-
 }

@@ -1,6 +1,6 @@
-mod utils;
 pub mod primitives;
 pub mod renderer;
+mod utils;
 
 use wasm_bindgen::prelude::*;
 
@@ -11,7 +11,7 @@ use wasm_bindgen::prelude::*;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-extern {
+extern "C" {
     fn alert(s: &str);
 }
 
@@ -25,7 +25,6 @@ pub fn greet() {
 pub fn greet() {
     println!("Hello, raytracer without wasm!");
 }
-
 
 #[wasm_bindgen(start)]
 pub fn wasm_init() -> Result<(), JsValue> {

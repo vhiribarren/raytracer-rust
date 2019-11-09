@@ -1,4 +1,4 @@
-use raytracer::primitives::{Vec3};
+use raytracer::primitives::Vec3;
 
 fn main() {
     raytracer::greet();
