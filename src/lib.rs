@@ -1,4 +1,6 @@
 mod utils;
+pub mod primitives;
+pub mod renderer;
 
 use wasm_bindgen::prelude::*;
 
