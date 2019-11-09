@@ -91,6 +91,8 @@ impl Default for Sphere {
 }
 
 impl Collision for Sphere {
+
+    #[allow(non_snake_case)]
     fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
         // http://mathinfo.univ-reims.fr/image/siRendu/Documents/2004-Chap6-RayTracing.pdf
         let r_square = self.radius.powi(2);

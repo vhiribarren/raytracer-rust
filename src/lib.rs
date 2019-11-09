@@ -25,3 +25,10 @@ pub fn greet() {
 pub fn greet() {
     println!("Hello, raytracer without wasm!");
 }
+
+
+#[wasm_bindgen(start)]
+pub fn wasm_init() -> Result<(), JsValue> {
+    utils::set_panic_hook();
+    Ok(())
+}
