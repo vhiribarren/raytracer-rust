@@ -3,7 +3,7 @@ trait Collision {
 }
 
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -12,7 +12,7 @@ pub struct Vec3 {
 
 impl Vec3 {
 
-    pub fn dot_product(&self, other: &Vec3) -> f64 {
+    pub fn dot_product(&self, other: Vec3) -> f64 {
         self.x*other.x + self.y*other.y + self.z*other.z
     }
 
@@ -27,7 +27,7 @@ impl Vec3 {
 
 }
 
-impl std::ops::Add for &Vec3 {
+impl std::ops::Add<Vec3> for Vec3 {
     type Output = Vec3;
     fn add(self, other: Self) -> Self::Output {
         Vec3 {
@@ -38,18 +38,7 @@ impl std::ops::Add for &Vec3 {
     }
 }
 
-impl std::ops::Add<Vec3> for &Vec3 {
-    type Output = Vec3;
-    fn add(self, other: Vec3) -> Self::Output {
-        Vec3 {
-            x: self.x + other.x,
-            y: self.y + other.y,
-            z: self.z + other.z,
-        }
-    }
-}
-
-impl std::ops::Sub<Self> for &Vec3 {
+impl std::ops::Sub<Self> for Vec3 {
     type Output = Vec3;
     fn sub(self, other: Self) -> Self::Output {
         Vec3 {
@@ -60,9 +49,9 @@ impl std::ops::Sub<Self> for &Vec3 {
     }
 }
 
-impl std::ops::Mul<&Vec3> for f64 {
+impl std::ops::Mul<Vec3> for f64 {
     type Output = Vec3;
-    fn mul(self, other: &Vec3) -> Self::Output {
+    fn mul(self, other: Vec3) -> Self::Output {
         Vec3 {
             x: self * other.x,
             y: self * other.y,
@@ -105,12 +94,12 @@ impl Collision for Sphere {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
         // http://mathinfo.univ-reims.fr/image/siRendu/Documents/2004-Chap6-RayTracing.pdf
         let r_square = self.radius.powi(2);
-        let u = &ray.direction.normalize();
-        let C = &self.center;
-        let A = &ray.source;
+        let u = ray.direction.normalize();
+        let C = self.center;
+        let A = ray.source;
         let L = C - A;
         let d = L.dot_product(u);
-        let l_square = L.dot_product(&L);
+        let l_square = L.dot_product(L);
         if d < 0.0 && l_square > r_square {
             return None;
         }
