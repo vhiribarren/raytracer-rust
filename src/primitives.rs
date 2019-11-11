@@ -10,8 +10,24 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
+    pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
+        Vec3 { x, y, z }
+    }
+
+    pub fn from_to_point(source: Vec3, destination: Vec3) -> Vec3 {
+        destination - source
+    }
+
     pub fn dot_product(&self, other: Vec3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
+    }
+
+    pub fn cross_product(&self, other: Vec3) -> Vec3 {
+        Vec3::new(
+            self.y * other.z - self.z * other.y,
+            self.z * other.x - self.x * other.z,
+            self.x * other.y - self.y * other.x,
+        )
     }
 
     pub fn norm(&self) -> f64 {
@@ -67,6 +83,15 @@ pub struct Ray {
     pub direction: Vec3,
 }
 
+impl Ray {
+    pub fn ray_from_to(source: Vec3, destination: Vec3) -> Ray {
+        Ray {
+            source,
+            direction: destination - source,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Plane {
     pub center: Vec3,
@@ -116,6 +141,27 @@ impl Collision for Sphere {
     }
 }
 
+#[derive(Debug)]
+pub struct Camera {
+    pub eye: Vec3,
+    pub screen_center: Vec3,
+    pub up: Vec3,
+    pub width: f64,
+    pub height: f64,
+}
+
+impl Default for Camera {
+    fn default() -> Self {
+        Camera {
+            eye: Vec3::new(0.0, 0.0, -15.0),
+            screen_center: Vec3::new(0.0, 0.0, -10.0),
+            up: Vec3::new(0.0, 1.0, 0.0),
+            width: 16.0,
+            height: 9.0,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -132,9 +178,10 @@ mod tests {
 
     #[test]
     fn ray_sphere_collision() {
-        let sphere: Sphere = Default::default(); // Given a unit sphere
+        // Given a unit sphere
+        let sphere: Sphere = Default::default();
+        // If we launch a ray in front of it
         let ray: Ray = Ray {
-            // If we launch a ray in front of it
             source: Vec3 {
                 x: 0.0,
                 y: 0.0,
@@ -147,7 +194,8 @@ mod tests {
             },
         };
         let result = sphere.check_collision(&ray);
-        assert!(result.is_some()); // There is a collision
+        // There is a collision
+        assert!(result.is_some());
         println!("{:?}", result);
     }
 
