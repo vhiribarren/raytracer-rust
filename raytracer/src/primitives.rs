@@ -9,7 +9,6 @@ pub struct Color {
     pub blue: f64,
 }
 
-
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Vec3 {
     pub x: f64,

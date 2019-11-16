@@ -1,19 +1,22 @@
-use crate::primitives::{Camera, Ray, Vec3, Color, Collision};
-
+use crate::primitives::{Camera, Collision, Color, Ray, Vec3};
 
 pub trait DrawCanvas {
-    fn draw(&self, x: u32, y: u32, color: &Color);
+    fn draw(&mut self, x: u32, y: u32, color: &Color);
 }
 
 pub struct StdoutCanvas;
 
 impl DrawCanvas for StdoutCanvas {
-    fn draw(&self, x: u32, _y: u32, color: &Color) {
+    fn draw(&mut self, x: u32, _y: u32, color: &Color) {
         if x == 0 {
             println!("");
         }
         match color {
-            Color {red: r, green: _, blue: _} if *r < 0.5 => print!(" "),
+            Color {
+                red: r,
+                green: _,
+                blue: _,
+            } if *r < 0.5 => print!(" "),
             _ => print!("."),
         }
     }
@@ -29,14 +32,22 @@ pub struct RenderOptions {
     pub canvas_height: u32,
 }
 
-pub fn render(scene: &Scene, canvas: &impl DrawCanvas, options: &RenderOptions) {
+pub fn render(scene: &Scene, canvas: &mut impl DrawCanvas, options: &RenderOptions) {
     for (x, y, ray) in generate_rays(&scene.camera, options.canvas_width, options.canvas_height) {
         for object in scene.objects.iter() {
             let color = match object.check_collision(&ray) {
-                None => Color {red: 0.0, green: 0.0, blue: 0.0},
+                None => Color {
+                    red: 0.0,
+                    green: 0.0,
+                    blue: 0.0,
+                },
                 Some(vec) => {
                     //println!("hit at {:?}", vec);
-                    Color {red: 1.0, green: 1.0, blue: 1.0}
+                    Color {
+                        red: 1.0,
+                        green: 1.0,
+                        blue: 1.0,
+                    }
                 }
             };
             canvas.draw(x, y, &color);
