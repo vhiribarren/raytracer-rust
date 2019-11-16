@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 raytracer = { path = "../raytracer" }
+sdl2 = { version = "0.32.0", features = ["bundled"] }   # static-link feature does not work in this version
