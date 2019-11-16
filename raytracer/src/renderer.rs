@@ -41,7 +41,7 @@ pub fn render(scene: &Scene, canvas: &mut impl DrawCanvas, options: &RenderOptio
                     green: 0.0,
                     blue: 0.0,
                 },
-                Some(vec) => {
+                Some(_vec) => {
                     //println!("hit at {:?}", vec);
                     Color {
                         red: 1.0,

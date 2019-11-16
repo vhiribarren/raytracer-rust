@@ -3,7 +3,6 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
-use std::time::Duration;
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 576;
@@ -21,7 +20,7 @@ impl<'a> DrawCanvas for WrapperCanvas<'a> {
         );
         self.0.set_draw_color(draw_color);
         self.0
-            .draw_point(sdl2::rect::Point::new(x as i32, y as i32));
+            .draw_point(sdl2::rect::Point::new(x as i32, y as i32)).unwrap();
     }
 }
 
@@ -35,7 +34,7 @@ pub fn main() {
         .build()
         .unwrap();
     let mut canvas = window.into_canvas().build().unwrap();
-    canvas.set_logical_size(CANVAS_WIDTH, CANVAS_HEIGHT);
+    canvas.set_logical_size(CANVAS_WIDTH, CANVAS_HEIGHT).unwrap();
     let mut wrapper_canvas = WrapperCanvas(&mut canvas);
     draw_test_scene(&mut wrapper_canvas);
     canvas.present();
@@ -57,7 +56,7 @@ pub fn main() {
 
 fn draw_test_scene(canvas: &mut impl DrawCanvas) {
     use raytracer::primitives::{Camera, Collision, Sphere, Vec3};
-    use raytracer::renderer::{render, RenderOptions, Scene, StdoutCanvas};
+    use raytracer::renderer::{render, RenderOptions, Scene};
 
     let camera: Camera = Default::default();
     let sphere: Sphere = Sphere {
