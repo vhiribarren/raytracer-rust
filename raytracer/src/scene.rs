@@ -8,10 +8,7 @@ pub struct Scene {
 
 pub trait SceneObject {
     fn texture(&self) -> &Texture;
-    fn primitive(&self) -> &dyn Collision;
-    fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
-        self.primitive().check_collision(ray)
-    }
+    fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
 }
 
 pub struct SceneObjectStruct<P: Collision> {
@@ -24,8 +21,8 @@ impl<P: Collision> SceneObject for SceneObjectStruct<P> {
         &self.texture
     }
 
-    fn primitive(&self) -> &dyn Collision {
-        &self.primitive
+    fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
+        self.primitive.check_collision(ray)
     }
 }
 
