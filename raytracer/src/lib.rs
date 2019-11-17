@@ -1,5 +1,7 @@
 pub mod primitives;
 pub mod renderer;
+pub mod scene;
+pub mod textures;
 mod utils;
 
 use wasm_bindgen::prelude::*;

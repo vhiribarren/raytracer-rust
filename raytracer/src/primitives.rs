@@ -2,13 +2,6 @@ pub trait Collision {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
 }
 
-#[derive(Debug)]
-pub struct Color {
-    pub red: f64,
-    pub green: f64,
-    pub blue: f64,
-}
-
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Vec3 {
     pub x: f64,
@@ -145,27 +138,6 @@ impl Collision for Sphere {
         let q = (r_square - m_square).sqrt();
         let t: f64 = if l_square > r_square { d - q } else { d + q };
         Some(A + t * u)
-    }
-}
-
-#[derive(Debug)]
-pub struct Camera {
-    pub eye: Vec3,
-    pub screen_center: Vec3,
-    pub up: Vec3,
-    pub width: f64,
-    pub height: f64,
-}
-
-impl Default for Camera {
-    fn default() -> Self {
-        Camera {
-            eye: Vec3::new(0.0, 0.0, -15.0),
-            screen_center: Vec3::new(0.0, 0.0, -10.0),
-            up: Vec3::new(0.0, 1.0, 0.0),
-            width: 16.0,
-            height: 9.0,
-        }
     }
 }
 

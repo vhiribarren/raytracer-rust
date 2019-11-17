@@ -1,4 +1,6 @@
-use crate::primitives::{Camera, Collision, Color, Ray, Vec3};
+use crate::primitives::{Ray, Vec3};
+use crate::scene::{Scene, Camera};
+use crate::textures::Color;
 
 pub trait DrawCanvas {
     fn draw(&mut self, x: u32, y: u32, color: &Color);
@@ -9,7 +11,7 @@ pub struct StdoutCanvas;
 impl DrawCanvas for StdoutCanvas {
     fn draw(&mut self, x: u32, _y: u32, color: &Color) {
         if x == 0 {
-            println!("");
+            println!();
         }
         match color {
             Color {
@@ -20,11 +22,6 @@ impl DrawCanvas for StdoutCanvas {
             _ => print!("."),
         }
     }
-}
-
-pub struct Scene {
-    pub camera: Camera,
-    pub objects: Vec<Box<dyn Collision>>,
 }
 
 pub struct RenderOptions {
