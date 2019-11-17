@@ -11,7 +11,7 @@ const CANVAS_HEIGHT: u32 = 360;
 
 struct WrapperCanvas<'a>(&'a mut Canvas<Window>);
 
-impl<'a> DrawCanvas for WrapperCanvas<'a> {
+impl DrawCanvas for WrapperCanvas<'_> {
     fn draw(&mut self, x: u32, y: u32, color: &raytracer::primitives::Color) {
         let draw_color = sdl2::pixels::Color::RGB(
             (255.0 * color.red) as u8,
