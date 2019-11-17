@@ -34,7 +34,7 @@ pub struct RenderOptions {
 
 pub fn render(scene: &Scene, canvas: &mut impl DrawCanvas, options: &RenderOptions) {
     for (x, y, ray) in generate_rays(&scene.camera, options.canvas_width, options.canvas_height) {
-        for object in scene.objects.iter() {
+        for object in &scene.objects {
             let color = match object.check_collision(&ray) {
                 None => Color {
                     red: 0.0,
