@@ -4,6 +4,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
+use std::time::Duration;
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 576;
@@ -55,6 +56,7 @@ pub fn main() {
                 _ => {}
             }
         }
+        std::thread::sleep(Duration::from_millis(100));
     }
 }
 
