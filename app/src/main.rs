@@ -6,6 +6,8 @@ use sdl2::render::Canvas;
 use sdl2::video::Window;
 use std::time::Duration;
 
+use log::info;
+
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 576;
 const CANVAS_WIDTH: u32 = 640;
@@ -28,6 +30,7 @@ impl DrawCanvas for WrapperCanvas<'_> {
 }
 
 pub fn main() {
+    stderrlog::new().verbosity(4).init().unwrap();
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem
@@ -86,5 +89,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) {
         canvas_width: CANVAS_WIDTH,
         canvas_height: CANVAS_HEIGHT,
     };
+    info!("Generating test scene...");
     render(&scene, canvas, &render_options);
+    info!("Done!");
 }
