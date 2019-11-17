@@ -43,7 +43,10 @@ pub fn main() {
     canvas
         .set_logical_size(CANVAS_WIDTH, CANVAS_HEIGHT)
         .unwrap();
+    canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
+    canvas.clear();
     let mut wrapper_canvas = WrapperCanvas(&mut canvas);
+
     draw_test_scene(&mut wrapper_canvas);
     canvas.present();
 
@@ -65,9 +68,9 @@ pub fn main() {
 
 fn draw_test_scene(canvas: &mut impl DrawCanvas) {
     use raytracer::primitives::{Sphere, Vec3};
+    use raytracer::renderer::{render, RenderOptions};
     use raytracer::scene::{Camera, Scene, SceneObject, SceneObjectStruct};
     use raytracer::textures::{Color, Texture};
-    use raytracer::renderer::{render, RenderOptions};
 
     let camera: Camera = Default::default();
     let primitive: Sphere = Sphere {
@@ -80,9 +83,22 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) {
         blue: 1.0,
     };
     let texture = Texture { color };
-    let object = SceneObjectStruct { primitive, texture };
+    let object_1 = SceneObjectStruct { primitive, texture };
+    let primitive: Sphere = Sphere {
+        center: Vec3::new(5.0, 20.0, 16.0),
+        radius: 20.0,
+    };
+    let color = Color {
+        red: 1.0,
+        green: 0.0,
+        blue: 0.0,
+    };
+    let texture = Texture { color };
+    let object_2 = SceneObjectStruct { primitive, texture };
+
     let mut objects: Vec<Box<dyn SceneObject>> = Vec::new();
-    objects.push(Box::new(object));
+    objects.push(Box::new(object_2));
+    objects.push(Box::new(object_1));
 
     let scene: Scene = Scene { camera, objects };
     let render_options = RenderOptions {
