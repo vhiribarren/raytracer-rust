@@ -20,7 +20,7 @@ pub fn render(scene: &Scene, canvas: &mut impl DrawCanvas, options: &RenderOptio
                 Some(_vec) => &object.texture().color,
                 _ => continue,
             };
-            canvas.draw(x, y, color);
+            canvas.draw(x, options.canvas_height - y, color);
         }
     }
 }
