@@ -15,13 +15,21 @@ pub struct RenderOptions {
 pub fn render(scene: &Scene, canvas: &mut impl DrawCanvas, options: &RenderOptions) {
     debug!("{} objects to process", scene.objects.len());
     for (x, y, ray) in generate_rays(&scene.camera, options.canvas_width, options.canvas_height) {
+        let mut color: &Color = &Default::default();
+        let mut shortest_distance: f64 = std::f64::MAX;
         for object in &scene.objects {
-            let color = match object.check_collision(&ray) {
-                Some(_vec) => &object.texture().color,
-                _ => continue,
+            match object.check_collision(&ray) {
+                Some(vec) => {
+                    let distance = vec.distance(scene.camera.eye);
+                    if distance < shortest_distance {
+                        shortest_distance = distance;
+                        color = &object.texture().color;
+                    }
+                },
+                None => continue,
             };
-            canvas.draw(x, options.canvas_height - y, color);
         }
+        canvas.draw(x, options.canvas_height - y, color);
     }
 }
 

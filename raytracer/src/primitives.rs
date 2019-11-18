@@ -42,6 +42,10 @@ impl Vec3 {
             z: self.z / norm,
         }
     }
+
+    pub fn distance(&self, other: Vec3) -> f64 {
+        (other - *self).norm()
+    }
 }
 
 impl std::ops::Add<Vec3> for Vec3 {

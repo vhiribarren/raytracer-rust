@@ -97,8 +97,8 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) {
     let object_2 = SceneObjectStruct { primitive, texture };
 
     let mut objects: Vec<Box<dyn SceneObject>> = Vec::new();
-    objects.push(Box::new(object_2));
     objects.push(Box::new(object_1));
+    objects.push(Box::new(object_2));
 
     let scene: Scene = Scene { camera, objects };
     let render_options = RenderOptions {
