@@ -10,8 +10,8 @@ use log::info;
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 576;
-const CANVAS_WIDTH: u32 = 640;
-const CANVAS_HEIGHT: u32 = 360;
+const CANVAS_WIDTH: u32 = 1024;
+const CANVAS_HEIGHT: u32 = 576;
 
 struct WrapperCanvas<'a>(&'a mut Canvas<Window>);
 
@@ -68,11 +68,11 @@ pub fn main() {
 
 fn draw_test_scene(canvas: &mut impl DrawCanvas) {
     use raytracer::primitives::{Sphere, Vec3};
-    use raytracer::renderer::{render, RenderOptions};
-    use raytracer::scene::{Camera, Scene, SceneObject, SceneObjectStruct};
+    use raytracer::renderer::{render, PerspectiveCamera, RenderOptions};
+    use raytracer::scene::{Scene, SceneObject, SceneObjectStruct};
     use raytracer::textures::{Color, Texture};
 
-    let camera: Camera = Default::default();
+    let camera: PerspectiveCamera = Default::default();
     let primitive: Sphere = Sphere {
         center: Vec3::new(0.0, 0.0, 0.0),
         radius: 8.0,
@@ -85,8 +85,8 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) {
     let texture = Texture { color };
     let object_1 = SceneObjectStruct { primitive, texture };
     let primitive: Sphere = Sphere {
-        center: Vec3::new(5.0, 20.0, 16.0),
-        radius: 20.0,
+        center: Vec3::new(-15.0, 0.0, 0.0),
+        radius: 10.0,
     };
     let color = Color {
         red: 1.0,
@@ -100,7 +100,10 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) {
     objects.push(Box::new(object_1));
     objects.push(Box::new(object_2));
 
-    let scene: Scene = Scene { camera, objects };
+    let scene: Scene = Scene {
+        camera: Box::new(camera),
+        objects,
+    };
     let render_options = RenderOptions {
         canvas_width: CANVAS_WIDTH,
         canvas_height: CANVAS_HEIGHT,
