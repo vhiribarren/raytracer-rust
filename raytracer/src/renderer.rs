@@ -86,6 +86,83 @@ impl RayEmitter for PerspectiveCamera {
     }
 }
 
+
+#[derive(Debug)]
+pub struct OrthogonalCamera {
+    pub screen_center: Vec3,
+    pub up: Vec3,
+    pub eye_direction: Vec3,
+    pub width: f64,
+    pub height: f64,
+}
+
+impl Default for OrthogonalCamera {
+    fn default() -> Self {
+        OrthogonalCamera {
+            screen_center: Vec3::new(0.0, 0.0, -10.0),
+            up: Vec3::new(0.0, 1.0, 0.0),
+            eye_direction: Vec3::new(0.0, 0.0, 1.0),
+            width: 16.0,
+            height: 9.0,
+        }
+    }
+}
+
+impl RayEmitter for OrthogonalCamera {
+    fn generate_rays<'a>(
+        &'a self,
+        screen_width: u32,
+        screen_height: u32,
+    ) -> Box<dyn Iterator<Item = (u32, u32, Ray)> + 'a> {
+        let max_index: u32 = screen_width.checked_mul(screen_height).unwrap();
+        let width_step = self.width / (screen_width as f64);
+        let height_step = self.height / (screen_height as f64);
+        let to_screen_coords = move |i: u32| {
+            if i < max_index {
+                Some((i % screen_width, i / screen_width))
+            } else {
+                None
+            }
+        };
+        let to_camera_coords = move |i: u32| {
+            let i_float = i as f64;
+            if i < max_index {
+                Some((
+                    width_step / 2.0 + ((i_float * width_step) % self.width),
+                    height_step / 2.0
+                        + (((i_float * width_step) / self.width).trunc() * height_step),
+                ))
+            } else {
+                None
+            }
+        };
+        let mut index: u32 = 0;
+        let camera_axis_z = self.eye_direction.normalize();
+        let camera_axis_y = self.up.normalize();
+        let camera_axis_x = camera_axis_y.cross_product(camera_axis_z);
+        let iter = std::iter::from_fn(move || match to_screen_coords(index) {
+            None => None,
+            Some((screen_x, screen_y)) => {
+                let (camera_x, camera_y) = to_camera_coords(index).unwrap();
+                let ray_source = self.screen_center
+                    + (camera_x as f64 - self.width / 2.0) * camera_axis_x
+                    + (camera_y as f64 - self.height / 2.0) * camera_axis_y;
+
+                let screen_ray = (
+                    screen_x,
+                    screen_y,
+                    Ray { source: ray_source, direction: self.eye_direction},
+                );
+                index += 1;
+                Some(screen_ray)
+            }
+        });
+        Box::new(iter)
+    }
+}
+
+
+
 pub fn render(scene: &Scene, canvas: &mut impl DrawCanvas, options: &RenderOptions) {
     debug!("{} objects to process", scene.objects.len());
     let camera = &scene.camera;
