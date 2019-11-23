@@ -39,36 +39,16 @@ impl RayEmitter for PerspectiveCamera {
         screen_width: u32,
         screen_height: u32,
     ) -> Box<dyn Iterator<Item = (u32, u32, Ray)> + 'a> {
-        let max_index: u32 = screen_width.checked_mul(screen_height).unwrap();
-        let width_step = self.width / (screen_width as f64);
-        let height_step = self.height / (screen_height as f64);
-        let to_screen_coords = move |i: u32| {
-            if i < max_index {
-                Some((i % screen_width, i / screen_width))
-            } else {
-                None
-            }
-        };
-        let to_camera_coords = move |i: u32| {
-            let i_float = i as f64;
-            if i < max_index {
-                Some((
-                    width_step / 2.0 + ((i_float * width_step) % self.width),
-                    height_step / 2.0
-                        + (((i_float * width_step) / self.width).trunc() * height_step),
-                ))
-            } else {
-                None
-            }
-        };
+        let renderer =
+            CameraCoordinateMapping::new(self.width, self.height, screen_width, screen_height);
         let mut index: u32 = 0;
         let camera_axis_z = Vec3::from_to_point(self.eye, self.screen_center).normalize();
         let camera_axis_y = self.up.normalize();
         let camera_axis_x = camera_axis_y.cross_product(camera_axis_z);
-        let iter = std::iter::from_fn(move || match to_screen_coords(index) {
+        let iter = std::iter::from_fn(move || match renderer.to_screen_coords(index) {
             None => None,
             Some((screen_x, screen_y)) => {
-                let (camera_x, camera_y) = to_camera_coords(index).unwrap();
+                let (camera_x, camera_y) = renderer.to_camera_coords(index).unwrap();
                 let ray_destination = self.screen_center
                     + (camera_x as f64 - self.width / 2.0) * camera_axis_x
                     + (camera_y as f64 - self.height / 2.0) * camera_axis_y;
@@ -85,7 +65,6 @@ impl RayEmitter for PerspectiveCamera {
         Box::new(iter)
     }
 }
-
 
 #[derive(Debug)]
 pub struct OrthogonalCamera {
@@ -114,36 +93,16 @@ impl RayEmitter for OrthogonalCamera {
         screen_width: u32,
         screen_height: u32,
     ) -> Box<dyn Iterator<Item = (u32, u32, Ray)> + 'a> {
-        let max_index: u32 = screen_width.checked_mul(screen_height).unwrap();
-        let width_step = self.width / (screen_width as f64);
-        let height_step = self.height / (screen_height as f64);
-        let to_screen_coords = move |i: u32| {
-            if i < max_index {
-                Some((i % screen_width, i / screen_width))
-            } else {
-                None
-            }
-        };
-        let to_camera_coords = move |i: u32| {
-            let i_float = i as f64;
-            if i < max_index {
-                Some((
-                    width_step / 2.0 + ((i_float * width_step) % self.width),
-                    height_step / 2.0
-                        + (((i_float * width_step) / self.width).trunc() * height_step),
-                ))
-            } else {
-                None
-            }
-        };
+        let renderer =
+            CameraCoordinateMapping::new(self.width, self.height, screen_width, screen_height);
         let mut index: u32 = 0;
         let camera_axis_z = self.eye_direction.normalize();
         let camera_axis_y = self.up.normalize();
         let camera_axis_x = camera_axis_y.cross_product(camera_axis_z);
-        let iter = std::iter::from_fn(move || match to_screen_coords(index) {
+        let iter = std::iter::from_fn(move || match renderer.to_screen_coords(index) {
             None => None,
             Some((screen_x, screen_y)) => {
-                let (camera_x, camera_y) = to_camera_coords(index).unwrap();
+                let (camera_x, camera_y) = renderer.to_camera_coords(index).unwrap();
                 let ray_source = self.screen_center
                     + (camera_x as f64 - self.width / 2.0) * camera_axis_x
                     + (camera_y as f64 - self.height / 2.0) * camera_axis_y;
@@ -151,7 +110,10 @@ impl RayEmitter for OrthogonalCamera {
                 let screen_ray = (
                     screen_x,
                     screen_y,
-                    Ray { source: ray_source, direction: self.eye_direction},
+                    Ray {
+                        source: ray_source,
+                        direction: self.eye_direction,
+                    },
                 );
                 index += 1;
                 Some(screen_ray)
@@ -161,7 +123,55 @@ impl RayEmitter for OrthogonalCamera {
     }
 }
 
+pub struct CameraCoordinateMapping {
+    camera_width: f64,
+    screen_width: u32,
+    width_step: f64,
+    height_step: f64,
+    max_index: u32,
+}
 
+impl CameraCoordinateMapping {
+    pub fn new(
+        camera_width: f64,
+        camera_height: f64,
+        screen_width: u32,
+        screen_height: u32,
+    ) -> Self {
+        let max_index = screen_width.checked_mul(screen_height).unwrap();
+        let width_step = camera_width / (screen_width as f64);
+        let height_step = camera_height / (screen_height as f64);
+        CameraCoordinateMapping {
+            camera_width,
+            screen_width,
+            width_step,
+            height_step,
+            max_index,
+        }
+    }
+
+    fn to_screen_coords(&self, i: u32) -> Option<(u32, u32)> {
+        if i < self.max_index {
+            Some((i % self.screen_width, i / self.screen_width))
+        } else {
+            None
+        }
+    }
+
+    fn to_camera_coords(&self, i: u32) -> Option<(f64, f64)> {
+        let i_float = i as f64;
+        if i < self.max_index {
+            Some((
+                self.width_step / 2.0 + ((i_float * self.width_step) % self.camera_width),
+                self.height_step / 2.0
+                    + (((i_float * self.width_step) / self.camera_width).trunc()
+                        * self.height_step),
+            ))
+        } else {
+            None
+        }
+    }
+}
 
 pub fn render(scene: &Scene, canvas: &mut impl DrawCanvas, options: &RenderOptions) {
     debug!("{} objects to process", scene.objects.len());

@@ -1,4 +1,4 @@
-use raytracer::renderer::{DrawCanvas, OrthogonalCamera};
+use raytracer::renderer::DrawCanvas;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -68,15 +68,16 @@ pub fn main() {
 
 fn draw_test_scene(canvas: &mut impl DrawCanvas) {
     use raytracer::primitives::{Sphere, Vec3};
-    use raytracer::renderer::{render, PerspectiveCamera, RenderOptions};
+    use raytracer::renderer::{render, OrthogonalCamera, RenderOptions};
     use raytracer::scene::{Scene, SceneObject, SceneObjectStruct};
     use raytracer::textures::{Color, Texture};
 
     //let camera: PerspectiveCamera = Default::default();
     let camera: OrthogonalCamera = OrthogonalCamera {
-        width: 16.0*3.0,
-        height: 9.0*3.0,
-        ..Default::default()};
+        width: 16.0 * 3.0,
+        height: 9.0 * 3.0,
+        ..Default::default()
+    };
     let primitive: Sphere = Sphere {
         center: Vec3::new(0.0, 0.0, 0.0),
         radius: 8.0,
