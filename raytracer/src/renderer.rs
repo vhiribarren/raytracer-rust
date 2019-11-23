@@ -42,7 +42,7 @@ impl RayEmitter for PerspectiveCamera {
         let renderer =
             CameraCoordinateMapping::new(self.width, self.height, screen_width, screen_height);
         let mut index: u32 = 0;
-        let camera_axis_z = Vec3::from_to_point(self.eye, self.screen_center).normalize();
+        let camera_axis_z = Vec3::between_points(self.eye, self.screen_center).normalize();
         let camera_axis_y = self.up.normalize();
         let camera_axis_x = camera_axis_y.cross_product(camera_axis_z);
         let iter = std::iter::from_fn(move || match renderer.to_screen_coords(index) {

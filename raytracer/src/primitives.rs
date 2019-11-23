@@ -14,7 +14,7 @@ impl Vec3 {
         Vec3 { x, y, z }
     }
 
-    pub fn from_to_point(source: Vec3, destination: Vec3) -> Vec3 {
+    pub fn between_points(source: Vec3, destination: Vec3) -> Vec3 {
         destination - source
     }
 
