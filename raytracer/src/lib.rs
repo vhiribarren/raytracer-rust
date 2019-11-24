@@ -1,3 +1,4 @@
+pub mod cameras;
 pub mod lights;
 pub mod primitives;
 pub mod renderer;

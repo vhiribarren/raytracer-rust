@@ -67,9 +67,10 @@ pub fn main() {
 }
 
 fn draw_test_scene(canvas: &mut impl DrawCanvas) {
+    use raytracer::cameras::OrthogonalCamera;
     use raytracer::lights::LightPoint;
     use raytracer::primitives::{Sphere, Vec3};
-    use raytracer::renderer::{render, OrthogonalCamera, RenderOptions};
+    use raytracer::renderer::{render, RenderOptions};
     use raytracer::scene::{Scene, SceneObjectStruct};
     use raytracer::textures::{Color, Texture};
 
