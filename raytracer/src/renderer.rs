@@ -5,6 +5,9 @@ use crate::utils;
 use log::debug;
 use std::f64;
 
+/// For value between 0 and 1, inclusive
+type UnitInterval = f64;
+
 pub trait DrawCanvas {
     fn draw(&mut self, x: u32, y: u32, color: &Color);
 }
@@ -32,33 +35,34 @@ pub fn render(
         camera.generate_rays(options.canvas_width, options.canvas_height)
     {
         let mut shortest_distance: f64 = std::f64::MAX;
-        let mut nearest_object: Option<&Box<dyn SceneObject>> = None;
+        let mut nearest_object_opt: Option<&Box<dyn SceneObject>> = None;
         let mut collision_point: Vec3 = Default::default();
         // For each pixel, we search for collision with objects
         // We also take into account the nearest object, for now
-        for object in &scene.objects {
-            if let Some(vec) = object.check_collision(&ray) {
-                let distance = vec.distance(ray.source);
+        for object_candidate in &scene.objects {
+            if let Some(collision_point_candidate) = object_candidate.check_collision(&ray) {
+                let distance = collision_point_candidate.distance(ray.source);
                 if distance < shortest_distance {
                     shortest_distance = distance;
-                    nearest_object = Some(object);
-                    collision_point = vec;
+                    nearest_object_opt = Some(object_candidate);
+                    collision_point = collision_point_candidate;
                 }
             }
         }
 
-        if let Some(obj) = nearest_object {
+        if let Some(nearest_object) = nearest_object_opt {
             // After having found the nearest object, we launch a ray to the light
             let light_ray = Ray::ray_from_to(collision_point, light.source());
             let light_direction = light_ray.direction;
             let light_distance = Vec3::between_points(collision_point, light.source()).norm();
             // Check of object obstruction between light and collision point
-            for object in &scene.objects {
-                if utils::cmp_ref(obj, object) {
+            for candidate_object in &scene.objects {
+                if utils::ref_equals(nearest_object, candidate_object) {
                     continue;
                 }
-                if let Some(vec) = object.check_collision(&light_ray) {
-                    let object_distance = Vec3::between_points(collision_point, vec).norm();
+                if let Some(obstruction_point) = candidate_object.check_collision(&light_ray) {
+                    let object_distance =
+                        Vec3::between_points(collision_point, obstruction_point).norm();
                     if object_distance > light_distance {
                         continue;
                     } else {
@@ -69,18 +73,28 @@ pub fn render(
             }
 
             // Try a first simple light model where intensity vary depending on angle with normal
-            let surface_normal = obj
-                .normal_at(collision_point)
-                .ok_or(String::from("No normal found"))?;
-            let cos_angle = light_direction.dot_product(surface_normal)
-                / (light_direction.norm() * surface_normal.norm());
-            let intensity: f64 = if cos_angle > 0.0 { cos_angle } else { 0.0 };
+            let intensity: UnitInterval =
+                light_intensity(&**nearest_object, light_direction, collision_point)?;
             canvas.draw(
                 x,
                 options.canvas_height - y,
-                &(intensity * &obj.texture().color),
+                &(intensity * &nearest_object.texture().color),
             );
         }
     }
     Ok(())
+}
+
+fn light_intensity(
+    scene_object: &dyn SceneObject,
+    light_direction: Vec3,
+    surface_point: Vec3,
+) -> Result<UnitInterval, String> {
+    let surface_normal = scene_object
+        .normal_at(surface_point)
+        .ok_or(String::from("No normal found"))?;
+    let cos_angle = light_direction.dot_product(surface_normal)
+        / (light_direction.norm() * surface_normal.norm());
+    let intensity = if cos_angle > 0.0 { cos_angle } else { 0.0 };
+    Ok(intensity)
 }

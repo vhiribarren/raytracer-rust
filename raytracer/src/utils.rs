@@ -9,6 +9,6 @@ pub fn set_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
-pub(crate) fn cmp_ref<T>(a1: &T, a2: &T) -> bool {
+pub(crate) fn ref_equals<T>(a1: &T, a2: &T) -> bool {
     a1 as *const _ == a2 as *const _
 }
