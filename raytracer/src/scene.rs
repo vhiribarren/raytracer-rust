@@ -1,8 +1,10 @@
+use crate::lights::LightObject;
 use crate::primitives::{Collision, Ray, Vec3};
 use crate::textures::Texture;
 
 pub struct Scene {
     pub camera: Box<dyn RayEmitter>,
+    pub lights: Vec<Box<dyn LightObject>>,
     pub objects: Vec<Box<dyn SceneObject>>,
 }
 

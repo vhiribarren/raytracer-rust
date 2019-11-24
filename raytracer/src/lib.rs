@@ -1,3 +1,4 @@
+pub mod lights;
 pub mod primitives;
 pub mod renderer;
 pub mod scene;
