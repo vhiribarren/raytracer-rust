@@ -53,7 +53,7 @@ pub fn render(
                 .ok_or(String::from("No normal found"))?;
             let cos_angle =
                 light_ray.dot_product(surface_normal) / (light_ray.norm() * surface_normal.norm());
-            let intensity: f64 = cos_angle;
+            let intensity: f64 = if cos_angle > 0.0 { cos_angle } else { 0.0 };
             canvas.draw(
                 x,
                 options.canvas_height - y,
