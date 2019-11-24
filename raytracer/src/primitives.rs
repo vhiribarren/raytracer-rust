@@ -1,5 +1,6 @@
 pub trait Collision {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
+    fn normal_at(&self, point: Vec3) -> Option<Vec3>;
 }
 
 #[derive(Debug, Default, Copy, Clone)]
@@ -142,6 +143,10 @@ impl Collision for Sphere {
         let q = (r_square - m_square).sqrt();
         let t: f64 = if l_square > r_square { d - q } else { d + q };
         Some(A + t * u)
+    }
+
+    fn normal_at(&self, point: Vec3) -> Option<Vec3> {
+        Some(Vec3::between_points(self.center, point).normalize())
     }
 }
 

@@ -116,6 +116,6 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) {
         canvas_height: CANVAS_HEIGHT,
     };
     info!("Generating test scene...");
-    render(&scene, canvas, &render_options);
+    render(&scene, canvas, &render_options).unwrap();
     info!("Done!");
 }

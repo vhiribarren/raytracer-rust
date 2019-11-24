@@ -11,6 +11,7 @@ pub struct Scene {
 pub trait SceneObject {
     fn texture(&self) -> &Texture;
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
+    fn normal_at(&self, point: Vec3) -> Option<Vec3>;
 }
 
 pub struct SceneObjectStruct<P: Collision> {
@@ -25,6 +26,10 @@ impl<P: Collision> SceneObject for SceneObjectStruct<P> {
 
     fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
         self.primitive.check_collision(ray)
+    }
+
+    fn normal_at(&self, point: Vec3) -> Option<Vec3> {
+        self.primitive.normal_at(point)
     }
 }
 
