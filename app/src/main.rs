@@ -81,7 +81,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) {
         ..Default::default()
     };
     let light = LightPoint {
-        source: Vec3::new(10.0, 10.0, 10.0),
+        source: Vec3::new(10.0, 10.0, -10.0),
     };
     let primitive: Sphere = Sphere {
         center: Vec3::new(0.0, 0.0, 0.0),
@@ -95,7 +95,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) {
     let texture = Texture { color };
     let object_1 = SceneObjectStruct { primitive, texture };
     let primitive: Sphere = Sphere {
-        center: Vec3::new(-15.0, 0.0, 0.0),
+        center: Vec3::new(-15.0, 0.0, 10.0),
         radius: 10.0,
     };
     let color = Color {
