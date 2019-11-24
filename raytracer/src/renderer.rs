@@ -50,37 +50,41 @@ pub fn render(
             }
         }
 
-        if let Some(nearest_object) = nearest_object_opt {
-            // After having found the nearest object, we launch a ray to the light
-            let light_ray = Ray::ray_from_to(collision_point, light.source());
-            let light_direction = light_ray.direction;
-            let light_distance = Vec3::between_points(collision_point, light.source()).norm();
-            // Check of object obstruction between light and collision point
-            for candidate_object in &scene.objects {
-                if utils::ref_equals(nearest_object, candidate_object) {
+        if nearest_object_opt.is_none() {
+            continue;
+        }
+
+        let nearest_object = nearest_object_opt.unwrap();
+
+        // After having found the nearest object, we launch a ray to the light
+        let light_ray = Ray::ray_from_to(collision_point, light.source());
+        let light_direction = light_ray.direction;
+        let light_distance = Vec3::between_points(collision_point, light.source()).norm();
+        // Check of object obstruction between light and collision point
+        for candidate_object in &scene.objects {
+            if utils::ref_equals(nearest_object, candidate_object) {
+                continue;
+            }
+            if let Some(obstruction_point) = candidate_object.check_collision(&light_ray) {
+                let object_distance =
+                    Vec3::between_points(collision_point, obstruction_point).norm();
+                if object_distance > light_distance {
                     continue;
-                }
-                if let Some(obstruction_point) = candidate_object.check_collision(&light_ray) {
-                    let object_distance =
-                        Vec3::between_points(collision_point, obstruction_point).norm();
-                    if object_distance > light_distance {
-                        continue;
-                    } else {
-                        // Object is hiding an other
-                        continue 'pixel_loop;
-                    }
+                } else {
+                    // Object is hiding an other
+                    continue 'pixel_loop;
                 }
             }
-
-            // Try a first simple light model where intensity vary depending on angle with normal
-            let intensity: UnitInterval =
-                light_intensity(&**nearest_object, light_direction, collision_point)?;
-            canvas.draw(
-                x,
-                options.canvas_height - y,
-                &(intensity * &nearest_object.texture().color),
-            );
         }
+
+        // Try a first simple light model where intensity vary depending on angle with normal
+        let intensity: UnitInterval =
+            light_intensity(&**nearest_object, light_direction, collision_point)?;
+        canvas.draw(
+            x,
+            options.canvas_height - y,
+            &(intensity * &nearest_object.texture().color),
+        );
     }
     Ok(())
 }
