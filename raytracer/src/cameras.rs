@@ -37,7 +37,9 @@ impl RayEmitter for PerspectiveCamera {
         let iter = std::iter::from_fn(move || match renderer.to_screen_coords(index) {
             None => None,
             Some((screen_x, screen_y)) => {
-                let (camera_x, camera_y) = renderer.to_camera_coords(index).unwrap();
+                let (camera_x, camera_y) = renderer
+                    .to_camera_coords(index)
+                    .expect("Index must be in a valid range.");
                 let ray_destination = self.screen_center
                     + (camera_x as f64 - self.width / 2.0) * camera_axis_x
                     + (camera_y as f64 - self.height / 2.0) * camera_axis_y;
@@ -91,7 +93,9 @@ impl RayEmitter for OrthogonalCamera {
         let iter = std::iter::from_fn(move || match renderer.to_screen_coords(index) {
             None => None,
             Some((screen_x, screen_y)) => {
-                let (camera_x, camera_y) = renderer.to_camera_coords(index).unwrap();
+                let (camera_x, camera_y) = renderer
+                    .to_camera_coords(index)
+                    .expect("Index must be in a valid range.");
                 let ray_source = self.screen_center
                     + (camera_x as f64 - self.width / 2.0) * camera_axis_x
                     + (camera_y as f64 - self.height / 2.0) * camera_axis_y;
@@ -127,7 +131,9 @@ impl CameraCoordinateMapping {
         screen_width: u32,
         screen_height: u32,
     ) -> Self {
-        let max_index = screen_width.checked_mul(screen_height).unwrap();
+        let max_index = screen_width
+            .checked_mul(screen_height)
+            .expect("Screen dimensions should be less high.");
         let width_step = camera_width / (screen_width as f64);
         let height_step = camera_height / (screen_height as f64);
         CameraCoordinateMapping {

@@ -16,7 +16,7 @@ const CANVAS_HEIGHT: u32 = 576;
 struct WrapperCanvas<'a>(&'a mut Canvas<Window>);
 
 impl DrawCanvas for WrapperCanvas<'_> {
-    fn draw(&mut self, x: u32, y: u32, color: &raytracer::textures::Color) {
+    fn draw(&mut self, x: u32, y: u32, color: &raytracer::textures::Color) -> Result<(), String> {
         let draw_color = sdl2::pixels::Color::RGB(
             (255.0 * color.red) as u8,
             (255.0 * color.green) as u8,
@@ -24,33 +24,36 @@ impl DrawCanvas for WrapperCanvas<'_> {
         );
         self.0.set_draw_color(draw_color);
         self.0
-            .draw_point(sdl2::rect::Point::new(x as i32, y as i32))
-            .unwrap();
+            .draw_point(sdl2::rect::Point::new(x as i32, y as i32))?;
+        Ok(())
     }
 }
 
-pub fn main() {
-    stderrlog::new().verbosity(4).init().unwrap();
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
+pub fn main() -> Result<(), String> {
+    stderrlog::new()
+        .verbosity(4)
+        .init()
+        .map_err(|e| e.to_string())?;
+    let sdl_context = sdl2::init()?;
+    let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
         .window("RayTracer Test", WINDOW_WIDTH, WINDOW_HEIGHT)
         .position_centered()
         .resizable()
         .build()
-        .unwrap();
-    let mut canvas = window.into_canvas().build().unwrap();
+        .map_err(|e| e.to_string())?;
+    let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
     canvas
         .set_logical_size(CANVAS_WIDTH, CANVAS_HEIGHT)
-        .unwrap();
+        .map_err(|e| e.to_string())?;
     canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
     canvas.clear();
     let mut wrapper_canvas = WrapperCanvas(&mut canvas);
 
-    draw_test_scene(&mut wrapper_canvas);
+    draw_test_scene(&mut wrapper_canvas)?;
     canvas.present();
 
-    let mut event_pump = sdl_context.event_pump().unwrap();
+    let mut event_pump = sdl_context.event_pump()?;
     'main_loop: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -64,9 +67,11 @@ pub fn main() {
         }
         std::thread::sleep(Duration::from_millis(100));
     }
+
+    Ok(())
 }
 
-fn draw_test_scene(canvas: &mut impl DrawCanvas) {
+fn draw_test_scene(canvas: &mut impl DrawCanvas) -> Result<(), String> {
     use raytracer::cameras::OrthogonalCamera;
     use raytracer::lights::LightPoint;
     use raytracer::primitives::{Sphere, Vec3};
@@ -116,6 +121,8 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) {
         canvas_height: CANVAS_HEIGHT,
     };
     info!("Generating test scene...");
-    render(&scene, canvas, &render_options).unwrap();
+    render(&scene, canvas, &render_options)?;
     info!("Done!");
+
+    Ok(())
 }

@@ -9,7 +9,7 @@ use std::f64;
 type UnitInterval = f64;
 
 pub trait DrawCanvas {
-    fn draw(&mut self, x: u32, y: u32, color: &Color);
+    fn draw(&mut self, x: u32, y: u32, color: &Color) -> Result<(), String>;
 }
 
 pub struct RenderOptions {
@@ -50,11 +50,10 @@ pub fn render(
             }
         }
 
-        if nearest_object_opt.is_none() {
-            continue;
-        }
-
-        let nearest_object = nearest_object_opt.unwrap();
+        let nearest_object = match nearest_object_opt {
+            Some(val) => val,
+            _ => continue,
+        };
 
         // After having found the nearest object, we launch a ray to the light
         let light_ray = Ray::ray_from_to(collision_point, light.source());
@@ -84,7 +83,7 @@ pub fn render(
             x,
             options.canvas_height - y,
             &(intensity * &nearest_object.texture().color),
-        );
+        )?;
     }
     Ok(())
 }
