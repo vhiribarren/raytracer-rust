@@ -28,30 +28,24 @@ impl RayEmitter for PerspectiveCamera {
         screen_width: u32,
         screen_height: u32,
     ) -> Box<dyn Iterator<Item = (u32, u32, Ray)> + 'a> {
-        let renderer =
-            CameraCoordinateMapping::new(self.width, self.height, screen_width, screen_height);
-        let mut index: u32 = 0;
+        let surface_iterator = CameraRectangleSurfaceIterator::new(
+            self.width,
+            self.height,
+            screen_width,
+            screen_height,
+        );
         let camera_axis_z = Vec3::between_points(self.eye, self.screen_center).normalize();
         let camera_axis_y = self.up.normalize();
         let camera_axis_x = camera_axis_y.cross_product(camera_axis_z);
-        let iter = std::iter::from_fn(move || match renderer.to_screen_coords(index) {
-            None => None,
-            Some((screen_x, screen_y)) => {
-                let (camera_x, camera_y) = renderer
-                    .to_camera_coords(index)
-                    .expect("Index must be in a valid range.");
-                let ray_destination = self.screen_center
-                    + (camera_x as f64 - self.width / 2.0) * camera_axis_x
-                    + (camera_y as f64 - self.height / 2.0) * camera_axis_y;
-
-                let screen_ray = (
-                    screen_x,
-                    screen_y,
-                    Ray::ray_from_to(self.eye, ray_destination),
-                );
-                index += 1;
-                Some(screen_ray)
-            }
+        let iter = surface_iterator.map(move |(screen_x, screen_y, camera_x, camera_y)| {
+            let ray_destination = self.screen_center
+                + (camera_x as f64 - self.width / 2.0) * camera_axis_x
+                + (camera_y as f64 - self.height / 2.0) * camera_axis_y;
+            (
+                screen_x,
+                screen_y,
+                Ray::ray_from_to(self.eye, ray_destination),
+            )
         });
         Box::new(iter)
     }
@@ -84,47 +78,43 @@ impl RayEmitter for OrthogonalCamera {
         screen_width: u32,
         screen_height: u32,
     ) -> Box<dyn Iterator<Item = (u32, u32, Ray)> + 'a> {
-        let renderer =
-            CameraCoordinateMapping::new(self.width, self.height, screen_width, screen_height);
-        let mut index: u32 = 0;
+        let surface_iterator = CameraRectangleSurfaceIterator::new(
+            self.width,
+            self.height,
+            screen_width,
+            screen_height,
+        );
         let camera_axis_z = self.eye_direction.normalize();
         let camera_axis_y = self.up.normalize();
         let camera_axis_x = camera_axis_y.cross_product(camera_axis_z);
-        let iter = std::iter::from_fn(move || match renderer.to_screen_coords(index) {
-            None => None,
-            Some((screen_x, screen_y)) => {
-                let (camera_x, camera_y) = renderer
-                    .to_camera_coords(index)
-                    .expect("Index must be in a valid range.");
-                let ray_source = self.screen_center
-                    + (camera_x as f64 - self.width / 2.0) * camera_axis_x
-                    + (camera_y as f64 - self.height / 2.0) * camera_axis_y;
+        let iter = surface_iterator.map(move |(screen_x, screen_y, camera_x, camera_y)| {
+            let ray_source = self.screen_center
+                + (camera_x as f64 - self.width / 2.0) * camera_axis_x
+                + (camera_y as f64 - self.height / 2.0) * camera_axis_y;
 
-                let screen_ray = (
-                    screen_x,
-                    screen_y,
-                    Ray {
-                        source: ray_source,
-                        direction: self.eye_direction,
-                    },
-                );
-                index += 1;
-                Some(screen_ray)
-            }
+            (
+                screen_x,
+                screen_y,
+                Ray {
+                    source: ray_source,
+                    direction: self.eye_direction,
+                },
+            )
         });
         Box::new(iter)
     }
 }
 
-pub struct CameraCoordinateMapping {
+pub struct CameraRectangleSurfaceIterator {
     camera_width: f64,
     screen_width: u32,
     width_step: f64,
     height_step: f64,
     max_index: u32,
+    current_index: u32,
 }
 
-impl CameraCoordinateMapping {
+impl CameraRectangleSurfaceIterator {
     pub fn new(
         camera_width: f64,
         camera_height: f64,
@@ -136,12 +126,14 @@ impl CameraCoordinateMapping {
             .expect("Screen dimensions should be less high.");
         let width_step = camera_width / (screen_width as f64);
         let height_step = camera_height / (screen_height as f64);
-        CameraCoordinateMapping {
+        let current_index = 0;
+        CameraRectangleSurfaceIterator {
             camera_width,
             screen_width,
             width_step,
             height_step,
             max_index,
+            current_index,
         }
     }
 
@@ -162,6 +154,21 @@ impl CameraCoordinateMapping {
                     + (((i_float * self.width_step) / self.camera_width).trunc()
                         * self.height_step),
             ))
+        } else {
+            None
+        }
+    }
+}
+
+impl Iterator for CameraRectangleSurfaceIterator {
+    type Item = (u32, u32, f64, f64);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current_index < self.max_index {
+            let (camera_x, camera_y) = self.to_camera_coords(self.current_index).unwrap();
+            let (screen_x, screen_y) = self.to_screen_coords(self.current_index).unwrap();
+            self.current_index += 1;
+            Some((screen_x, screen_y, camera_x, camera_y))
         } else {
             None
         }
