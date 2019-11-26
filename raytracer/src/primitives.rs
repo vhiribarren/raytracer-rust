@@ -99,8 +99,39 @@ impl Ray {
 
 #[derive(Debug)]
 pub struct Plane {
-    pub center: Vec3,
-    pub normal: Vec3,
+    center: Vec3,
+    normal_normalized: Vec3,
+}
+
+impl Plane {
+    pub fn new(center: Vec3, normal: Vec3) -> Self {
+        Plane {
+            center,
+            normal_normalized: normal.normalize(),
+        }
+    }
+}
+
+impl Collision for Plane {
+    fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
+        let denom = self
+            .normal_normalized
+            .dot_product(ray.direction.normalize());
+        if denom.abs() < 1e-6 {
+            return None;
+        }
+        let p_l = self.center - ray.source;
+        let t = p_l.dot_product(self.normal_normalized) / denom;
+        if t > 0.0 {
+            Some(ray.source + t * ray.direction)
+        } else {
+            None
+        }
+    }
+
+    fn normal_at(&self, _point: Vec3) -> Option<Vec3> {
+        Some(self.normal_normalized)
+    }
 }
 
 #[derive(Debug)]

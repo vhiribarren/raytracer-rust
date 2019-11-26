@@ -13,3 +13,7 @@ impl LightObject for LightPoint {
         self.source
     }
 }
+
+pub struct AmbientLight {
+    pub power: f64,
+}

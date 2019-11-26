@@ -1,5 +1,5 @@
 use crate::primitives::{Ray, Vec3};
-use crate::scene::{Scene, AnySceneObject};
+use crate::scene::{AnySceneObject, Scene};
 use crate::textures::Color;
 use crate::utils;
 use log::debug;

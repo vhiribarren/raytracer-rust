@@ -74,7 +74,7 @@ pub fn main() -> Result<(), String> {
 fn draw_test_scene(canvas: &mut impl DrawCanvas) -> Result<(), String> {
     use raytracer::cameras::OrthogonalCamera;
     use raytracer::lights::LightPoint;
-    use raytracer::primitives::{Sphere, Vec3};
+    use raytracer::primitives::{Plane, Sphere, Vec3};
     use raytracer::renderer::{render, RenderOptions};
     use raytracer::scene::{Scene, SceneObject};
     use raytracer::textures::{Color, Texture};
@@ -86,10 +86,10 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> Result<(), String> {
         ..Default::default()
     };
     let light = LightPoint {
-        source: Vec3::new(10.0, 10.0, -10.0),
+        source: Vec3::new(10.0, 100.0, -50.0),
     };
     let primitive: Sphere = Sphere {
-        center: Vec3::new(0.0, 0.0, 0.0),
+        center: Vec3::new(5.0, 0.0, 0.0),
         radius: 8.0,
     };
     let color = Color {
@@ -100,7 +100,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> Result<(), String> {
     let texture = Texture { color };
     let object_1 = SceneObject { primitive, texture };
     let primitive: Sphere = Sphere {
-        center: Vec3::new(-15.0, 0.0, 10.0),
+        center: Vec3::new(-10.0, 0.0, 10.0),
         radius: 10.0,
     };
     let color = Color {
@@ -110,11 +110,23 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> Result<(), String> {
     };
     let texture = Texture { color };
     let object_2 = SceneObject { primitive, texture };
+    let plane = Plane::new(Vec3::new(0.0, -10.0, 0.0), Vec3::new(0.0, 1.0, -0.1));
+    let texture = Texture {
+        color: Color {
+            red: 0.8,
+            green: 0.8,
+            blue: 0.8,
+        },
+    };
+    let object_3 = SceneObject {
+        primitive: plane,
+        texture,
+    };
 
     let scene: Scene = Scene {
         camera: Box::new(camera),
         lights: vec![Box::new(light)],
-        objects: vec![Box::new(object_1), Box::new(object_2)],
+        objects: vec![Box::new(object_1), Box::new(object_2), Box::new(object_3)],
     };
     let render_options = RenderOptions {
         canvas_width: CANVAS_WIDTH,

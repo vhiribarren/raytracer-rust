@@ -13,7 +13,7 @@ pub struct PerspectiveCamera {
 impl Default for PerspectiveCamera {
     fn default() -> Self {
         PerspectiveCamera {
-            eye: Vec3::new(0.0, 0.0, -10.5),
+            eye: Vec3::new(0.0, 0.0, -100.0),
             screen_center: Vec3::new(0.0, 0.0, -10.0),
             up: Vec3::new(0.0, 1.0, 0.0),
             width: 16.0,
@@ -137,26 +137,17 @@ impl CameraRectangleSurfaceIterator {
         }
     }
 
-    fn to_screen_coords(&self, i: u32) -> Option<(u32, u32)> {
-        if i < self.max_index {
-            Some((i % self.screen_width, i / self.screen_width))
-        } else {
-            None
-        }
+    fn to_screen_coords(&self, i: u32) -> (u32, u32) {
+        (i % self.screen_width, i / self.screen_width)
     }
 
-    fn to_camera_coords(&self, i: u32) -> Option<(f64, f64)> {
+    fn to_camera_coords(&self, i: u32) -> (f64, f64) {
         let i_float = i as f64;
-        if i < self.max_index {
-            Some((
-                self.width_step / 2.0 + ((i_float * self.width_step) % self.camera_width),
-                self.height_step / 2.0
-                    + (((i_float * self.width_step) / self.camera_width).trunc()
-                        * self.height_step),
-            ))
-        } else {
-            None
-        }
+        (
+            self.width_step / 2.0 + ((i_float * self.width_step) % self.camera_width),
+            self.height_step / 2.0
+                + (((i_float * self.width_step) / self.camera_width).trunc() * self.height_step),
+        )
     }
 }
 
@@ -165,8 +156,8 @@ impl Iterator for CameraRectangleSurfaceIterator {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current_index < self.max_index {
-            let (camera_x, camera_y) = self.to_camera_coords(self.current_index).unwrap();
-            let (screen_x, screen_y) = self.to_screen_coords(self.current_index).unwrap();
+            let (camera_x, camera_y) = self.to_camera_coords(self.current_index);
+            let (screen_x, screen_y) = self.to_screen_coords(self.current_index);
             self.current_index += 1;
             Some((screen_x, screen_y, camera_x, camera_y))
         } else {
