@@ -1,5 +1,5 @@
 use crate::primitives::{Ray, Vec3};
-use crate::scene::{Scene, SceneObject};
+use crate::scene::{Scene, AnySceneObject};
 use crate::textures::Color;
 use crate::utils;
 use log::debug;
@@ -35,7 +35,7 @@ pub fn render(
         camera.generate_rays(options.canvas_width, options.canvas_height)
     {
         let mut shortest_distance: f64 = std::f64::MAX;
-        let mut nearest_object_opt: Option<&Box<dyn SceneObject>> = None;
+        let mut nearest_object_opt: Option<&Box<dyn AnySceneObject>> = None;
         let mut collision_point: Vec3 = Default::default();
         // For each pixel, we search for collision with objects
         // We also take into account the nearest object, for now
@@ -89,7 +89,7 @@ pub fn render(
 }
 
 fn light_intensity(
-    scene_object: &dyn SceneObject,
+    scene_object: &dyn AnySceneObject,
     light_direction: Vec3,
     surface_point: Vec3,
 ) -> Result<UnitInterval, String> {

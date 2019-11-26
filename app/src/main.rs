@@ -76,7 +76,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> Result<(), String> {
     use raytracer::lights::LightPoint;
     use raytracer::primitives::{Sphere, Vec3};
     use raytracer::renderer::{render, RenderOptions};
-    use raytracer::scene::{Scene, SceneObjectStruct};
+    use raytracer::scene::{Scene, SceneObject};
     use raytracer::textures::{Color, Texture};
 
     //let camera: PerspectiveCamera = Default::default();
@@ -98,7 +98,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> Result<(), String> {
         blue: 1.0,
     };
     let texture = Texture { color };
-    let object_1 = SceneObjectStruct { primitive, texture };
+    let object_1 = SceneObject { primitive, texture };
     let primitive: Sphere = Sphere {
         center: Vec3::new(-15.0, 0.0, 10.0),
         radius: 10.0,
@@ -109,7 +109,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> Result<(), String> {
         blue: 0.0,
     };
     let texture = Texture { color };
-    let object_2 = SceneObjectStruct { primitive, texture };
+    let object_2 = SceneObject { primitive, texture };
 
     let scene: Scene = Scene {
         camera: Box::new(camera),

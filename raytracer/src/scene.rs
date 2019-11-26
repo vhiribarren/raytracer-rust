@@ -5,21 +5,21 @@ use crate::textures::Texture;
 pub struct Scene {
     pub camera: Box<dyn RayEmitter>,
     pub lights: Vec<Box<dyn LightObject>>,
-    pub objects: Vec<Box<dyn SceneObject>>,
+    pub objects: Vec<Box<dyn AnySceneObject>>,
 }
 
-pub trait SceneObject {
+pub trait AnySceneObject {
     fn texture(&self) -> &Texture;
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
     fn normal_at(&self, point: Vec3) -> Option<Vec3>;
 }
 
-pub struct SceneObjectStruct<P: Collision> {
+pub struct SceneObject<P: Collision> {
     pub texture: Texture,
     pub primitive: P,
 }
 
-impl<P: Collision> SceneObject for SceneObjectStruct<P> {
+impl<P: Collision> AnySceneObject for SceneObject<P> {
     fn texture(&self) -> &Texture {
         &self.texture
     }
