@@ -95,7 +95,7 @@ fn light_intensity(
 ) -> Result<UnitInterval, String> {
     let surface_normal = scene_object
         .normal_at(surface_point)
-        .ok_or(String::from("No normal found"))?;
+        .ok_or_else(|| String::from("No normal found"))?;
     let cos_angle = light_direction.dot_product(surface_normal)
         / (light_direction.norm() * surface_normal.norm());
     let intensity = if cos_angle > 0.0 { cos_angle } else { 0.0 };

@@ -138,10 +138,12 @@ impl CameraRectangleSurfaceIterator {
     }
 
     fn to_screen_coords(&self, i: u32) -> (u32, u32) {
+        assert!(i < self.max_index);
         (i % self.screen_width, i / self.screen_width)
     }
 
     fn to_camera_coords(&self, i: u32) -> (f64, f64) {
+        assert!(i < self.max_index);
         let i_float = i as f64;
         (
             self.width_step / 2.0 + ((i_float * self.width_step) % self.camera_width),

@@ -1,3 +1,5 @@
+mod utils;
+
 use raytracer::renderer::DrawCanvas;
 
 use sdl2::event::Event;
@@ -6,6 +8,7 @@ use sdl2::render::Canvas;
 use sdl2::video::Window;
 use std::time::Duration;
 
+use crate::utils::result::RaytracingResult;
 use log::info;
 
 const WINDOW_WIDTH: u32 = 1024;
@@ -16,7 +19,12 @@ const CANVAS_HEIGHT: u32 = 576;
 struct WrapperCanvas<'a>(&'a mut Canvas<Window>);
 
 impl DrawCanvas for WrapperCanvas<'_> {
-    fn draw(&mut self, x: u32, y: u32, color: &raytracer::textures::Color) -> Result<(), String> {
+    fn draw(
+        &mut self,
+        x: u32,
+        y: u32,
+        color: &raytracer::textures::Color,
+    ) -> std::result::Result<(), String> {
         let draw_color = sdl2::pixels::Color::RGB(
             (255.0 * color.red) as u8,
             (255.0 * color.green) as u8,
@@ -29,23 +37,17 @@ impl DrawCanvas for WrapperCanvas<'_> {
     }
 }
 
-pub fn main() -> Result<(), String> {
-    stderrlog::new()
-        .verbosity(4)
-        .init()
-        .map_err(|e| e.to_string())?;
+pub fn main() -> RaytracingResult {
+    stderrlog::new().verbosity(4).init()?;
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
         .window("RayTracer Test", WINDOW_WIDTH, WINDOW_HEIGHT)
         .position_centered()
         .resizable()
-        .build()
-        .map_err(|e| e.to_string())?;
-    let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
-    canvas
-        .set_logical_size(CANVAS_WIDTH, CANVAS_HEIGHT)
-        .map_err(|e| e.to_string())?;
+        .build()?;
+    let mut canvas = window.into_canvas().build()?;
+    canvas.set_logical_size(CANVAS_WIDTH, CANVAS_HEIGHT)?;
     canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
     canvas.clear();
     let mut wrapper_canvas = WrapperCanvas(&mut canvas);
@@ -71,7 +73,7 @@ pub fn main() -> Result<(), String> {
     Ok(())
 }
 
-fn draw_test_scene(canvas: &mut impl DrawCanvas) -> Result<(), String> {
+fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     use raytracer::cameras::OrthogonalCamera;
     use raytracer::lights::LightPoint;
     use raytracer::primitives::{Plane, Sphere, Vec3};
