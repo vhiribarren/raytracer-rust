@@ -82,7 +82,7 @@ pub fn render(
         canvas.draw(
             x,
             options.canvas_height - y,
-            &(intensity * &nearest_object.texture().color),
+            &(intensity * &nearest_object.color_at(collision_point)),
         )?;
     }
     Ok(())

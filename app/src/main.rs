@@ -10,6 +10,7 @@ use std::time::Duration;
 
 use crate::utils::result::RaytracingResult;
 use log::info;
+use raytracer::textures::CheckedPattern;
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 576;
@@ -79,7 +80,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     use raytracer::primitives::{Plane, Sphere, Vec3};
     use raytracer::renderer::{render, RenderOptions};
     use raytracer::scene::{Scene, SceneObject};
-    use raytracer::textures::{Color, Texture};
+    use raytracer::textures::{Color, PlainColorTexture};
 
     //let camera: PerspectiveCamera = Default::default();
     let camera: OrthogonalCamera = OrthogonalCamera {
@@ -99,7 +100,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
         green: 0.0,
         blue: 1.0,
     };
-    let texture = Texture { color };
+    let texture = <CheckedPattern as Default>::default();
     let object_1 = SceneObject { primitive, texture };
     let primitive: Sphere = Sphere {
         center: Vec3::new(-10.0, 0.0, 10.0),
@@ -110,16 +111,10 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
         green: 0.0,
         blue: 0.0,
     };
-    let texture = Texture { color };
+    let texture = PlainColorTexture { color };
     let object_2 = SceneObject { primitive, texture };
-    let plane = Plane::new(Vec3::new(0.0, -10.0, 0.0), Vec3::new(0.0, 1.0, -0.1));
-    let texture = Texture {
-        color: Color {
-            red: 0.8,
-            green: 0.8,
-            blue: 0.8,
-        },
-    };
+    let plane = Plane::new(Vec3::new(0.0, -10.0, 0.0), Vec3::new(0.0, 1.0, -0.3));
+    let texture = <CheckedPattern as Default>::default();
     let object_3 = SceneObject {
         primitive: plane,
         texture,
@@ -128,7 +123,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     let scene: Scene = Scene {
         camera: Box::new(camera),
         lights: vec![Box::new(light)],
-        objects: vec![Box::new(object_1), Box::new(object_2), Box::new(object_3)],
+        objects: vec![Box::new(object_1), Box::new(object_2)],
     };
     let render_options = RenderOptions {
         canvas_width: CANVAS_WIDTH,

@@ -1,6 +1,9 @@
+use std::f64::consts::PI;
+
 pub trait Collision {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
     fn normal_at(&self, point: Vec3) -> Option<Vec3>;
+    fn surface_mapping_at(&self, point: Vec3) -> Option<(f64, f64)>;
 }
 
 #[derive(Debug, Default, Copy, Clone)]
@@ -132,6 +135,10 @@ impl Collision for Plane {
     fn normal_at(&self, _point: Vec3) -> Option<Vec3> {
         Some(self.normal_normalized)
     }
+
+    fn surface_mapping_at(&self, point: Vec3) -> Option<(f64, f64)> {
+        unimplemented!()
+    }
 }
 
 #[derive(Debug)]
@@ -178,6 +185,13 @@ impl Collision for Sphere {
 
     fn normal_at(&self, point: Vec3) -> Option<Vec3> {
         Some(Vec3::between_points(self.center, point).normalize())
+    }
+
+    fn surface_mapping_at(&self, point: Vec3) -> Option<(f64, f64)> {
+        let unit_point = Vec3::between_points(self.center, point).normalize();
+        let u = 0.5 + unit_point.z.atan2(unit_point.x) / (2.0 * PI);
+        let v = 0.5 - unit_point.y.asin() / PI;
+        Some((u, v))
     }
 }
 

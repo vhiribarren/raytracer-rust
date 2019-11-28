@@ -1,6 +1,6 @@
 use crate::lights::LightObject;
 use crate::primitives::{Collision, Ray, Vec3};
-use crate::textures::Texture;
+use crate::textures::{Color, Texture};
 
 pub struct Scene {
     pub camera: Box<dyn RayEmitter>,
@@ -9,19 +9,20 @@ pub struct Scene {
 }
 
 pub trait AnySceneObject {
-    fn texture(&self) -> &Texture;
+    fn color_at(&self, point: Vec3) -> Color;
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
     fn normal_at(&self, point: Vec3) -> Option<Vec3>;
 }
 
-pub struct SceneObject<P: Collision> {
-    pub texture: Texture,
+pub struct SceneObject<T: Texture, P: Collision> {
+    pub texture: T,
     pub primitive: P,
 }
 
-impl<P: Collision> AnySceneObject for SceneObject<P> {
-    fn texture(&self) -> &Texture {
-        &self.texture
+impl<T: Texture, P: Collision> AnySceneObject for SceneObject<T, P> {
+    fn color_at(&self, point: Vec3) -> Color {
+        let (u, v) = self.primitive.surface_mapping_at(point).unwrap();
+        self.texture.color_at(u, v)
     }
 
     fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
