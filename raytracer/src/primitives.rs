@@ -1,4 +1,4 @@
-use crate::vector::Vec3;
+use crate::vector::{Vec3, Mat3};
 use std::f64::consts::PI;
 
 pub trait Collision {
@@ -26,13 +26,20 @@ impl Ray {
 pub struct Plane {
     center: Vec3,
     normal_normalized: Vec3,
+    u_vec: Vec3,
+    v_vec: Vec3,
+    uv_mapping_width: f64,
 }
 
 impl Plane {
     pub fn new(center: Vec3, normal: Vec3) -> Self {
+        let transform = Mat3::transformation_between(Vec3::new(0.0, 1.0, 0.0), normal);
         Plane {
             center,
             normal_normalized: normal.normalize(),
+            u_vec: transform*Vec3::new(1.0, 0.0, 0.0),
+            v_vec: transform*Vec3::new(0.0, 0.0, 1.0),
+            uv_mapping_width: 50.0,
         }
     }
 }
@@ -59,7 +66,9 @@ impl Collision for Plane {
     }
 
     fn surface_mapping_at(&self, point: Vec3) -> Option<(f64, f64)> {
-        unimplemented!()
+        let u = (point.dot_product(self.u_vec) % self.uv_mapping_width) / self.uv_mapping_width;
+        let v = (point.dot_product(self.v_vec) % self.uv_mapping_width) / self.uv_mapping_width;
+        Some((u, v))
     }
 }
 

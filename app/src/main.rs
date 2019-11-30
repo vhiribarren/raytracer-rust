@@ -124,7 +124,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     let scene: Scene = Scene {
         camera: Box::new(camera),
         lights: vec![Box::new(light)],
-        objects: vec![Box::new(object_1), Box::new(object_2)],
+        objects: vec![Box::new(object_1), Box::new(object_2), Box::new(object_3)],
     };
     let render_options = RenderOptions {
         canvas_width: CANVAS_WIDTH,

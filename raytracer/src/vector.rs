@@ -81,17 +81,26 @@ impl std::ops::Mul<Vec3> for f64 {
 pub struct Mat3([[f64; 3]; 3]);
 
 impl Mat3 {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Mat3([[0.0; 3]; 3])
     }
 
     #[rustfmt::skip]
-    fn id() -> Self {
+    pub fn id() -> Self {
         Mat3([
             [1.0, 0.0, 0.0],
             [0.0, 1.0, 0.0],
             [0.0, 0.0, 1.0]
         ])
+    }
+
+    pub fn transformation_between(from: Vec3, to: Vec3) -> Self {
+        // https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
+        //https://gist.github.com/peteristhegreat/3b76d5169d7b9fc1e333
+        let v = from.cross_product(to);
+        let ssc = Mat3([[0.0, -v.z, v.y], [v.z, 0.0, -v.x], [-v.y, v.x, 0.0]]);
+        let r = Mat3::id() + ssc + ((1.0 - from.dot_product(to)) / (v.norm().powi(2))) * ssc * ssc;
+        return r;
     }
 }
 
