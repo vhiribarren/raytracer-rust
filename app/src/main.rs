@@ -10,7 +10,9 @@ use std::time::Duration;
 
 use crate::utils::result::RaytracingResult;
 use log::info;
+use raytracer::cameras::PerspectiveCamera;
 use raytracer::textures::CheckedPattern;
+use std::f32::consts::PI;
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 576;
@@ -83,12 +85,21 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     use raytracer::textures::{Color, PlainColorTexture};
     use raytracer::vector::Vec3;
 
-    //let camera: PerspectiveCamera = Default::default();
-    let camera: OrthogonalCamera = OrthogonalCamera {
-        width: 16.0 * 3.0,
-        height: 9.0 * 3.0,
-        ..Default::default()
-    };
+    // let camera: PerspectiveCamera = Default::default();
+    let camera_orth = OrthogonalCamera::new(
+        Vec3::new(0.0, 2.0, -10.0),
+        Vec3::new(0.0, 0.0, 0.0),
+        16.0 * 3.0,
+        9.0 * 3.0,
+    );
+    let camera_perspective = PerspectiveCamera::new(
+        Vec3::new(0.0, 2.0, -10.0),
+        Vec3::new(0.0, 0.0, 0.0),
+        16.0 * 3.0,
+        9.0 * 3.0,
+        (PI / 32.0) as f64,
+    );
+    let camera = camera_perspective;
     let light = LightPoint {
         source: Vec3::new(10.0, 100.0, -50.0),
     };
@@ -114,7 +125,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     };
     let texture = PlainColorTexture { color };
     let object_2 = SceneObject { primitive, texture };
-    let plane = Plane::new(Vec3::new(0.0, -10.0, 0.0), Vec3::new(0.0, 1.0, -0.3));
+    let plane = Plane::new(Vec3::new(0.0, -10.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
     let texture = <CheckedPattern as Default>::default();
     let object_3 = SceneObject {
         primitive: plane,

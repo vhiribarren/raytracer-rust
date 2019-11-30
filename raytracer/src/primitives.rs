@@ -1,4 +1,4 @@
-use crate::vector::{Vec3, Mat3};
+use crate::vector::{Mat3, Vec3};
 use std::f64::consts::PI;
 
 pub trait Collision {
@@ -37,8 +37,8 @@ impl Plane {
         Plane {
             center,
             normal_normalized: normal.normalize(),
-            u_vec: transform*Vec3::new(1.0, 0.0, 0.0),
-            v_vec: transform*Vec3::new(0.0, 0.0, 1.0),
+            u_vec: transform * Vec3::new(1.0, 0.0, 0.0),
+            v_vec: transform * Vec3::new(0.0, 0.0, 1.0),
             uv_mapping_width: 50.0,
         }
     }

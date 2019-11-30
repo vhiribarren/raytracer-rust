@@ -1,6 +1,6 @@
 use crate::primitives::Ray;
 use crate::scene::RayEmitter;
-use crate::vector::Vec3;
+use crate::vector::{Mat3, Vec3};
 
 #[derive(Debug)]
 pub struct PerspectiveCamera {
@@ -11,11 +11,28 @@ pub struct PerspectiveCamera {
     pub height: f64,
 }
 
+impl PerspectiveCamera {
+    pub fn new(screen_center: Vec3, look_at: Vec3, width: f64, height: f64, angle: f64) -> Self {
+        let eye_direction = Vec3::between_points(screen_center, look_at).normalize();
+        let transform = Mat3::transformation_between(Vec3::new(0.0, 0.0, 1.0), eye_direction);
+        let up = transform * Vec3::new(0.0, 1.0, 0.0);
+        let distance_eye_center = height / (2.0 * angle.tan());
+        let eye = screen_center - distance_eye_center * eye_direction;
+        PerspectiveCamera {
+            screen_center,
+            up,
+            eye,
+            width,
+            height,
+        }
+    }
+}
+
 impl Default for PerspectiveCamera {
     fn default() -> Self {
         PerspectiveCamera {
-            eye: Vec3::new(0.0, 0.0, -100.0),
-            screen_center: Vec3::new(0.0, 0.0, -10.0),
+            eye: Vec3::new(0.0, 0.0, -150.0),
+            screen_center: Vec3::new(0.0, 0.0, -100.0),
             up: Vec3::new(0.0, 1.0, 0.0),
             width: 16.0,
             height: 9.0,
@@ -59,6 +76,21 @@ pub struct OrthogonalCamera {
     pub eye_direction: Vec3,
     pub width: f64,
     pub height: f64,
+}
+
+impl OrthogonalCamera {
+    pub fn new(eye: Vec3, look_at: Vec3, width: f64, height: f64) -> Self {
+        let eye_direction = Vec3::between_points(eye, look_at).normalize();
+        let transform = Mat3::transformation_between(Vec3::new(0.0, 0.0, 1.0), eye_direction);
+        let up = transform * Vec3::new(0.0, 1.0, 0.0);
+        OrthogonalCamera {
+            screen_center: eye,
+            up,
+            eye_direction,
+            width,
+            height,
+        }
+    }
 }
 
 impl Default for OrthogonalCamera {
