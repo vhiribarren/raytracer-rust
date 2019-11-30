@@ -1,7 +1,8 @@
-use crate::primitives::{Ray, Vec3};
+use crate::primitives::Ray;
 use crate::scene::{AnySceneObject, Scene};
 use crate::textures::Color;
 use crate::utils;
+use crate::vector::Vec3;
 use log::debug;
 use std::f64;
 

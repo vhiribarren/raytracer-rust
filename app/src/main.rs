@@ -77,10 +77,11 @@ pub fn main() -> RaytracingResult {
 fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     use raytracer::cameras::OrthogonalCamera;
     use raytracer::lights::LightPoint;
-    use raytracer::primitives::{Plane, Sphere, Vec3};
+    use raytracer::primitives::{Plane, Sphere};
     use raytracer::renderer::{render, RenderOptions};
     use raytracer::scene::{Scene, SceneObject};
     use raytracer::textures::{Color, PlainColorTexture};
+    use raytracer::vector::Vec3;
 
     //let camera: PerspectiveCamera = Default::default();
     let camera: OrthogonalCamera = OrthogonalCamera {

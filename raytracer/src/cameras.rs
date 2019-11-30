@@ -1,5 +1,6 @@
-use crate::primitives::{Ray, Vec3};
+use crate::primitives::Ray;
 use crate::scene::RayEmitter;
+use crate::vector::Vec3;
 
 #[derive(Debug)]
 pub struct PerspectiveCamera {

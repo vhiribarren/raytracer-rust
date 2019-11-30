@@ -1,4 +1,4 @@
-use crate::primitives::Vec3;
+use crate::vector::Vec3;
 
 pub trait LightObject {
     fn source(&self) -> Vec3;

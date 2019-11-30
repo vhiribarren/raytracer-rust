@@ -1,6 +1,7 @@
 use crate::lights::LightObject;
-use crate::primitives::{Collision, Ray, Vec3};
+use crate::primitives::{Collision, Ray};
 use crate::textures::{Color, Texture};
+use crate::vector::Vec3;
 
 pub struct Scene {
     pub camera: Box<dyn RayEmitter>,
