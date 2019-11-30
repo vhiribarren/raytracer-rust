@@ -99,7 +99,11 @@ impl std::ops::Add for Mat3 {
     type Output = Mat3;
 
     fn add(self, rhs: Self) -> Self::Output {
-        unimplemented!()
+        let mut result = Mat3::new();
+        let mut operands_iter = self.0.iter().flatten().zip(rhs.0.iter().flatten());
+        let mut zipped_iter = result.0.iter_mut().flatten().zip(operands_iter);
+        zipped_iter.for_each(|(res, (&left, &right))| *res = left + right);
+        return result;
     }
 }
 
@@ -107,7 +111,10 @@ impl std::ops::Mul<Mat3> for f64 {
     type Output = Mat3;
 
     fn mul(self, rhs: Mat3) -> Self::Output {
-        unimplemented!()
+        let mut result = Mat3::new();
+        let mut zipped_iter = result.0.iter_mut().flatten().zip(rhs.0.iter().flatten());
+        zipped_iter.for_each(|(res, &orig)| *res = self * orig);
+        return result;
     }
 }
 
@@ -115,7 +122,12 @@ impl std::ops::Mul<Vec3> for Mat3 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Self::Output {
-        unimplemented!()
+        let mat = self.0;
+        Vec3::new(
+            rhs.x * mat[0][0] + rhs.y * mat[0][1] + rhs.z * mat[0][2],
+            rhs.x * mat[1][0] + rhs.y * mat[1][1] + rhs.z * mat[1][2],
+            rhs.x * mat[2][0] + rhs.y * mat[2][1] + rhs.z * mat[2][2],
+        )
     }
 }
 
@@ -123,7 +135,25 @@ impl std::ops::Mul<Mat3> for Mat3 {
     type Output = Mat3;
 
     fn mul(self, rhs: Mat3) -> Self::Output {
-        unimplemented!()
+        let mat = self.0;
+        let rhs = rhs.0;
+        Mat3([
+            [
+                mat[0][0] * rhs[0][0] + mat[0][1] * rhs[1][0] + mat[0][2] * rhs[2][0],
+                mat[0][0] * rhs[0][1] + mat[0][1] * rhs[1][1] + mat[0][2] * rhs[2][1],
+                mat[0][0] * rhs[0][2] + mat[0][1] * rhs[1][2] + mat[0][2] * rhs[2][2],
+            ],
+            [
+                mat[1][0] * rhs[0][0] + mat[1][1] * rhs[1][0] + mat[1][2] * rhs[2][0],
+                mat[1][0] * rhs[0][1] + mat[1][1] * rhs[1][1] + mat[1][2] * rhs[2][1],
+                mat[1][0] * rhs[0][2] + mat[1][1] * rhs[1][2] + mat[1][2] * rhs[2][2],
+            ],
+            [
+                mat[2][0] * rhs[0][0] + mat[2][1] * rhs[1][0] + mat[2][2] * rhs[2][0],
+                mat[2][0] * rhs[0][1] + mat[2][1] * rhs[1][1] + mat[2][2] * rhs[2][1],
+                mat[2][0] * rhs[0][2] + mat[2][1] * rhs[1][2] + mat[2][2] * rhs[2][2],
+            ],
+        ])
     }
 }
 
@@ -213,7 +243,7 @@ mod tests {
             ]);
                 let target =  Mat3([
                 [15.0, 18.0, 21.0],
-                [46.0, -9.0, -12.0],
+                [-6.0, -9.0, -12.0],
                 [-540.0, -610.0, -680.0]
             ]);
             let result = mat_1 * mat_2;
