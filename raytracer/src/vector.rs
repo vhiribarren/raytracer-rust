@@ -10,6 +10,14 @@ impl Vec3 {
         Vec3 { x, y, z }
     }
 
+    pub fn zero() -> Self {
+        Vec3::new(0.0, 0.0, 0.0)
+    }
+
+    pub fn is_null(self) -> bool {
+        self == Vec3::zero()
+    }
+
     pub fn between_points(source: Vec3, destination: Vec3) -> Vec3 {
         destination - source
     }
@@ -41,6 +49,18 @@ impl Vec3 {
 
     pub fn distance(&self, other: Vec3) -> f64 {
         (other - *self).norm()
+    }
+}
+
+impl std::cmp::PartialEq for Vec3 {
+    fn eq(&self, other: &Self) -> bool {
+        use std::f64::EPSILON;;
+        self.x <= other.x + EPSILON
+            && self.x >= other.x - EPSILON
+            && self.y <= other.y + EPSILON
+            && self.y >= other.y - EPSILON
+            && self.z <= other.z + EPSILON
+            && self.z >= other.z - EPSILON
     }
 }
 
@@ -82,7 +102,7 @@ pub struct Mat3([[f64; 3]; 3]);
 
 impl Mat3 {
     pub fn new() -> Self {
-        Mat3([[0.0; 3]; 3])
+        Self::zero()
     }
 
     #[rustfmt::skip]
@@ -94,13 +114,33 @@ impl Mat3 {
         ])
     }
 
+    #[rustfmt::skip]
+    pub fn zero() -> Self {
+        Mat3([[0.0; 3]; 3])
+    }
+
+    pub fn is_null(self) -> bool {
+        self == Mat3::zero()
+    }
+
     pub fn transformation_between(from: Vec3, to: Vec3) -> Self {
         // https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
-        //https://gist.github.com/peteristhegreat/3b76d5169d7b9fc1e333
+        // https://gist.github.com/peteristhegreat/3b76d5169d7b9fc1e333
         let v = from.cross_product(to);
+        if v.is_null() {
+            return Mat3::id();
+        }
         let ssc = Mat3([[0.0, -v.z, v.y], [v.z, 0.0, -v.x], [-v.y, v.x, 0.0]]);
         let r = Mat3::id() + ssc + ((1.0 - from.dot_product(to)) / (v.norm().powi(2))) * ssc * ssc;
         return r;
+    }
+}
+
+impl std::cmp::PartialEq for Mat3 {
+    fn eq(&self, other: &Self) -> bool {
+        use std::f64::EPSILON;;
+        let mut zipped_iter = self.0.iter().flatten().zip(other.0.iter().flatten());
+        zipped_iter.all(|(&left, &right)| left <= right + EPSILON && left >= right - EPSILON)
     }
 }
 
@@ -168,26 +208,10 @@ impl std::ops::Mul<Mat3> for Mat3 {
 
 #[cfg(test)]
 mod tests {
+
     #[rustfmt::skip]
     mod mat {
         use super::super::*;
-
-        impl std::cmp::PartialEq for Mat3 {
-            fn eq(&self, other: &Self) -> bool {
-                use std::f64::EPSILON;;
-                let mut zipped_iter = self.0.iter().flatten().zip(other.0.iter().flatten());
-                zipped_iter.all(|(&left, &right)| left <= right + EPSILON && left >= right - EPSILON)
-            }
-        }
-
-        impl std::cmp::PartialEq for Vec3 {
-            fn eq(&self, other: &Self) -> bool {
-                use std::f64::EPSILON;;
-                self.x <= other.x + EPSILON && self.x >= other.x - EPSILON
-                && self.y <= other.y + EPSILON && self.y >= other.y - EPSILON
-                && self.z <= other.z + EPSILON && self.z >= other.z - EPSILON
-            }
-        }
 
         #[test]
         fn new_mat3_is_zeroed() {
@@ -300,6 +324,12 @@ mod tests {
             let vec = Vec3::new(-10.0, 0.0, 22.0);
             let result = Mat3::id() * vec;
             assert_eq!(vec, result);
+        }
+
+        #[test]
+        fn same_direction_transform_is_id() {
+            let vec = Vec3::new(1.1, 2.2, 2.2);
+            assert_eq!(Mat3::id(), Mat3::transformation_between(vec, vec) );
         }
     }
 }
