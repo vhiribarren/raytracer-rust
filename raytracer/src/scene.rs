@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 use crate::lights::LightObject;
-use crate::primitives::{Collision, Ray};
+use crate::primitives::{Ray, Shape};
 use crate::textures::{Color, Texture};
 use crate::vector::Vec3;
 
@@ -39,12 +39,12 @@ pub trait AnySceneObject {
     fn normal_at(&self, point: Vec3) -> Option<Vec3>;
 }
 
-pub struct SceneObject<T: Texture, P: Collision> {
+pub struct SceneObject<T: Texture, P: Shape> {
     pub texture: T,
     pub primitive: P,
 }
 
-impl<T: Texture, P: Collision> AnySceneObject for SceneObject<T, P> {
+impl<T: Texture, P: Shape> AnySceneObject for SceneObject<T, P> {
     fn color_at(&self, point: Vec3) -> Color {
         let (u, v) = self.primitive.surface_mapping_at(point).unwrap();
         self.texture.color_at(u, v)

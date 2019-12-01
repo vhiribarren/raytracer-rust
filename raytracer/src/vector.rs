@@ -121,7 +121,7 @@ impl std::ops::Mul<Vec3> for f64 {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct Mat3([[f64; 3]; 3]);
 
 impl Mat3 {
@@ -155,16 +155,18 @@ impl Mat3 {
             return Mat3::id();
         }
         let ssc = Mat3([[0.0, -v.z, v.y], [v.z, 0.0, -v.x], [-v.y, v.x, 0.0]]);
-        let r = Mat3::id() + ssc + ((1.0 - from.dot_product(to)) / (v.norm().powi(2))) * ssc * ssc;
-        return r;
+        Mat3::id() + ssc + ((1.0 - from.dot_product(to)) / (v.norm().powi(2))) * ssc * ssc
     }
 }
 
 impl std::cmp::PartialEq for Mat3 {
     fn eq(&self, other: &Self) -> bool {
         use std::f64::EPSILON;;
-        let mut zipped_iter = self.0.iter().flatten().zip(other.0.iter().flatten());
-        zipped_iter.all(|(&left, &right)| left <= right + EPSILON && left >= right - EPSILON)
+        self.0
+            .iter()
+            .flatten()
+            .zip(other.0.iter().flatten())
+            .all(|(&left, &right)| left <= right + EPSILON && left >= right - EPSILON)
     }
 }
 
@@ -173,10 +175,14 @@ impl std::ops::Add for Mat3 {
 
     fn add(self, rhs: Self) -> Self::Output {
         let mut result = Mat3::new();
-        let mut operands_iter = self.0.iter().flatten().zip(rhs.0.iter().flatten());
-        let mut zipped_iter = result.0.iter_mut().flatten().zip(operands_iter);
-        zipped_iter.for_each(|(res, (&left, &right))| *res = left + right);
-        return result;
+        let operands_iter = self.0.iter().flatten().zip(rhs.0.iter().flatten());
+        result
+            .0
+            .iter_mut()
+            .flatten()
+            .zip(operands_iter)
+            .for_each(|(res, (&left, &right))| *res = left + right);
+        result
     }
 }
 
@@ -185,9 +191,13 @@ impl std::ops::Mul<Mat3> for f64 {
 
     fn mul(self, rhs: Mat3) -> Self::Output {
         let mut result = Mat3::new();
-        let mut zipped_iter = result.0.iter_mut().flatten().zip(rhs.0.iter().flatten());
-        zipped_iter.for_each(|(res, &orig)| *res = self * orig);
-        return result;
+        result
+            .0
+            .iter_mut()
+            .flatten()
+            .zip(rhs.0.iter().flatten())
+            .for_each(|(res, &orig)| *res = self * orig);
+        result
     }
 }
 

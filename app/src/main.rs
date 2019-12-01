@@ -103,7 +103,7 @@ pub fn main() -> RaytracingResult {
 fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     use raytracer::cameras::OrthogonalCamera;
     use raytracer::lights::LightPoint;
-    use raytracer::primitives::{Plane, Sphere};
+    use raytracer::primitives::{InfinitePlan, Sphere};
     use raytracer::renderer::{render, RenderOptions};
     use raytracer::scene::{Scene, SceneObject};
     use raytracer::textures::{Color, PlainColorTexture};
@@ -155,7 +155,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     };
     let texture = PlainColorTexture { color };
     let object_3 = SceneObject { primitive, texture };
-    let plane = Plane::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
+    let plane = InfinitePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
     let texture = <CheckedPattern as Default>::default();
     let object_4 = SceneObject {
         primitive: plane,

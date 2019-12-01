@@ -25,7 +25,7 @@ SOFTWARE.
 use crate::vector::{Mat3, Vec3};
 use std::f64::consts::PI;
 
-pub trait Collision {
+pub trait Shape {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
     fn normal_at(&self, point: Vec3) -> Option<Vec3>;
     fn surface_mapping_at(&self, point: Vec3) -> Option<(f64, f64)>;
@@ -47,7 +47,7 @@ impl Ray {
 }
 
 #[derive(Debug)]
-pub struct Plane {
+pub struct InfinitePlan {
     center: Vec3,
     normal_normalized: Vec3,
     u_vec: Vec3,
@@ -55,10 +55,10 @@ pub struct Plane {
     uv_mapping_width: f64,
 }
 
-impl Plane {
+impl InfinitePlan {
     pub fn new(center: Vec3, normal: Vec3) -> Self {
         let transform = Mat3::transformation_between(Vec3::new(0.0, 1.0, 0.0), normal);
-        Plane {
+        InfinitePlan {
             center,
             normal_normalized: normal.normalize(),
             u_vec: transform * Vec3::new(1.0, 0.0, 0.0),
@@ -68,7 +68,7 @@ impl Plane {
     }
 }
 
-impl Collision for Plane {
+impl Shape for InfinitePlan {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
         let denom = self
             .normal_normalized
@@ -115,7 +115,7 @@ impl Default for Sphere {
     }
 }
 
-impl Collision for Sphere {
+impl Shape for Sphere {
     #[allow(non_snake_case)]
     fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
         // http://mathinfo.univ-reims.fr/image/siRendu/Documents/2004-Chap6-RayTracing.pdf
