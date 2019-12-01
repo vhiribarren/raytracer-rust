@@ -111,36 +111,31 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
 
     // let camera: PerspectiveCamera = Default::default();
     let camera_orth = OrthogonalCamera::new(
-        Vec3::new(0.0, 2.0, -10.0),
-        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 10.0, -15.0),
+        Vec3::new(0.0, 0.0, 15.0),
         16.0 * 3.0,
         9.0 * 3.0,
     );
     let camera_perspective = PerspectiveCamera::new(
         Vec3::new(0.0, 2.0, -10.0),
-        Vec3::new(0.0, 0.0, 0.0),
-        16.0 * 3.0,
-        9.0 * 3.0,
-        (PI / 4.0) as f64,
+        Vec3::new(0.0, 0.0, 15.0),
+        16.0 * 2.0,
+        9.0 * 2.0,
+        (PI / 10.0) as f64,
     );
     let camera = camera_perspective;
     let light = LightPoint {
-        source: Vec3::new(10.0, 100.0, -50.0),
+        source: Vec3::new(50.0, 100.0, -50.0),
     };
     let primitive: Sphere = Sphere {
-        center: Vec3::new(5.0, 0.0, 0.0),
-        radius: 8.0,
-    };
-    let color = Color {
-        red: 0.0,
-        green: 0.0,
-        blue: 1.0,
+        center: Vec3::new(0.0, 0.0, 0.0),
+        radius: 5.0,
     };
     let texture = <CheckedPattern as Default>::default();
     let object_1 = SceneObject { primitive, texture };
     let primitive: Sphere = Sphere {
-        center: Vec3::new(-10.0, 0.0, 10.0),
-        radius: 10.0,
+        center: Vec3::new(-10.0, 3.0, 10.0),
+        radius: 8.0,
     };
     let color = Color {
         red: 1.0,
@@ -149,9 +144,20 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     };
     let texture = PlainColorTexture { color };
     let object_2 = SceneObject { primitive, texture };
-    let plane = Plane::new(Vec3::new(0.0, -10.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
+    let primitive: Sphere = Sphere {
+        center: Vec3::new(10.0, 3.0, 10.0),
+        radius: 8.0,
+    };
+    let color = Color {
+        red: 0.0,
+        green: 1.0,
+        blue: 0.0,
+    };
+    let texture = PlainColorTexture { color };
+    let object_3 = SceneObject { primitive, texture };
+    let plane = Plane::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
     let texture = <CheckedPattern as Default>::default();
-    let object_3 = SceneObject {
+    let object_4 = SceneObject {
         primitive: plane,
         texture,
     };
@@ -159,7 +165,12 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     let scene: Scene = Scene {
         camera: Box::new(camera),
         lights: vec![Box::new(light)],
-        objects: vec![Box::new(object_1), Box::new(object_2), Box::new(object_3)],
+        objects: vec![
+            Box::new(object_1),
+            Box::new(object_2),
+            Box::new(object_3),
+            Box::new(object_4),
+        ],
     };
     let render_options = RenderOptions {
         canvas_width: CANVAS_WIDTH,
