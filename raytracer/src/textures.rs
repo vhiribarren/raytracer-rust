@@ -71,6 +71,15 @@ impl Default for CheckedPattern {
 
 impl Texture for CheckedPattern {
     fn color_at(&self, u: f64, v: f64) -> Color {
+        assert!(u >= -std::f64::EPSILON && u <= 1.0 + std::f64::EPSILON);
+        assert!(v >= -std::f64::EPSILON && v <= 1.0 + std::f64::EPSILON);
+        if (u * self.count) as u64 == 0 && (v * self.count) as u64 == 0 {
+            return Color {
+                red: 1.0,
+                green: 0.0,
+                blue: 1.0,
+            };
+        }
         let selection = ((u * self.count).floor() + (v * self.count).floor()) as u64 % 2;
         match selection {
             0 => self.primary_color.clone(),

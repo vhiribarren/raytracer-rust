@@ -79,6 +79,8 @@ pub fn render(
             Some(val) => val,
             _ => continue,
         };
+        let collision_point = collision_point;
+        let shortest_distance = shortest_distance;
 
         // After having found the nearest object, we launch a ray to the light
         let light_ray = Ray::ray_from_to(collision_point, light.source());

@@ -90,11 +90,86 @@ impl Shape for InfinitePlan {
     }
 
     fn surface_mapping_at(&self, point: Vec3) -> Option<(f64, f64)> {
-        let u = (point.dot_product(self.u_vec) % self.uv_mapping_width) / self.uv_mapping_width;
-        let v = (point.dot_product(self.v_vec) % self.uv_mapping_width) / self.uv_mapping_width;
+        let positive_space = |x| if x >= 0.0 { x } else { 1.0 + x };
+        let plane_coords = Vec3::between_points(self.center, point);
+        let u =
+            (plane_coords.dot_product(self.u_vec) % self.uv_mapping_width) / self.uv_mapping_width;
+        let u = positive_space(u);
+        let v =
+            (plane_coords.dot_product(self.v_vec) % self.uv_mapping_width) / self.uv_mapping_width;
+        let v = positive_space(v);
         Some((u, v))
     }
 }
+
+#[derive(Debug)]
+pub struct SquarePlan {
+    center: Vec3,
+    normal_normalized: Vec3,
+    u_vec: Vec3,
+    v_vec: Vec3,
+    width: f64,
+}
+
+impl SquarePlan {
+    pub fn new(center: Vec3, normal: Vec3, width: f64) -> Self {
+        let transform = Mat3::transformation_between(Vec3::new(0.0, 1.0, 0.0), normal);
+        SquarePlan {
+            center,
+            normal_normalized: normal.normalize(),
+            u_vec: transform * Vec3::new(1.0, 0.0, 0.0),
+            v_vec: transform * Vec3::new(0.0, 0.0, 1.0),
+            width,
+        }
+    }
+
+    fn to_plan_coords(&self, point: Vec3) -> Option<(f64, f64)> {
+        // TODO return None if point not in plan
+        let local_coords = Vec3::between_points(self.center, point);
+        let local_x = local_coords.dot_product(self.u_vec);
+        let local_y = local_coords.dot_product(self.v_vec);
+        let radius = self.width/2.0;
+        if local_x < - radius || local_x > radius || local_y < -radius || local_y > radius {
+            None
+        }
+        else {
+            Some((local_x, local_y))
+        }
+    }
+}
+
+impl Shape for SquarePlan {
+    fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
+        let denom = self
+            .normal_normalized
+            .dot_product(ray.direction.normalize());
+        if denom.abs() < 1e-6 {
+            return None;
+        }
+        let p_l = self.center - ray.source;
+        let t = p_l.dot_product(self.normal_normalized) / denom;
+        if t > 0.0 {
+            let collision_point = ray.source + t * ray.direction;
+            if self.to_plan_coords(collision_point).is_some() {
+                return Some(collision_point);
+            }
+        }
+        None
+    }
+
+    fn normal_at(&self, _point: Vec3) -> Option<Vec3> {
+        Some(self.normal_normalized)
+    }
+
+    fn surface_mapping_at(&self, point: Vec3) -> Option<(f64, f64)> {
+        let (local_x, local_y) = self.to_plan_coords(point).unwrap();
+        let radius = self.width/2.0;
+        let u = (local_x + radius) / self.width;
+        let v = (local_y + radius) / self.width;
+        Some((u, v))
+    }
+}
+
 
 #[derive(Debug)]
 pub struct Sphere {
