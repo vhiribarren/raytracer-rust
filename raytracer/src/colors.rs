@@ -22,18 +22,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use wasm_bindgen::__rt::core::ops::Add;
+use crate::utils::unit_interval_clamp;
+use crate::UnitInterval;
 
 #[derive(Clone, Debug, Default)]
 pub struct Color {
-    pub red: f64,
-    pub green: f64,
-    pub blue: f64,
+    red: UnitInterval,
+    green: UnitInterval,
+    blue: UnitInterval,
 }
 
 impl Color {
-    fn new(red: f64, green: f64, blue: f64) -> Self {
-        Color { red, green, blue }
+    pub fn new(red: UnitInterval, green: UnitInterval, blue: UnitInterval) -> Self {
+        Color {
+            red: unit_interval_clamp(red),
+            green: unit_interval_clamp(green),
+            blue: unit_interval_clamp(blue),
+        }
+    }
+
+    pub fn red(&self) -> UnitInterval {
+        self.red
+    }
+
+    pub fn blue(&self) -> UnitInterval {
+        self.blue
+    }
+
+    pub fn green(&self) -> UnitInterval {
+        self.green
     }
 
     pub const WHITE: Self = Color {
@@ -73,18 +90,18 @@ impl std::ops::Add for Color {
 
     fn add(self, rhs: Self) -> Self::Output {
         Color::new(
-            self.red + rhs.red,
-            self.green + rhs.green,
-            self.blue + rhs.blue,
+            unit_interval_clamp(self.red + rhs.red),
+            unit_interval_clamp(self.green + rhs.green),
+            unit_interval_clamp(self.blue + rhs.blue),
         )
     }
 }
 
 impl std::ops::AddAssign for Color {
     fn add_assign(&mut self, rhs: Self) {
-        self.red += rhs.red;
-        self.green += rhs.green;
-        self.blue += rhs.blue;
+        self.red = unit_interval_clamp(self.red + rhs.red);
+        self.green = unit_interval_clamp(self.green + rhs.green);
+        self.blue = unit_interval_clamp(self.blue + rhs.blue);
     }
 }
 
@@ -100,50 +117,50 @@ impl std::ops::Mul for Color {
     }
 }
 
-impl std::ops::Mul<f64> for &Color {
+impl std::ops::Mul<UnitInterval> for &Color {
     type Output = Color;
 
-    fn mul(self, rhs: f64) -> Self::Output {
+    fn mul(self, rhs: UnitInterval) -> Self::Output {
         Color {
-            red: rhs * self.red,
-            green: rhs * self.green,
-            blue: rhs * self.blue,
+            red: unit_interval_clamp(rhs * self.red),
+            green: unit_interval_clamp(rhs * self.green),
+            blue: unit_interval_clamp(rhs * self.blue),
         }
     }
 }
 
-impl std::ops::Mul<f64> for Color {
+impl std::ops::Mul<UnitInterval> for Color {
     type Output = Color;
 
-    fn mul(self, rhs: f64) -> Self::Output {
+    fn mul(self, rhs: UnitInterval) -> Self::Output {
         Color {
-            red: rhs * self.red,
-            green: rhs * self.green,
-            blue: rhs * self.blue,
+            red: unit_interval_clamp(rhs * self.red),
+            green: unit_interval_clamp(rhs * self.green),
+            blue: unit_interval_clamp(rhs * self.blue),
         }
     }
 }
 
-impl std::ops::Mul<Color> for f64 {
+impl std::ops::Mul<Color> for UnitInterval {
     type Output = Color;
 
     fn mul(self, rhs: Color) -> Self::Output {
         Color {
-            red: self * rhs.red,
-            green: self * rhs.green,
-            blue: self * rhs.blue,
+            red: unit_interval_clamp(self * rhs.red),
+            green: unit_interval_clamp(self * rhs.green),
+            blue: unit_interval_clamp(self * rhs.blue),
         }
     }
 }
 
-impl std::ops::Mul<&Color> for f64 {
+impl std::ops::Mul<&Color> for UnitInterval {
     type Output = Color;
 
     fn mul(self, rhs: &Color) -> Self::Output {
         Color {
-            red: self * rhs.red,
-            green: self * rhs.green,
-            blue: self * rhs.blue,
+            red: unit_interval_clamp(self * rhs.red),
+            green: unit_interval_clamp(self * rhs.green),
+            blue: unit_interval_clamp(self * rhs.blue),
         }
     }
 }

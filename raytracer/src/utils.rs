@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::UnitInterval;
+
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
     // `set_panic_hook` function at least once during initialization, and then
@@ -35,4 +37,12 @@ pub fn set_panic_hook() {
 
 pub(crate) fn ref_equals<T>(a1: &T, a2: &T) -> bool {
     a1 as *const _ == a2 as *const _
+}
+
+pub fn unit_interval_clamp(val: f64) -> UnitInterval {
+    match val {
+        x if x < 0.0 => 0.0,
+        x if x > 1.0 => 1.0,
+        x => x,
+    }
 }

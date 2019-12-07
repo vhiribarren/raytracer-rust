@@ -25,13 +25,10 @@ SOFTWARE.
 use crate::colors::Color;
 use crate::primitives::Ray;
 use crate::scene::{AnySceneObject, Scene};
-use crate::utils;
 use crate::vector::Vec3;
+use crate::{utils, UnitInterval};
 use log::debug;
 use std::f64;
-
-/// For value between 0 and 1, inclusive
-type UnitInterval = f64;
 
 pub trait DrawCanvas {
     fn draw(&mut self, x: u32, y: u32, color: &Color) -> Result<(), String>;
@@ -54,9 +51,7 @@ pub fn render(
     }
     let camera = &scene.camera;
     // We scan the pixels of the canvas
-    for (x, y, ray) in
-        camera.generate_rays(options.canvas_width, options.canvas_height)
-    {
+    for (x, y, ray) in camera.generate_rays(options.canvas_width, options.canvas_height) {
         let mut shortest_distance: f64 = std::f64::MAX;
         let mut nearest_object_opt: Option<&Box<dyn AnySceneObject>> = None;
         let mut collision_point: Vec3 = Default::default();
@@ -85,7 +80,8 @@ pub fn render(
         'light_loop: for current_light in &scene.lights {
             let light_ray = Ray::ray_from_to(collision_point, current_light.source());
             let light_direction = light_ray.direction;
-            let light_distance = Vec3::between_points(collision_point, current_light.source()).norm();
+            let light_distance =
+                Vec3::between_points(collision_point, current_light.source()).norm();
             // Check of object obstruction between light and collision point
             for candidate_object in &scene.objects {
                 if utils::ref_equals(nearest_object, candidate_object) {
@@ -109,11 +105,7 @@ pub fn render(
             total_color += intensity * &(light_color * nearest_object.color_at(collision_point));
         }
 
-        canvas.draw(
-            x,
-            options.canvas_height - y,
-            &(total_color),
-        )?;
+        canvas.draw(x, options.canvas_height - y, &(total_color))?;
     }
     Ok(())
 }

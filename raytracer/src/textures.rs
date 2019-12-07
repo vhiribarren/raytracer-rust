@@ -47,16 +47,8 @@ pub struct CheckedPattern {
 impl Default for CheckedPattern {
     fn default() -> Self {
         CheckedPattern {
-            primary_color: Color {
-                red: 0.95,
-                green: 0.95,
-                blue: 0.95,
-            },
-            secondary_color: Color {
-                red: 0.05,
-                green: 0.05,
-                blue: 0.05,
-            },
+            primary_color: Color::new(0.95, 0.95, 0.95),
+            secondary_color: Color::new(0.05, 0.05, 0.05),
             count: 10.0,
         }
     }

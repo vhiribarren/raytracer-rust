@@ -62,3 +62,6 @@ pub fn wasm_init() -> Result<(), JsValue> {
     utils::set_panic_hook();
     Ok(())
 }
+
+/// For value between 0 and 1, inclusive
+pub type UnitInterval = f64;

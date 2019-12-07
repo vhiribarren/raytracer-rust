@@ -24,11 +24,12 @@ SOFTWARE.
 
 use crate::vector::{Mat3, Vec3};
 use std::f64::consts::PI;
+use crate::UnitInterval;
 
 pub trait Shape {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
     fn normal_at(&self, point: Vec3) -> Option<Vec3>;
-    fn surface_mapping_at(&self, point: Vec3) -> Option<(f64, f64)>;
+    fn surface_mapping_at(&self, point: Vec3) -> Option<(UnitInterval, UnitInterval)>;
 }
 
 #[derive(Debug)]
@@ -89,7 +90,7 @@ impl Shape for InfinitePlan {
         Some(self.normal_normalized)
     }
 
-    fn surface_mapping_at(&self, point: Vec3) -> Option<(f64, f64)> {
+    fn surface_mapping_at(&self, point: Vec3) -> Option<(UnitInterval, UnitInterval)> {
         let positive_space = |x| if x >= 0.0 { x } else { 1.0 + x };
         let plane_coords = Vec3::between_points(self.center, point);
         let u =
@@ -160,7 +161,7 @@ impl Shape for SquarePlan {
         Some(self.normal_normalized)
     }
 
-    fn surface_mapping_at(&self, point: Vec3) -> Option<(f64, f64)> {
+    fn surface_mapping_at(&self, point: Vec3) -> Option<(UnitInterval, UnitInterval)> {
         let (local_x, local_y) = self.to_plan_coords(point).unwrap();
         let radius = self.width / 2.0;
         let u = (local_x + radius) / self.width;
@@ -215,7 +216,7 @@ impl Shape for Sphere {
         Some(Vec3::between_points(self.center, point).normalize())
     }
 
-    fn surface_mapping_at(&self, point: Vec3) -> Option<(f64, f64)> {
+    fn surface_mapping_at(&self, point: Vec3) -> Option<(UnitInterval, UnitInterval)> {
         let unit_point = Vec3::between_points(self.center, point).normalize();
         let u = 0.5 + unit_point.z.atan2(unit_point.x) / (2.0 * PI);
         let v = 0.5 - unit_point.y.asin() / PI;

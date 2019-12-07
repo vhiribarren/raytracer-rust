@@ -53,9 +53,9 @@ impl DrawCanvas for WrapperCanvas<'_> {
         color: &raytracer::colors::Color,
     ) -> std::result::Result<(), String> {
         let draw_color = sdl2::pixels::Color::RGB(
-            (255.0 * color.red) as u8,
-            (255.0 * color.green) as u8,
-            (255.0 * color.blue) as u8,
+            (255.0 * color.red()) as u8,
+            (255.0 * color.green()) as u8,
+            (255.0 * color.blue()) as u8,
         );
         self.0.set_draw_color(draw_color);
         self.0
