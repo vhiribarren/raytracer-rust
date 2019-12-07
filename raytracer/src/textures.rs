@@ -22,58 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use std::ops::Mul;
-
-#[derive(Clone, Debug, Default)]
-pub struct Color {
-    pub red: f64,
-    pub green: f64,
-    pub blue: f64,
-}
-
-impl Color {
-    fn new(red: f64, green: f64, blue: f64) -> Self {
-        Color { red, green, blue }
-    }
-
-    pub const WHITE: Self = Color {
-        red: 1.0,
-        green: 1.0,
-        blue: 1.0,
-    };
-    pub const BLACK: Self = Color {
-        red: 0.0,
-        green: 0.0,
-        blue: 0.0,
-    };
-    pub const RED: Self = Color {
-        red: 1.0,
-        green: 0.0,
-        blue: 0.0,
-    };
-    pub const GREEN: Self = Color {
-        red: 0.0,
-        green: 1.0,
-        blue: 0.0,
-    };
-    pub const BLUE: Self = Color {
-        red: 0.0,
-        green: 0.0,
-        blue: 1.0,
-    };
-}
-
-impl Mul for Color {
-    type Output = Color;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Color::new(
-            self.red * rhs.red,
-            self.green * rhs.green,
-            self.blue * rhs.blue,
-        )
-    }
-}
+use crate::colors::Color;
 
 pub trait Texture {
     fn color_at(&self, u: f64, v: f64) -> Color;
@@ -122,54 +71,6 @@ impl Texture for CheckedPattern {
             0 => self.primary_color.clone(),
             1 => self.secondary_color.clone(),
             _ => unreachable!(),
-        }
-    }
-}
-
-impl Mul<f64> for &Color {
-    type Output = Color;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Color {
-            red: rhs * self.red,
-            green: rhs * self.green,
-            blue: rhs * self.blue,
-        }
-    }
-}
-
-impl Mul<f64> for Color {
-    type Output = Color;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Color {
-            red: rhs * self.red,
-            green: rhs * self.green,
-            blue: rhs * self.blue,
-        }
-    }
-}
-
-impl Mul<Color> for f64 {
-    type Output = Color;
-
-    fn mul(self, rhs: Color) -> Self::Output {
-        Color {
-            red: self * rhs.red,
-            green: self * rhs.green,
-            blue: self * rhs.blue,
-        }
-    }
-}
-
-impl Mul<&Color> for f64 {
-    type Output = Color;
-
-    fn mul(self, rhs: &Color) -> Self::Output {
-        Color {
-            red: self * rhs.red,
-            green: self * rhs.green,
-            blue: self * rhs.blue,
         }
     }
 }

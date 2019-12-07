@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::textures::Color;
+use crate::colors::Color;
 use crate::vector::Vec3;
 
 pub trait LightObject {
@@ -39,15 +39,12 @@ impl LightPoint {
     pub fn new(source: Vec3) -> Self {
         LightPoint {
             source,
-            color: Color::WHITE
+            color: Color::WHITE,
         }
     }
 
-    pub fn with_color(source: Vec3, color: Color, intensity_coeff: f64) -> Self {
-        LightPoint {
-            source,
-            color
-        }
+    pub fn with_color(source: Vec3, color: Color) -> Self {
+        LightPoint { source, color }
     }
 }
 

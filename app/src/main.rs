@@ -50,7 +50,7 @@ impl DrawCanvas for WrapperCanvas<'_> {
         &mut self,
         x: u32,
         y: u32,
-        color: &raytracer::textures::Color,
+        color: &raytracer::colors::Color,
     ) -> std::result::Result<(), String> {
         let draw_color = sdl2::pixels::Color::RGB(
             (255.0 * color.red) as u8,
@@ -102,11 +102,12 @@ pub fn main() -> RaytracingResult {
 
 fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     use raytracer::cameras::OrthogonalCamera;
+    use raytracer::colors::Color;
     use raytracer::lights::LightPoint;
     use raytracer::primitives::{InfinitePlan, Sphere, SquarePlan};
     use raytracer::renderer::{render, RenderOptions};
     use raytracer::scene::{Scene, SceneObject};
-    use raytracer::textures::{Color, PlainColorTexture};
+    use raytracer::textures::PlainColorTexture;
     use raytracer::vector::Vec3;
 
     // let camera: PerspectiveCamera = Default::default();

@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::colors::Color;
 use crate::lights::LightObject;
 use crate::primitives::{Ray, Shape};
-use crate::textures::{Color, Texture};
+use crate::textures::Texture;
 use crate::vector::Vec3;
 
 pub struct Scene {

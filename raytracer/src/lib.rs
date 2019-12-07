@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 pub mod cameras;
+pub mod colors;
 pub mod lights;
 pub mod primitives;
 pub mod renderer;

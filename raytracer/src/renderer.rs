@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::colors::Color;
 use crate::primitives::Ray;
 use crate::scene::{AnySceneObject, Scene};
-use crate::textures::Color;
 use crate::utils;
 use crate::vector::Vec3;
 use log::debug;
