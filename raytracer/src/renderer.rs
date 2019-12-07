@@ -104,12 +104,13 @@ pub fn render(
         }
 
         // Try a first simple light model where intensity vary depending on angle with normal
+        let light_color = light.light_color_at(collision_point);
         let intensity: UnitInterval =
             light_intensity(&**nearest_object, light_direction, collision_point)?;
         canvas.draw(
             x,
             options.canvas_height - y,
-            &(intensity * &nearest_object.color_at(collision_point)),
+            &(intensity * &(light_color * nearest_object.color_at(collision_point))),
         )?;
     }
     Ok(())

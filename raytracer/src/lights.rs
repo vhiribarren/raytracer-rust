@@ -22,19 +22,42 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::textures::Color;
 use crate::vector::Vec3;
 
 pub trait LightObject {
     fn source(&self) -> Vec3;
+    fn light_color_at(&self, point: Vec3) -> Color;
 }
 
 pub struct LightPoint {
     pub source: Vec3,
+    pub color: Color,
+}
+
+impl LightPoint {
+    pub fn new(source: Vec3) -> Self {
+        LightPoint {
+            source,
+            color: Color::WHITE
+        }
+    }
+
+    pub fn with_color(source: Vec3, color: Color, intensity_coeff: f64) -> Self {
+        LightPoint {
+            source,
+            color
+        }
+    }
 }
 
 impl LightObject for LightPoint {
     fn source(&self) -> Vec3 {
         self.source
+    }
+
+    fn light_color_at(&self, point: Vec3) -> Color {
+        self.color.clone()
     }
 }
 

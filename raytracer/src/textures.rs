@@ -31,6 +31,50 @@ pub struct Color {
     pub blue: f64,
 }
 
+impl Color {
+    fn new(red: f64, green: f64, blue: f64) -> Self {
+        Color { red, green, blue }
+    }
+
+    pub const WHITE: Self = Color {
+        red: 1.0,
+        green: 1.0,
+        blue: 1.0,
+    };
+    pub const BLACK: Self = Color {
+        red: 0.0,
+        green: 0.0,
+        blue: 0.0,
+    };
+    pub const RED: Self = Color {
+        red: 1.0,
+        green: 0.0,
+        blue: 0.0,
+    };
+    pub const GREEN: Self = Color {
+        red: 0.0,
+        green: 1.0,
+        blue: 0.0,
+    };
+    pub const BLUE: Self = Color {
+        red: 0.0,
+        green: 0.0,
+        blue: 1.0,
+    };
+}
+
+impl Mul for Color {
+    type Output = Color;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Color::new(
+            self.red * rhs.red,
+            self.green * rhs.green,
+            self.blue * rhs.blue,
+        )
+    }
+}
+
 pub trait Texture {
     fn color_at(&self, u: f64, v: f64) -> Color;
 }

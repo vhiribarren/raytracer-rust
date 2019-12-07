@@ -125,9 +125,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     );
     //let camera = camera_orth;
     let camera = camera_perspective;
-    let light = LightPoint {
-        source: Vec3::new(50.0, 100.0, -50.0),
-    };
+    let light = LightPoint::new(Vec3::new(50.0, 100.0, -50.0));
     let primitive: Sphere = Sphere {
         center: Vec3::new(0.0, 0.0, 0.0),
         radius: 5.0,
