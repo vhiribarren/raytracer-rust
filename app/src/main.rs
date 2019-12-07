@@ -126,7 +126,8 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     );
     //let camera = camera_orth;
     let camera = camera_perspective;
-    let light = LightPoint::new(Vec3::new(50.0, 100.0, -50.0));
+    let light_1 = LightPoint::new(Vec3::new(50.0, 100.0, -50.0));
+    let light_2 = LightPoint::with_color(Vec3::new(-50.0, 20.0, -20.0), Color::RED);
     let primitive: Sphere = Sphere {
         center: Vec3::new(0.0, 0.0, 0.0),
         radius: 5.0,
@@ -137,22 +138,14 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
         center: Vec3::new(-10.0, 3.0, 10.0),
         radius: 8.0,
     };
-    let color = Color {
-        red: 1.0,
-        green: 0.0,
-        blue: 0.0,
-    };
+    let color = Color::RED;
     let texture = PlainColorTexture { color };
     let object_2 = SceneObject { primitive, texture };
     let primitive: Sphere = Sphere {
         center: Vec3::new(10.0, 3.0, 10.0),
         radius: 8.0,
     };
-    let color = Color {
-        red: 0.0,
-        green: 1.0,
-        blue: 0.0,
-    };
+    let color = Color::GREEN;
     let texture = PlainColorTexture { color };
     let object_3 = SceneObject { primitive, texture };
     //let plane = SquarePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0), 40.0);
@@ -165,7 +158,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
 
     let scene: Scene = Scene {
         camera: Box::new(camera),
-        lights: vec![Box::new(light)],
+        lights: vec![Box::new(light_1), Box::new(light_2)],
         objects: vec![
             Box::new(object_1),
             Box::new(object_2),

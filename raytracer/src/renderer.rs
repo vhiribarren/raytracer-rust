@@ -49,14 +49,12 @@ pub fn render(
 ) -> Result<(), String> {
     debug!("render: {} objects to process", scene.objects.len());
     debug!("render: {} lights to process", scene.lights.len());
+    if scene.lights.len() == 0 {
+        return Err(String::from("There is no light in the scene"));
+    }
     let camera = &scene.camera;
-    let light = match scene.lights.len() {
-        0 => return Err(String::from("There is no light in the scene")),
-        1 => &scene.lights[0],
-        _ => unimplemented!("Only one light is implemented for now"),
-    };
     // We scan the pixels of the canvas
-    'pixel_loop: for (x, y, ray) in
+    for (x, y, ray) in
         camera.generate_rays(options.canvas_width, options.canvas_height)
     {
         let mut shortest_distance: f64 = std::f64::MAX;
@@ -83,34 +81,38 @@ pub fn render(
         let shortest_distance = shortest_distance;
 
         // After having found the nearest object, we launch a ray to the light
-        let light_ray = Ray::ray_from_to(collision_point, light.source());
-        let light_direction = light_ray.direction;
-        let light_distance = Vec3::between_points(collision_point, light.source()).norm();
-        // Check of object obstruction between light and collision point
-        for candidate_object in &scene.objects {
-            if utils::ref_equals(nearest_object, candidate_object) {
-                continue;
-            }
-            if let Some(obstruction_point) = candidate_object.check_collision(&light_ray) {
-                let object_distance =
-                    Vec3::between_points(collision_point, obstruction_point).norm();
-                if object_distance > light_distance {
+        let mut total_color = Color::BLACK;
+        'light_loop: for current_light in &scene.lights {
+            let light_ray = Ray::ray_from_to(collision_point, current_light.source());
+            let light_direction = light_ray.direction;
+            let light_distance = Vec3::between_points(collision_point, current_light.source()).norm();
+            // Check of object obstruction between light and collision point
+            for candidate_object in &scene.objects {
+                if utils::ref_equals(nearest_object, candidate_object) {
                     continue;
-                } else {
-                    // Object is hiding an other
-                    continue 'pixel_loop;
+                }
+                if let Some(obstruction_point) = candidate_object.check_collision(&light_ray) {
+                    let object_distance =
+                        Vec3::between_points(collision_point, obstruction_point).norm();
+                    if object_distance > light_distance {
+                        continue;
+                    } else {
+                        // Object is hiding an other
+                        continue 'light_loop;
+                    }
                 }
             }
+            // Try a first simple light model where intensity vary depending on angle with normal
+            let light_color = current_light.light_color_at(collision_point);
+            let intensity: UnitInterval =
+                light_intensity(&**nearest_object, light_direction, collision_point)?;
+            total_color += intensity * &(light_color * nearest_object.color_at(collision_point));
         }
 
-        // Try a first simple light model where intensity vary depending on angle with normal
-        let light_color = light.light_color_at(collision_point);
-        let intensity: UnitInterval =
-            light_intensity(&**nearest_object, light_direction, collision_point)?;
         canvas.draw(
             x,
             options.canvas_height - y,
-            &(intensity * &(light_color * nearest_object.color_at(collision_point))),
+            &(total_color),
         )?;
     }
     Ok(())

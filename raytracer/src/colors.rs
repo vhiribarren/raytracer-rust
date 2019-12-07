@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use wasm_bindgen::__rt::core::ops::Add;
+
 #[derive(Clone, Debug, Default)]
 pub struct Color {
     pub red: f64,
@@ -59,6 +61,31 @@ impl Color {
         green: 0.0,
         blue: 1.0,
     };
+    pub const YELLOW: Self = Color {
+        red: 1.0,
+        green: 1.0,
+        blue: 0.0,
+    };
+}
+
+impl std::ops::Add for Color {
+    type Output = Color;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Color::new(
+            self.red + rhs.red,
+            self.green + rhs.green,
+            self.blue + rhs.blue,
+        )
+    }
+}
+
+impl std::ops::AddAssign for Color {
+    fn add_assign(&mut self, rhs: Self) {
+        self.red += rhs.red;
+        self.green += rhs.green;
+        self.blue += rhs.blue;
+    }
 }
 
 impl std::ops::Mul for Color {
