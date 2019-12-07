@@ -46,7 +46,7 @@ pub fn render(
 ) -> Result<(), String> {
     debug!("render: {} objects to process", scene.objects.len());
     debug!("render: {} lights to process", scene.lights.len());
-    if scene.lights.len() == 0 {
+    if scene.lights.is_empty() {
         return Err(String::from("There is no light in the scene"));
     }
     let camera = &scene.camera;
