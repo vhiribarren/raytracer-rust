@@ -27,8 +27,9 @@ use crate::primitives::Ray;
 use crate::scene::{AnySceneObject, Scene};
 use crate::vector::Vec3;
 use crate::{utils, UnitInterval};
-use log::debug;
+use log::{debug, info};
 use std::f64;
+use std::time;
 
 pub trait DrawCanvas {
     fn draw(&mut self, x: u32, y: u32, color: &Color) -> Result<(), String>;
@@ -44,6 +45,7 @@ pub fn render(
     canvas: &mut impl DrawCanvas,
     options: &RenderOptions,
 ) -> Result<(), String> {
+    let start_render_instant = time::Instant::now();
     debug!("render: {} objects to process", scene.objects.len());
     debug!("render: {} lights to process", scene.lights.len());
     if scene.lights.is_empty() {
@@ -107,6 +109,10 @@ pub fn render(
 
         canvas.draw(x, options.canvas_height - y, &(total_color))?;
     }
+    info!(
+        "Rendering duration: {:.3} seconds",
+        start_render_instant.elapsed().as_secs_f32()
+    );
     Ok(())
 }
 

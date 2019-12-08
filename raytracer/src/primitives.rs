@@ -23,8 +23,8 @@ SOFTWARE.
 */
 
 use crate::vector::{Mat3, Vec3};
-use std::f64::consts::PI;
 use crate::UnitInterval;
+use std::f64::consts::PI;
 
 pub trait Shape {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
