@@ -117,6 +117,18 @@ impl std::ops::Mul for Color {
     }
 }
 
+impl std::ops::Mul for &Color {
+    type Output = Color;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Color::new(
+            self.red * rhs.red,
+            self.green * rhs.green,
+            self.blue * rhs.blue,
+        )
+    }
+}
+
 impl std::ops::Mul<UnitInterval> for &Color {
     type Output = Color;
 

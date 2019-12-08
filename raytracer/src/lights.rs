@@ -53,7 +53,7 @@ impl LightObject for LightPoint {
         self.source
     }
 
-    fn light_color_at(&self, point: Vec3) -> Color {
+    fn light_color_at(&self, _point: Vec3) -> Color {
         self.color.clone()
     }
 }

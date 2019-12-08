@@ -32,6 +32,21 @@ pub struct Scene {
     pub camera: Box<dyn RayEmitter>,
     pub lights: Vec<Box<dyn LightObject>>,
     pub objects: Vec<Box<dyn AnySceneObject>>,
+    pub options: SceneOptions,
+}
+
+pub struct SceneOptions {
+    pub world_color: Color,
+    pub ambient_light: Option<Color>,
+}
+
+impl Default for SceneOptions {
+    fn default() -> Self {
+        SceneOptions {
+            world_color: Color::BLACK,
+            ambient_light: Some(Color::new(0.2, 0.2, 0.2)),
+        }
+    }
 }
 
 pub trait AnySceneObject {

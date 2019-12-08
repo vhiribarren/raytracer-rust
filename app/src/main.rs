@@ -101,24 +101,22 @@ pub fn main() -> RaytracingResult {
 }
 
 fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
-    use raytracer::cameras::OrthogonalCamera;
     use raytracer::colors::Color;
     use raytracer::lights::LightPoint;
-    use raytracer::primitives::{InfinitePlan, Sphere, SquarePlan};
+    use raytracer::primitives::{InfinitePlan, Sphere};
     use raytracer::renderer::{render, RenderOptions};
     use raytracer::scene::{Scene, SceneObject};
     use raytracer::textures::PlainColorTexture;
     use raytracer::vector::Vec3;
 
-    // let camera: PerspectiveCamera = Default::default();
-    let camera_orth = OrthogonalCamera::new(
-        Vec3::new(0.0, 10.0, -15.0),
-        Vec3::new(0.0, 0.0, 15.0),
-        16.0 * 3.0,
-        9.0 * 3.0,
-    );
+    // let camera_orth = OrthogonalCamera::new(
+    //     Vec3::new(0.0, 10.0, -15.0),
+    //     Vec3::new(0.0, 0.0, 15.0),
+    //     16.0 * 3.0,
+    //     9.0 * 3.0,
+    //);
     let camera_perspective = PerspectiveCamera::new(
-        Vec3::new(0.0, 2.0, -10.0),
+        Vec3::new(0.0, 30.0, -10.0),
         Vec3::new(0.0, 0.0, 15.0),
         16.0 * 2.0,
         9.0 * 2.0,
@@ -126,8 +124,8 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     );
     //let camera = camera_orth;
     let camera = camera_perspective;
-    let light_1 = LightPoint::new(Vec3::new(50.0, 100.0, -50.0));
-    let light_2 = LightPoint::with_color(Vec3::new(-50.0, 20.0, -20.0), Color::RED);
+    let light_1 = LightPoint::with_color(Vec3::new(50.0, 100.0, -50.0), Color::new(0.8, 0.8, 0.8));
+    let light_2 = LightPoint::with_color(Vec3::new(-50.0, 20.0, -20.0), Color::new(0.8, 0.0, 0.0));
     let primitive: Sphere = Sphere {
         center: Vec3::new(0.0, 0.0, 0.0),
         radius: 5.0,
@@ -165,6 +163,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
             Box::new(object_3),
             Box::new(object_4),
         ],
+        options: Default::default(),
     };
     let render_options = RenderOptions {
         canvas_width: CANVAS_WIDTH,

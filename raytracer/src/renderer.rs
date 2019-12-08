@@ -72,10 +72,13 @@ pub fn render(
 
         let nearest_object = match nearest_object_opt {
             Some(val) => val,
-            _ => continue,
+            _ => {
+                canvas.draw(x, options.canvas_height - y, &(scene.options.world_color))?;
+                continue;
+            }
         };
+
         let collision_point = collision_point;
-        let shortest_distance = shortest_distance;
 
         // After having found the nearest object, we launch a ray to the light
         let mut total_color = Color::BLACK;
@@ -105,6 +108,9 @@ pub fn render(
             let intensity: UnitInterval =
                 light_intensity(&**nearest_object, light_direction, collision_point)?;
             total_color += intensity * &(light_color * nearest_object.color_at(collision_point));
+        }
+        if let Some(ambient_light) = &scene.options.ambient_light {
+            total_color += ambient_light * &nearest_object.color_at(collision_point);
         }
 
         canvas.draw(x, options.canvas_height - y, &(total_color))?;
