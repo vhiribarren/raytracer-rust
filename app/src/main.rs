@@ -36,7 +36,7 @@ use crate::utils::result::RaytracingResult;
 use log::info;
 use raytracer::cameras::PerspectiveCamera;
 use raytracer::scene::SceneOptions;
-use raytracer::textures::CheckedPattern;
+use raytracer::textures::{CheckedPattern, TextureEffects};
 use std::f32::consts::PI;
 
 const WINDOW_WIDTH: u32 = 1024;
@@ -132,27 +132,48 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
         radius: 5.0,
     };
     let texture = <CheckedPattern as Default>::default();
-    let object_1 = SceneObject { primitive, texture };
+    let object_1 = SceneObject {
+        primitive,
+        texture,
+        effects: TextureEffects {
+            phong: Some(Default::default())
+        },
+    };
     let primitive: Sphere = Sphere {
         center: Vec3::new(-10.0, 3.0, 10.0),
         radius: 8.0,
     };
     let color = Color::RED;
     let texture = PlainColorTexture { color };
-    let object_2 = SceneObject { primitive, texture };
+    let object_2 = SceneObject {
+        primitive,
+        texture,
+        effects: TextureEffects {
+            phong: Some(Default::default())
+        },
+    };
     let primitive: Sphere = Sphere {
         center: Vec3::new(10.0, 3.0, 10.0),
         radius: 8.0,
     };
     let color = Color::GREEN;
     let texture = PlainColorTexture { color };
-    let object_3 = SceneObject { primitive, texture };
+    let object_3 = SceneObject {
+        primitive,
+        texture,
+        effects: TextureEffects {
+            phong: Some(Default::default())
+        },
+    };
     //let plane = SquarePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0), 40.0);
     let plane = InfinitePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
     let texture = <CheckedPattern as Default>::default();
     let object_4 = SceneObject {
         primitive: plane,
         texture,
+        effects: TextureEffects {
+            ..Default::default()
+        },
     };
 
     let scene: Scene = Scene {

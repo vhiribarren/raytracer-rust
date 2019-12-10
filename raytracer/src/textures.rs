@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 use crate::colors::Color;
+use crate::UnitInterval;
 
 pub trait Texture {
     fn color_at(&self, u: f64, v: f64) -> Color;
@@ -63,6 +64,30 @@ impl Texture for CheckedPattern {
             0 => self.primary_color.clone(),
             1 => self.secondary_color.clone(),
             _ => unreachable!(),
+        }
+    }
+}
+
+pub struct TextureEffects {
+    pub phong: Option<Phong>,
+}
+
+impl Default for TextureEffects {
+    fn default() -> Self {
+        TextureEffects { phong: None }
+    }
+}
+
+pub struct Phong {
+    pub size: u32,
+    pub lum_coeff: UnitInterval,
+}
+
+impl Default for Phong {
+    fn default() -> Self {
+        Phong {
+            size: 50,
+            lum_coeff: 0.5,
         }
     }
 }

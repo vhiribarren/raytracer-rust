@@ -25,7 +25,7 @@ SOFTWARE.
 use crate::colors::Color;
 use crate::lights::LightObject;
 use crate::primitives::{Ray, Shape};
-use crate::textures::Texture;
+use crate::textures::{Texture, TextureEffects};
 use crate::vector::Vec3;
 
 pub struct Scene {
@@ -53,11 +53,13 @@ pub trait AnySceneObject {
     fn color_at(&self, point: Vec3) -> Color;
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
     fn normal_at(&self, point: Vec3) -> Option<Vec3>;
+    fn effects(&self) -> &TextureEffects;
 }
 
 pub struct SceneObject<T: Texture, P: Shape> {
     pub texture: T,
     pub primitive: P,
+    pub effects: TextureEffects,
 }
 
 impl<T: Texture, P: Shape> AnySceneObject for SceneObject<T, P> {
@@ -72,6 +74,10 @@ impl<T: Texture, P: Shape> AnySceneObject for SceneObject<T, P> {
 
     fn normal_at(&self, point: Vec3) -> Option<Vec3> {
         self.primitive.normal_at(point)
+    }
+
+    fn effects(&self) -> &TextureEffects {
+        &self.effects
     }
 }
 

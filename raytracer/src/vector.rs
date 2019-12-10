@@ -61,7 +61,7 @@ impl Vec3 {
     pub fn reflect(&self, normal: Vec3) -> Vec3 {
         // https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector
         let n = normal.normalize();
-        *self - 2.0*(self.dot_product(n))*n
+        *self - 2.0 * (self.dot_product(n)) * n
     }
 
     pub fn norm(&self) -> f64 {

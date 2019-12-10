@@ -25,8 +25,8 @@ SOFTWARE.
 use crate::colors::Color;
 use crate::primitives::Ray;
 use crate::scene::{AnySceneObject, Scene};
+use crate::utils;
 use crate::vector::Vec3;
-use crate::{utils, UnitInterval};
 use log::{debug, info};
 use std::f64;
 use std::time;
@@ -84,7 +84,6 @@ pub fn render(
         let mut total_color = Color::BLACK;
         'light_loop: for current_light in &scene.lights {
             let light_ray = Ray::ray_from_to(collision_point, current_light.source());
-            let light_direction = light_ray.direction;
             let light_distance =
                 Vec3::between_points(collision_point, current_light.source()).norm();
             // Check of object obstruction between light and collision point
@@ -103,17 +102,33 @@ pub fn render(
                     }
                 }
             }
-            // Try a first simple light model where intensity vary depending on angle with normal
+
+            // Build values needed for light computation
+            let light_direction = light_ray.direction.normalize();
             let light_color = current_light.light_color_at(collision_point);
-            let intensity: UnitInterval =
-                light_intensity(&**nearest_object, light_direction, collision_point)?;
-            total_color += intensity * &(light_color.clone() * nearest_object.color_at(collision_point));
+            let surface_normal = nearest_object
+                .normal_at(collision_point)
+                .ok_or_else(|| String::from("No normal found"))?;
+            let ray_reflexion = ray.direction.reflect(surface_normal).normalize();
+
+            // Diffuse reflection
+            let reflection_angle = light_direction.dot_product(surface_normal);
+            if reflection_angle > 0.0 {
+                total_color += reflection_angle
+                    * &(light_color.clone() * nearest_object.color_at(collision_point));
+            }
 
             // Add specular / phong light
-            let object_normal = nearest_object.normal_at(collision_point).unwrap();
-            let ray_reflexion = ray.direction.reflect(object_normal);
-            total_color +=  light_color.clone()*(-light_direction.normalize().dot_product(ray_reflexion.normalize())).powi(50) *0.5;
+            if let Some(phong) = &nearest_object.effects().phong {
+                let specular_angle = light_direction.dot_product(ray_reflexion);
+                if specular_angle > 0.0 {
+                    total_color += light_color.clone()
+                        * (specular_angle).powi(phong.size as i32)
+                        * phong.lum_coeff;
+                }
+            }
         }
+        // Ambien light
         if let Some(ambient_light) = &scene.options.ambient_light {
             total_color += ambient_light * &nearest_object.color_at(collision_point);
         }
@@ -125,18 +140,4 @@ pub fn render(
         start_render_instant.elapsed().as_secs_f32()
     );
     Ok(())
-}
-
-fn light_intensity(
-    scene_object: &dyn AnySceneObject,
-    light_direction: Vec3,
-    surface_point: Vec3,
-) -> Result<UnitInterval, String> {
-    let surface_normal = scene_object
-        .normal_at(surface_point)
-        .ok_or_else(|| String::from("No normal found"))?;
-    let cos_angle = light_direction.dot_product(surface_normal)
-        / (light_direction.norm() * surface_normal.norm());
-    let intensity = if cos_angle > 0.0 { cos_angle } else { 0.0 };
-    Ok(intensity)
 }
