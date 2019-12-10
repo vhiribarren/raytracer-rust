@@ -107,7 +107,12 @@ pub fn render(
             let light_color = current_light.light_color_at(collision_point);
             let intensity: UnitInterval =
                 light_intensity(&**nearest_object, light_direction, collision_point)?;
-            total_color += intensity * &(light_color * nearest_object.color_at(collision_point));
+            total_color += intensity * &(light_color.clone() * nearest_object.color_at(collision_point));
+
+            // Add specular / phong light
+            let object_normal = nearest_object.normal_at(collision_point).unwrap();
+            let ray_reflexion = ray.direction.reflect(object_normal);
+            total_color +=  light_color.clone()*(-light_direction.normalize().dot_product(ray_reflexion.normalize())).powi(50) *0.5;
         }
         if let Some(ambient_light) = &scene.options.ambient_light {
             total_color += ambient_light * &nearest_object.color_at(collision_point);

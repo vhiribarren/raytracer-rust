@@ -35,6 +35,7 @@ use std::time::Duration;
 use crate::utils::result::RaytracingResult;
 use log::info;
 use raytracer::cameras::PerspectiveCamera;
+use raytracer::scene::SceneOptions;
 use raytracer::textures::CheckedPattern;
 use std::f32::consts::PI;
 
@@ -116,11 +117,11 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
     //     9.0 * 3.0,
     //);
     let camera_perspective = PerspectiveCamera::new(
-        Vec3::new(0.0, 30.0, -10.0),
+        Vec3::new(0.0, 5.0, -10.0),
         Vec3::new(0.0, 0.0, 15.0),
         16.0 * 2.0,
         9.0 * 2.0,
-        (PI / 10.0) as f64,
+        (PI / 8.0) as f64,
     );
     //let camera = camera_orth;
     let camera = camera_perspective;
@@ -163,7 +164,10 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
             Box::new(object_3),
             Box::new(object_4),
         ],
-        options: Default::default(),
+        options: SceneOptions {
+            ambient_light: Some(Color::new(0.0, 0.0, 0.2)),
+            ..Default::default()
+        },
     };
     let render_options = RenderOptions {
         canvas_width: CANVAS_WIDTH,
