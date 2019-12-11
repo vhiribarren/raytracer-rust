@@ -136,7 +136,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
         primitive,
         texture,
         effects: TextureEffects {
-            phong: Some(Default::default())
+            phong: Some(Default::default()),
         },
     };
     let primitive: Sphere = Sphere {
@@ -149,7 +149,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
         primitive,
         texture,
         effects: TextureEffects {
-            phong: Some(Default::default())
+            phong: Some(Default::default()),
         },
     };
     let primitive: Sphere = Sphere {
@@ -162,7 +162,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
         primitive,
         texture,
         effects: TextureEffects {
-            phong: Some(Default::default())
+            phong: Some(Default::default()),
         },
     };
     //let plane = SquarePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0), 40.0);
