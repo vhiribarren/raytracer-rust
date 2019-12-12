@@ -23,14 +23,14 @@ SOFTWARE.
 */
 
 use crate::colors::Color;
-use crate::lights::LightObject;
+use crate::lights::AnyLightObject;
 use crate::primitives::{Ray, Shape};
 use crate::textures::{Texture, TextureEffects};
 use crate::vector::Vec3;
 
 pub struct Scene {
     pub camera: Box<dyn RayEmitter>,
-    pub lights: Vec<Box<dyn LightObject>>,
+    pub lights: Vec<Box<dyn AnyLightObject>>,
     pub objects: Vec<Box<dyn AnySceneObject>>,
     pub options: SceneOptions,
 }

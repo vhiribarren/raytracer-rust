@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 use crate::colors::Color;
-use crate::lights::LightObject;
+use crate::lights::AnyLightObject;
 use crate::primitives::Ray;
 use crate::scene::{AnySceneObject, Scene};
 use crate::vector::Vec3;
@@ -57,7 +57,7 @@ pub fn render(
         // Check if there is an object to process for this pixel
         let (nearest_object, collision_point) =
             match search_object_collision(&camera_ray, &scene.objects) {
-                Some((object, point)) => (&**object, point),
+                Some((object, point)) => (object, point),
                 None => {
                     canvas.draw(x, options.canvas_height - y, &(scene.options.world_color))?;
                     continue;
@@ -87,13 +87,10 @@ pub fn render(
     Ok(())
 }
 
-fn search_object_collision<'a, I>(
+fn search_object_collision<'a>(
     ray: &Ray,
-    objects: I,
-) -> Option<(&'a Box<dyn AnySceneObject>, Vec3)>
-where
-    I: IntoIterator<Item = &'a Box<dyn AnySceneObject>>,
-{
+    objects: &'a [Box<dyn AnySceneObject>],
+) -> Option<(&'a dyn AnySceneObject, Vec3)> {
     let mut shortest_distance: f64 = f64::MAX;
     let mut nearest_object_opt: Option<&Box<dyn AnySceneObject>> = None;
     let mut collision_point: Vec3 = Default::default();
@@ -110,21 +107,18 @@ where
         }
     }
     match nearest_object_opt {
-        Some(nearest_object) => Some((nearest_object, collision_point)),
+        Some(nearest_object) => Some((&**nearest_object, collision_point)),
         _ => None,
     }
 }
 
-fn illumination_from_lights<'a, I>(
+fn illumination_from_lights(
     object: &dyn AnySceneObject,
     surface_point: Vec3,
-    lights: I,
+    lights: &[Box<dyn AnyLightObject>],
     objects: &[Box<dyn AnySceneObject>],
     camera_ray: &Ray,
-) -> Result<Color, String>
-where
-    I: IntoIterator<Item = &'a Box<dyn LightObject>>,
-{
+) -> Result<Color, String> {
     let mut total_color = Color::BLACK;
     for current_light in lights {
         let light_ray = Ray::ray_from_to(surface_point, current_light.source());
@@ -161,10 +155,11 @@ where
 }
 
 #[allow(clippy::if_same_then_else)]
-fn ray_encounter_obstacle<'a, I>(ray: &Ray, destination: &Vec3, objects: I) -> bool
-where
-    I: IntoIterator<Item = &'a Box<dyn AnySceneObject>>,
-{
+fn ray_encounter_obstacle(
+    ray: &Ray,
+    destination: &Vec3,
+    objects: &[Box<dyn AnySceneObject>],
+) -> bool {
     let source = ray.source;
     let light_distance = Vec3::between_points(source, *destination).norm();
     // Check of object obstruction between light and collision point
@@ -174,7 +169,8 @@ where
             if object_distance > light_distance {
                 // Not between the object and the light
                 continue;
-            } else if object_distance <= 1e-12 { // TODO Check why this value is so high, it was f64::EPSILON before
+            } else if object_distance <= 1e-12 {
+                // TODO Check why this value is so high, it was f64::EPSILON before
                 // Float comparison error, source is probably also the candidate object
                 continue;
             } else {
