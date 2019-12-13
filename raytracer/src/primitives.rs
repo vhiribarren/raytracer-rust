@@ -45,6 +45,13 @@ impl Ray {
             direction: destination - source,
         }
     }
+
+    pub fn shift_source(&self) -> Ray {
+        Ray {
+            source: self.source + 1e-12 * self.direction.normalize(),
+            direction: self.direction,
+        }
+    }
 }
 
 #[derive(Debug)]

@@ -166,6 +166,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
         texture,
         effects: TextureEffects {
             phong: Some(Default::default()),
+            transparency: Some(Default::default()),
             ..Default::default()
         },
     };

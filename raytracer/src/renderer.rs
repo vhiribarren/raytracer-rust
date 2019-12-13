@@ -98,14 +98,16 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: i8) -> Result<Color, Strin
         let refraction_ray = Ray {
             source: collision_point,
             direction: camera_ray.direction,
-        };
+        }
+        .shift_source();
         if let Some((_, exit_point)) = search_object_collision(&camera_ray, &scene.objects) {
             // TODO only the nearest_object is necessary
             // launch new ray
             let new_ray = Ray {
                 source: exit_point,
                 direction: camera_ray.direction,
-            };
+            }
+            .shift_source();
             total_color += transparency.alpha * launch_ray(&new_ray, scene, depth - 1)?;
         }
     }
