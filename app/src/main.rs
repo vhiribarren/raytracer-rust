@@ -35,7 +35,7 @@ use std::time::Duration;
 use crate::utils::result::RaytracingResult;
 use log::info;
 use raytracer::cameras::PerspectiveCamera;
-use raytracer::scene::SceneOptions;
+use raytracer::scene::SceneConfiguration;
 use raytracer::textures::{CheckedPattern, TextureEffects};
 use std::f32::consts::PI;
 
@@ -137,6 +137,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
         texture,
         effects: TextureEffects {
             phong: Some(Default::default()),
+            ..Default::default()
         },
     };
     let primitive: Sphere = Sphere {
@@ -150,6 +151,8 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
         texture,
         effects: TextureEffects {
             phong: Some(Default::default()),
+            transparency: Some(Default::default()),
+            ..Default::default()
         },
     };
     let primitive: Sphere = Sphere {
@@ -163,6 +166,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
         texture,
         effects: TextureEffects {
             phong: Some(Default::default()),
+            ..Default::default()
         },
     };
     //let plane = SquarePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0), 40.0);
@@ -185,7 +189,7 @@ fn draw_test_scene(canvas: &mut impl DrawCanvas) -> RaytracingResult {
             Box::new(object_3),
             Box::new(object_4),
         ],
-        options: SceneOptions {
+        options: SceneConfiguration {
             ambient_light: Some(Color::new(0.0, 0.0, 0.2)),
             ..Default::default()
         },

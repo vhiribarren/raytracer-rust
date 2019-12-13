@@ -70,11 +70,29 @@ impl Texture for CheckedPattern {
 
 pub struct TextureEffects {
     pub phong: Option<Phong>,
+    pub transparency: Option<Transparency>,
 }
 
 impl Default for TextureEffects {
     fn default() -> Self {
-        TextureEffects { phong: None }
+        TextureEffects {
+            phong: None,
+            transparency: None,
+        }
+    }
+}
+
+pub struct Transparency {
+    pub refractive_index: f64,
+    pub alpha: UnitInterval,
+}
+
+impl Default for Transparency {
+    fn default() -> Self {
+        Transparency {
+            refractive_index: 1.0,
+            alpha: 0.5,
+        }
     }
 }
 

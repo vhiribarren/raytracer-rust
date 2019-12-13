@@ -54,37 +54,68 @@ pub fn render(
     let camera = &scene.camera;
     // We scan the pixels of the canvas
     for (x, y, camera_ray) in camera.generate_rays(options.canvas_width, options.canvas_height) {
-        // Check if there is an object to process for this pixel
-        let (nearest_object, collision_point) =
-            match search_object_collision(&camera_ray, &scene.objects) {
-                Some((object, point)) => (object, point),
-                None => {
-                    canvas.draw(x, options.canvas_height - y, &(scene.options.world_color))?;
-                    continue;
-                }
-            };
-
-        // After having found the nearest object, we launch a ray to the light
-        let mut total_color = Color::BLACK;
-        total_color += illumination_from_lights(
-            nearest_object,
-            collision_point,
-            &scene.lights,
-            &scene.objects,
+        let color = launch_ray(
             &camera_ray,
+            scene,
+            scene.options.maximum_light_recursion as i8,
         )?;
-        // Ambient light
-        if let Some(ambient_light) = &scene.options.ambient_light {
-            total_color += ambient_light * &nearest_object.color_at(collision_point);
-        }
-
-        canvas.draw(x, options.canvas_height - y, &(total_color))?;
+        canvas.draw(x, options.canvas_height - y, &(color))?;
     }
     info!(
         "Rendering duration: {:.3} seconds",
         start_render_instant.elapsed().as_secs_f32()
     );
     Ok(())
+}
+
+fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: i8) -> Result<Color, String> {
+    if depth < 0 {
+        return Ok(Color::BLACK);
+    }
+
+    // Check if there is an object to process for this pixel
+    let (nearest_object, collision_point) =
+        match search_object_collision(&camera_ray, &scene.objects) {
+            Some((object, point)) => (object, point),
+            None => {
+                return Ok(scene.options.world_color.clone());
+            }
+        };
+
+    // After having found the nearest object, we launch a ray to the light
+    let mut total_color = Color::BLACK;
+    total_color += illumination_from_lights(
+        nearest_object,
+        collision_point,
+        &scene.lights,
+        &scene.objects,
+        &camera_ray,
+    )?;
+
+    // Refraction light
+    if let Some(transparency) = &nearest_object.effects().transparency {
+        // Go up to object exterior
+        let refraction_ray = Ray {
+            source: collision_point,
+            direction: camera_ray.direction,
+        };
+        if let Some((_, exit_point)) = search_object_collision(&camera_ray, &scene.objects) {
+            // TODO only the nearest_object is necessary
+            // launch new ray
+            let new_ray = Ray {
+                source: exit_point,
+                direction: camera_ray.direction,
+            };
+            total_color += transparency.alpha * launch_ray(&new_ray, scene, depth - 1)?;
+        }
+    }
+
+    // Ambient light
+    if let Some(ambient_light) = &scene.options.ambient_light {
+        total_color += ambient_light * &nearest_object.color_at(collision_point);
+    }
+
+    Ok(total_color)
 }
 
 fn search_object_collision<'a>(
@@ -99,7 +130,9 @@ fn search_object_collision<'a>(
     for object_candidate in objects {
         if let Some(collision_point_candidate) = object_candidate.check_collision(&ray) {
             let distance = collision_point_candidate.distance(ray.source);
-            if distance < shortest_distance {
+            if distance <= 1e-12 {
+                continue;
+            } else if distance < shortest_distance {
                 shortest_distance = distance;
                 nearest_object_opt = Some(object_candidate);
                 collision_point = collision_point_candidate;
@@ -122,6 +155,8 @@ fn illumination_from_lights(
     let mut total_color = Color::BLACK;
     for current_light in lights {
         let light_ray = Ray::ray_from_to(surface_point, current_light.source());
+
+        // Generate shadow, by skipping process if there is an obstacle between object and light
         if ray_encounter_obstacle(&light_ray, &current_light.source(), objects) {
             continue;
         }

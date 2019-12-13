@@ -32,19 +32,23 @@ pub struct Scene {
     pub camera: Box<dyn RayEmitter>,
     pub lights: Vec<Box<dyn AnyLightObject>>,
     pub objects: Vec<Box<dyn AnySceneObject>>,
-    pub options: SceneOptions,
+    pub options: SceneConfiguration,
 }
 
-pub struct SceneOptions {
+pub struct SceneConfiguration {
     pub world_color: Color,
+    pub world_refractive_index: f64,
     pub ambient_light: Option<Color>,
+    pub maximum_light_recursion: u8,
 }
 
-impl Default for SceneOptions {
+impl Default for SceneConfiguration {
     fn default() -> Self {
-        SceneOptions {
+        SceneConfiguration {
             world_color: Color::BLACK,
+            world_refractive_index: 1.0,
             ambient_light: Some(Color::new(0.2, 0.2, 0.2)),
+            maximum_light_recursion: 2,
         }
     }
 }
