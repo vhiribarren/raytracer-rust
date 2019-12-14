@@ -22,23 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::utils::result::RaytracingResult;
-use log::info;
 use raytracer::cameras::PerspectiveCamera;
 use raytracer::colors::Color;
 use raytracer::lights::LightPoint;
 use raytracer::primitives::{InfinitePlan, Sphere};
-use raytracer::renderer::{render, DrawCanvas, RenderOptions};
 use raytracer::scene::{Scene, SceneConfiguration, SceneObject};
 use raytracer::textures::{CheckedPattern, PlainColorTexture, TextureEffects};
 use raytracer::vector::Vec3;
 use std::f64::consts::PI;
 
-pub(crate) fn draw_test_scene(
-    canvas: &mut impl DrawCanvas,
-    canvas_width: u32,
-    canvas_height: u32,
-) -> RaytracingResult {
+pub(crate) fn generate_test_scene() -> Scene {
     // let camera_orth = OrthogonalCamera::new(
     //     Vec3::new(0.0, 10.0, -15.0),
     //     Vec3::new(0.0, 0.0, 15.0),
@@ -108,7 +101,7 @@ pub(crate) fn draw_test_scene(
         },
     };
 
-    let scene: Scene = Scene {
+    Scene {
         camera: Box::new(camera),
         lights: vec![Box::new(light_1), Box::new(light_2)],
         objects: vec![
@@ -121,14 +114,5 @@ pub(crate) fn draw_test_scene(
             ambient_light: Some(Color::new(0.0, 0.0, 0.2)),
             ..Default::default()
         },
-    };
-    let render_options = RenderOptions {
-        canvas_width,
-        canvas_height,
-    };
-    info!("Generating test scene...");
-    render(&scene, canvas, &render_options)?;
-    info!("Done!");
-
-    Ok(())
+    }
 }

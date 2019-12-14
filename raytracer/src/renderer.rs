@@ -45,6 +45,7 @@ pub fn render(
     canvas: &mut impl DrawCanvas,
     options: &RenderOptions,
 ) -> Result<(), String> {
+    info!("render: start process...");
     let start_render_instant = time::Instant::now();
     debug!("render: {} objects to process", scene.objects.len());
     debug!("render: {} lights to process", scene.lights.len());
@@ -62,9 +63,10 @@ pub fn render(
         canvas.draw(x, options.canvas_height - y, &(color))?;
     }
     info!(
-        "Rendering duration: {:.3} seconds",
+        "render: duration: {:.3} seconds",
         start_render_instant.elapsed().as_secs_f32()
     );
+    info!("render: done!");
     Ok(())
 }
 

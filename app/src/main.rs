@@ -29,8 +29,16 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use std::time::Duration;
 
+use crate::utils::canvas::none::NoCanvas;
+use crate::utils::canvas::sdl::WrapperCanvas;
 use crate::utils::result::RaytracingResult;
-use crate::utils::sdl::WrapperCanvas;
+use raytracer::renderer::{render, RenderOptions};
+use raytracer::scene::Scene;
+
+const APP_AUTHOR: &str = "Vincent Hiribarren";
+const APP_NAME: &str = "raytracer-rust-wasm";
+const APP_ABOUT: &str = "Toy project to test Rust";
+const APP_VERSION: &str = "0.0.0";
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 576;
@@ -39,6 +47,39 @@ const CANVAS_HEIGHT: u32 = 576;
 
 pub fn main() -> RaytracingResult {
     stderrlog::new().verbosity(4).init()?;
+
+    let matches = clap::App::new(APP_NAME)
+        .author(APP_AUTHOR)
+        .about(APP_ABOUT)
+        .version(APP_VERSION)
+        .arg(
+            clap::Arg::with_name("no-gui")
+                .long("no-gui")
+                .help("Does not display the rendering canvas."),
+        )
+        .get_matches();
+
+    let scene = sample_1::generate_test_scene();
+    let render_options = RenderOptions {
+        canvas_width: CANVAS_WIDTH,
+        canvas_height: CANVAS_HEIGHT,
+    };
+
+    if matches.is_present("no-gui") {
+        render_no_gui(&scene, &render_options)?;
+    } else {
+        render_sdl(&scene, &render_options)?;
+    }
+
+    Ok(())
+}
+
+fn render_no_gui(scene: &Scene, render_options: &RenderOptions) -> utils::result::RaytracingResult {
+    render(&scene, &mut NoCanvas, &render_options)?;
+    Ok(())
+}
+
+fn render_sdl(scene: &Scene, render_options: &RenderOptions) -> utils::result::RaytracingResult {
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
@@ -52,7 +93,8 @@ pub fn main() -> RaytracingResult {
     canvas.clear();
     let mut wrapper_canvas = WrapperCanvas(&mut canvas);
 
-    sample_1::draw_test_scene(&mut wrapper_canvas, CANVAS_WIDTH, CANVAS_HEIGHT)?;
+    render(&scene, &mut wrapper_canvas, &render_options)?;
+
     canvas.present();
 
     let mut event_pump = sdl_context.event_pump()?;
