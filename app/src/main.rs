@@ -35,10 +35,10 @@ use crate::utils::result::RaytracingResult;
 use raytracer::renderer::{render, RenderOptions};
 use raytracer::scene::Scene;
 
-const APP_AUTHOR: &str = "Vincent Hiribarren";
-const APP_NAME: &str = "raytracer-rust-wasm";
-const APP_ABOUT: &str = "Toy project to test Rust";
-const APP_VERSION: &str = "0.0.0";
+const APP_AUTHOR: &'static str = "Vincent Hiribarren";
+const APP_NAME: &'static str = "raytracer-rust-wasm";
+const APP_ABOUT: &'static str = "Toy project to test Rust";
+const APP_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 576;
