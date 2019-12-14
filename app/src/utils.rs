@@ -75,3 +75,30 @@ pub mod result {
         }
     }
 }
+
+pub mod sdl {
+    use raytracer::renderer::DrawCanvas;
+    use sdl2::render::Canvas;
+    use sdl2::video::Window;
+
+    pub struct WrapperCanvas<'a>(pub &'a mut Canvas<Window>);
+
+    impl DrawCanvas for WrapperCanvas<'_> {
+        fn draw(
+            &mut self,
+            x: u32,
+            y: u32,
+            color: &raytracer::colors::Color,
+        ) -> std::result::Result<(), String> {
+            let draw_color = sdl2::pixels::Color::RGB(
+                (255.0 * color.red()) as u8,
+                (255.0 * color.green()) as u8,
+                (255.0 * color.blue()) as u8,
+            );
+            self.0.set_draw_color(draw_color);
+            self.0
+                .draw_point(sdl2::rect::Point::new(x as i32, y as i32))?;
+            Ok(())
+        }
+    }
+}
