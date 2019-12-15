@@ -58,7 +58,7 @@ pub fn render(
         let color = launch_ray(
             &camera_ray,
             scene,
-            scene.options.maximum_light_recursion as i8,
+            0,
         )?;
         canvas.draw(x, options.canvas_height - y, &(color))?;
     }
@@ -70,8 +70,8 @@ pub fn render(
     Ok(())
 }
 
-fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: i8) -> Result<Color, String> {
-    if depth < 0 {
+fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, String> {
+    if depth > scene.options.maximum_light_recursion {
         return Ok(Color::BLACK);
     }
 
@@ -102,7 +102,7 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: i8) -> Result<Color, Strin
             direction: camera_ray.direction,
         }
         .shift_source();
-        if let Some((_, exit_point)) = search_object_collision(&camera_ray, &scene.objects) {
+        if let Some((_, exit_point)) = search_object_collision(&refraction_ray, &scene.objects) {
             // TODO only the nearest_object is necessary
             // launch new ray
             let new_ray = Ray {
@@ -110,7 +110,7 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: i8) -> Result<Color, Strin
                 direction: camera_ray.direction,
             }
             .shift_source();
-            total_color += transparency.alpha * launch_ray(&new_ray, scene, depth - 1)?;
+            total_color += transparency.alpha * launch_ray(&new_ray, scene, depth + 1)?;
         }
     }
 

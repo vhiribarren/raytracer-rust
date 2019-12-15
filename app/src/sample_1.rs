@@ -39,8 +39,8 @@ pub(crate) fn generate_test_scene() -> Scene {
     //     9.0 * 3.0,
     //);
     let camera_perspective = PerspectiveCamera::new(
-        Vec3::new(0.0, 5.0, -10.0),
-        Vec3::new(0.0, 0.0, 15.0),
+        Vec3::new(0.0, 10.0, -10.0),
+        Vec3::new(0.0, 0.0, 30.0),
         16.0 * 2.0,
         9.0 * 2.0,
         (PI / 8.0) as f64,
@@ -90,10 +90,24 @@ pub(crate) fn generate_test_scene() -> Scene {
             transparency: Some(Default::default()),
         },
     };
+    let primitive: Sphere = Sphere {
+        center: Vec3::new(0.0, 10.0, 35.0),
+        radius: 15.0,
+    };
+    let color = Color::YELLOW;
+    let texture = PlainColorTexture { color };
+    let object_4 = SceneObject {
+        primitive,
+        texture,
+        effects: TextureEffects {
+            phong: Some(Default::default()),
+            transparency: Some(Default::default()),
+        },
+    };
     //let plane = SquarePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0), 40.0);
     let plane = InfinitePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
     let texture = <CheckedPattern as Default>::default();
-    let object_4 = SceneObject {
+    let object_5 = SceneObject {
         primitive: plane,
         texture,
         effects: TextureEffects {
@@ -109,6 +123,7 @@ pub(crate) fn generate_test_scene() -> Scene {
             Box::new(object_2),
             Box::new(object_3),
             Box::new(object_4),
+            Box::new(object_5),
         ],
         options: SceneConfiguration {
             ambient_light: Some(Color::new(0.0, 0.0, 0.2)),
