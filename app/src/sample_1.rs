@@ -27,7 +27,7 @@ use raytracer::colors::Color;
 use raytracer::lights::LightPoint;
 use raytracer::primitives::{InfinitePlan, Sphere};
 use raytracer::scene::{Scene, SceneConfiguration, SceneObject};
-use raytracer::textures::{CheckedPattern, PlainColorTexture, TextureEffects};
+use raytracer::textures::{CheckedPattern, PlainColorTexture, TextureEffects, Transparency};
 use raytracer::vector::Vec3;
 use std::f64::consts::PI;
 
@@ -73,7 +73,10 @@ pub(crate) fn generate_test_scene() -> Scene {
         texture,
         effects: TextureEffects {
             phong: Some(Default::default()),
-            transparency: Some(Default::default()),
+            transparency: Some(Transparency {
+                refractive_index: 1.3,
+                ..Default::default()
+            }),
         },
     };
     let primitive: Sphere = Sphere {
@@ -87,7 +90,10 @@ pub(crate) fn generate_test_scene() -> Scene {
         texture,
         effects: TextureEffects {
             phong: Some(Default::default()),
-            transparency: Some(Default::default()),
+            transparency: Some(Transparency {
+                refractive_index: 1.3,
+                ..Default::default()
+            }),
         },
     };
     let primitive: Sphere = Sphere {
@@ -101,7 +107,10 @@ pub(crate) fn generate_test_scene() -> Scene {
         texture,
         effects: TextureEffects {
             phong: Some(Default::default()),
-            transparency: Some(Default::default()),
+            transparency: Some(Transparency {
+                refractive_index: 1.3,
+                ..Default::default()
+            }),
         },
     };
     //let plane = SquarePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0), 40.0);

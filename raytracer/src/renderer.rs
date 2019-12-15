@@ -55,11 +55,7 @@ pub fn render(
     let camera = &scene.camera;
     // We scan the pixels of the canvas
     for (x, y, camera_ray) in camera.generate_rays(options.canvas_width, options.canvas_height) {
-        let color = launch_ray(
-            &camera_ray,
-            scene,
-            0,
-        )?;
+        let color = launch_ray(&camera_ray, scene, 0)?;
         canvas.draw(x, options.canvas_height - y, &(color))?;
     }
     info!(
@@ -96,10 +92,20 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, Strin
 
     // Refraction light
     if let Some(transparency) = &nearest_object.effects().transparency {
+        let surface_normal = nearest_object
+            .normal_at(collision_point)
+            .ok_or_else(|| String::from("No normal found"))?
+            .normalize();
+        let camera_ray_normalized = camera_ray.direction.normalize();
+        let n_ratio = scene.options.world_refractive_index / transparency.refractive_index;
+        let cos_refraction = camera_ray_normalized.dot_product(surface_normal);
+        let sin_square_refraction = n_ratio.powi(2) * (1.0 - cos_refraction.powi(2));
+        let refraction_direction = n_ratio * camera_ray_normalized
+            - (n_ratio * cos_refraction + (1.0 - sin_square_refraction).sqrt()) * surface_normal;
         // Go up to object exterior
         let refraction_ray = Ray {
             source: collision_point,
-            direction: camera_ray.direction,
+            direction: refraction_direction,
         }
         .shift_source();
         if let Some((_, exit_point)) = search_object_collision(&refraction_ray, &scene.objects) {
