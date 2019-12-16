@@ -9,7 +9,8 @@ jobs:
     strategy:
       matrix:
         # As for 2019-12-16, macost-latest does not have cargo installed
-        os: [ubuntu-latest, windows-latest]
+        # Compilation issue for SDL with windows-latest
+        os: [ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v1
