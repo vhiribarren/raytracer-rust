@@ -35,21 +35,33 @@ pub trait Shape {
 #[derive(Debug)]
 pub struct Ray {
     pub source: Vec3,
+    /// The direction is normalized
     pub direction: Vec3,
+    _use_constructor: (),
 }
 
 impl Ray {
+    pub fn new(source: Vec3, direction: Vec3) -> Ray {
+        Ray {
+            source,
+            direction: direction.normalize(),
+            _use_constructor: (),
+        }
+    }
+
     pub fn ray_from_to(source: Vec3, destination: Vec3) -> Ray {
         Ray {
             source,
-            direction: destination - source,
+            direction: (destination - source).normalize(),
+            _use_constructor: (),
         }
     }
 
     pub fn shift_source(&self) -> Ray {
         Ray {
-            source: self.source + 1e-12 * self.direction.normalize(),
+            source: self.source + 1e-12 * self.direction,
             direction: self.direction,
+            _use_constructor: (),
         }
     }
 }
@@ -80,14 +92,14 @@ impl Shape for InfinitePlan {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
         let denom = self
             .normal_normalized
-            .dot_product(ray.direction.normalize());
+            .dot_product(ray.direction);
         if denom.abs() < 1e-6 {
             return None;
         }
         let p_l = self.center - ray.source;
         let t = p_l.dot_product(self.normal_normalized) / denom;
         if t > 0.0 {
-            Some(ray.source + t * ray.direction.normalize())
+            Some(ray.source + t * ray.direction)
         } else {
             None
         }
@@ -237,6 +249,18 @@ mod tests {
     use crate::utils::f64_eq;
 
     #[test]
+    fn from_to_ray_has_normalized_direction() {
+        let ray = Ray::ray_from_to(Vec3::new(0.0, 0.0, 0.0), Vec3::new(10.0, 10.0, 10.0));
+        assert!(f64_eq(ray.direction.norm(),1.0));
+    }
+
+    #[test]
+    fn new_ray_has_normalized_direction() {
+        let ray = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(10.0, 10.0, 10.0));
+        assert!(f64_eq(ray.direction.norm(),1.0));
+    }
+
+    #[test]
     fn unit_sphere_values() {
         let sphere: Sphere = Default::default(); // Given a unit sphere
         assert!(f64_eq(sphere.radius, 1.0)); // Then it has a radius of 1
@@ -250,18 +274,18 @@ mod tests {
         // Given a unit sphere
         let sphere: Sphere = Default::default();
         // If we launch a ray in front of it
-        let ray: Ray = Ray {
-            source: Vec3 {
+        let ray: Ray = Ray::new(
+            Vec3 {
                 x: 0.0,
                 y: 0.0,
                 z: -2.0,
             },
-            direction: Vec3 {
+            Vec3 {
                 x: 0.0,
                 y: 0.0,
                 z: 1.0,
             },
-        };
+        );
         let result = sphere.check_collision(&ray);
         // There is a collision
         assert!(result.is_some());
@@ -271,19 +295,19 @@ mod tests {
     #[test]
     fn ray_sphere_no_collision() {
         let sphere: Sphere = Default::default(); // Given a unit sphere
-        let ray: Ray = Ray {
+        let ray: Ray = Ray::new(
             // If we launch a ray next to it and orthogonally
-            source: Vec3 {
+            Vec3 {
                 x: 2.0,
                 y: 0.0,
                 z: -2.0,
             },
-            direction: Vec3 {
+            Vec3 {
                 x: 0.0,
                 y: 0.0,
                 z: 1.0,
             },
-        };
+        );
         assert!(sphere.check_collision(&ray).is_none()); // There is no collision
     }
 }

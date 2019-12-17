@@ -96,25 +96,23 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, Strin
             .normal_at(collision_point)
             .ok_or_else(|| String::from("No normal found"))?
             .normalize();
-        let camera_ray_normalized = camera_ray.direction.normalize();
         let n_ratio = scene.options.world_refractive_index / transparency.refractive_index;
-        let cos_refraction = camera_ray_normalized.dot_product(surface_normal);
+        let cos_refraction = camera_ray.direction.dot_product(surface_normal);
         let sin_square_refraction = n_ratio.powi(2) * (1.0 - cos_refraction.powi(2));
-        let refraction_direction = n_ratio * camera_ray_normalized
+        let refraction_direction = n_ratio * camera_ray.direction
             - (n_ratio * cos_refraction + (1.0 - sin_square_refraction).sqrt()) * surface_normal;
         // Go up to object exterior
-        let refraction_ray = Ray {
-            source: collision_point,
-            direction: refraction_direction,
-        }
+        let refraction_ray = Ray::new(
+            collision_point,
+            refraction_direction)
         .shift_source();
         if let Some((_, exit_point)) = search_object_collision(&refraction_ray, &scene.objects) {
             // TODO only the nearest_object is necessary
             // launch new ray
-            let new_ray = Ray {
-                source: exit_point,
-                direction: camera_ray.direction,
-            }
+            let new_ray = Ray::new(
+                 exit_point,
+                camera_ray.direction
+            )
             .shift_source();
             total_color += transparency.alpha * launch_ray(&new_ray, scene, depth + 1)?;
         }
@@ -172,7 +170,7 @@ fn illumination_from_lights(
         }
 
         // Build values needed for light computation
-        let light_direction = light_ray.direction.normalize();
+        let light_direction = light_ray.direction;
         let light_color = current_light.light_color_at(surface_point);
         let surface_normal = object
             .normal_at(surface_point)

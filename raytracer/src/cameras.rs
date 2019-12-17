@@ -152,10 +152,7 @@ impl RayEmitter for OrthogonalCamera {
             (
                 screen_x,
                 screen_y,
-                Ray {
-                    source: ray_source,
-                    direction: self.eye_direction,
-                },
+                Ray::new(ray_source,self.eye_direction),
             )
         });
         Box::new(iter)
