@@ -234,15 +234,15 @@ impl Shape for Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64::EPSILON;
+    use crate::utils::f64_eq;
 
     #[test]
     fn unit_sphere_values() {
         let sphere: Sphere = Default::default(); // Given a unit sphere
-        assert!((sphere.radius - 1.0).abs() < EPSILON); // Then it has a radius of 1
-        assert!((sphere.center.x - 0.0).abs() < EPSILON); // And a x value of 0
-        assert!((sphere.center.y - 0.0).abs() < EPSILON); // And a y value of 0
-        assert!((sphere.center.z - 0.0).abs() < EPSILON); // And a z value of 0
+        assert!(f64_eq(sphere.radius, 1.0)); // Then it has a radius of 1
+        assert!(f64_eq(sphere.center.x, 0.0)); // And a x value of 0
+        assert!(f64_eq(sphere.center.y, 0.0)); // And a y value of 0
+        assert!(f64_eq(sphere.center.z, 0.0)); // And a z value of 0
     }
 
     #[test]

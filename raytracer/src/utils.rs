@@ -42,3 +42,20 @@ pub fn unit_interval_clamp(val: f64) -> UnitInterval {
         x => x,
     }
 }
+
+// Not using generics, because it would require a "float" trait which does not
+// exist in the std library, and adding a 3rd party lib only for that is excessive.
+#[inline]
+pub(crate) fn f64_eq(a: f64, b: f64) -> bool {
+    (a - b).abs() <= std::f64::EPSILON
+}
+
+#[inline]
+pub(crate) fn f64_lt(a: f64, b: f64) -> bool {
+    a <= b + std::f64::EPSILON
+}
+
+#[inline]
+pub(crate) fn f64_gt(a: f64, b: f64) -> bool {
+    a >= b - std::f64::EPSILON
+}

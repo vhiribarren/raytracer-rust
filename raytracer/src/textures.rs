@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 use crate::colors::Color;
+use crate::utils::{f64_gt, f64_lt};
 use crate::UnitInterval;
 
 pub trait Texture {
@@ -57,8 +58,8 @@ impl Default for CheckedPattern {
 
 impl Texture for CheckedPattern {
     fn color_at(&self, u: f64, v: f64) -> Color {
-        assert!(u >= -std::f64::EPSILON && u <= 1.0 + std::f64::EPSILON);
-        assert!(v >= -std::f64::EPSILON && v <= 1.0 + std::f64::EPSILON);
+        assert!(f64_gt(u, 0.0) && f64_lt(u, 1.0));
+        assert!(f64_gt(v, 0.0) && f64_lt(v, 1.0));
         let selection = ((u * self.count).floor() + (v * self.count).floor()) as u64 % 2;
         match selection {
             0 => self.primary_color.clone(),

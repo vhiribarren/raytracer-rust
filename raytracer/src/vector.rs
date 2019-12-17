@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::utils::f64_eq;
+
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Vec3 {
     pub x: f64,
@@ -84,13 +86,7 @@ impl Vec3 {
 
 impl std::cmp::PartialEq for Vec3 {
     fn eq(&self, other: &Self) -> bool {
-        use std::f64::EPSILON;;
-        self.x <= other.x + EPSILON
-            && self.x >= other.x - EPSILON
-            && self.y <= other.y + EPSILON
-            && self.y >= other.y - EPSILON
-            && self.z <= other.z + EPSILON
-            && self.z >= other.z - EPSILON
+        f64_eq(self.x, other.x) && f64_eq(self.y, other.y) && f64_eq(self.z, other.z)
     }
 }
 
@@ -167,12 +163,11 @@ impl Mat3 {
 
 impl std::cmp::PartialEq for Mat3 {
     fn eq(&self, other: &Self) -> bool {
-        use std::f64::EPSILON;;
         self.0
             .iter()
             .flatten()
             .zip(other.0.iter().flatten())
-            .all(|(&left, &right)| left <= right + EPSILON && left >= right - EPSILON)
+            .all(|(&left, &right)| f64_eq(left, right))
     }
 }
 
@@ -261,7 +256,7 @@ mod tests {
             mat.0
                 .iter()
                 .flatten()
-                .for_each(|&val| assert!(val.abs() < std::f64::EPSILON));
+                .for_each(|&val| assert!(f64_eq(val, 0.0)));
         }
 
         #[test]

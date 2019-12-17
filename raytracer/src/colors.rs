@@ -180,22 +180,22 @@ impl std::ops::Mul<&Color> for UnitInterval {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64::EPSILON;
+    use crate::utils::{f64_gt, f64_lt};
 
     #[test]
     fn new_color_with_high_value_is_clamped() {
         let color = Color::new(10.0, 10.0, 10.0);
-        assert!(color.red <= 1.0 + EPSILON);
-        assert!(color.green <= 1.0 + EPSILON);
-        assert!(color.blue <= 1.0 + EPSILON);
+        assert!(f64_lt(color.red, 1.0));
+        assert!(f64_lt(color.green, 1.0));
+        assert!(f64_lt(color.blue, 1.0));
     }
 
     #[test]
     fn new_color_with_low_value_is_clamped() {
         let color = Color::new(-10.0, -10.0, -10.0);
-        assert!(color.red >= -EPSILON);
-        assert!(color.green >= -EPSILON);
-        assert!(color.blue >= -EPSILON);
+        assert!(f64_gt(color.red, 0.0));
+        assert!(f64_gt(color.green, 0.0));
+        assert!(f64_gt(color.blue, 0.0));
     }
 
     #[test]
@@ -203,17 +203,17 @@ mod tests {
         let color_1 = Color::new(1.0, 1.0, 1.0);
         let color_2 = Color::new(1.0, 1.0, 1.0);
         let result = color_1 + color_2;
-        assert!(result.red <= 1.0 + EPSILON);
-        assert!(result.green <= 1.0 + EPSILON);
-        assert!(result.blue <= 1.0 + EPSILON);
+        assert!(f64_lt(result.red, 1.0));
+        assert!(f64_lt(result.green, 1.0));
+        assert!(f64_lt(result.blue, 1.0));
     }
 
     #[test]
     fn mul_with_high_constant_is_clamped() {
         let color = Color::new(1.0, 1.0, 1.0);
         let result = 10.0 * color;
-        assert!(result.red <= 1.0 + EPSILON);
-        assert!(result.green <= 1.0 + EPSILON);
-        assert!(result.blue <= 1.0 + EPSILON);
+        assert!(f64_lt(result.red, 1.0));
+        assert!(f64_lt(result.green, 1.0));
+        assert!(f64_lt(result.blue, 1.0));
     }
 }
