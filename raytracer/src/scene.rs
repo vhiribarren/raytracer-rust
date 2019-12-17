@@ -32,7 +32,7 @@ pub struct Scene {
     pub camera: Box<dyn RayEmitter>,
     pub lights: Vec<Box<dyn AnyLightObject>>,
     pub objects: Vec<Box<dyn AnySceneObject>>,
-    pub options: SceneConfiguration,
+    pub config: SceneConfiguration,
 }
 
 pub struct SceneConfiguration {

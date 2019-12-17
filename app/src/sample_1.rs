@@ -137,7 +137,7 @@ pub(crate) fn generate_test_scene() -> Scene {
             Box::new(object_4),
             Box::new(object_5),
         ],
-        options: SceneConfiguration {
+        config: SceneConfiguration {
             ambient_light: Some(Color::new(0.0, 0.0, 0.2)),
             maximum_light_recursion: 2,
             ..Default::default()

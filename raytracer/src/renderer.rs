@@ -67,7 +67,7 @@ pub fn render(
 }
 
 fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, String> {
-    if depth > scene.options.maximum_light_recursion {
+    if depth > scene.config.maximum_light_recursion {
         return Ok(Color::BLACK);
     }
 
@@ -76,7 +76,7 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, Strin
         match search_object_collision(&camera_ray, &scene.objects) {
             Some((object, point)) => (object, point),
             None => {
-                return Ok(scene.options.world_color.clone());
+                return Ok(scene.config.world_color.clone());
             }
         };
 
@@ -96,7 +96,7 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, Strin
             .normal_at(collision_point)
             .ok_or_else(|| String::from("No normal found"))?
             .normalize();
-        let n_ratio = scene.options.world_refractive_index / transparency.refractive_index;
+        let n_ratio = scene.config.world_refractive_index / transparency.refractive_index;
         let cos_refraction = camera_ray.direction.dot_product(surface_normal);
         let sin_square_refraction = n_ratio.powi(2) * (1.0 - cos_refraction.powi(2));
         let refraction_direction = n_ratio * camera_ray.direction
@@ -126,7 +126,7 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, Strin
     }
 
     // Ambient light
-    if let Some(ambient_light) = &scene.options.ambient_light {
+    if let Some(ambient_light) = &scene.config.ambient_light {
         total_color += ambient_light * &nearest_object.color_at(collision_point);
     }
 
