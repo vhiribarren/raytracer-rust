@@ -27,7 +27,9 @@ use raytracer::colors::Color;
 use raytracer::lights::LightPoint;
 use raytracer::primitives::{InfinitePlan, Sphere};
 use raytracer::scene::{Scene, SceneConfiguration, SceneObject};
-use raytracer::textures::{CheckedPattern, PlainColorTexture, TextureEffects, Transparency};
+use raytracer::textures::{
+    CheckedPattern, Mirror, PlainColorTexture, TextureEffects, Transparency,
+};
 use raytracer::vector::Vec3;
 use std::f64::consts::PI;
 
@@ -73,10 +75,8 @@ pub(crate) fn generate_test_scene() -> Scene {
         texture,
         effects: TextureEffects {
             phong: Some(Default::default()),
-            transparency: Some(Transparency {
-                refractive_index: 1.3,
-                ..Default::default()
-            }),
+            mirror: Some(Mirror { coeff: 1.0 }),
+            ..Default::default()
         },
     };
     let primitive: Sphere = Sphere {
@@ -94,6 +94,7 @@ pub(crate) fn generate_test_scene() -> Scene {
                 refractive_index: 1.3,
                 ..Default::default()
             }),
+            ..Default::default()
         },
     };
     let primitive: Sphere = Sphere {
@@ -111,6 +112,7 @@ pub(crate) fn generate_test_scene() -> Scene {
                 refractive_index: 1.3,
                 ..Default::default()
             }),
+            ..Default::default()
         },
     };
     //let plane = SquarePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0), 40.0);
@@ -120,6 +122,7 @@ pub(crate) fn generate_test_scene() -> Scene {
         primitive: plane,
         texture,
         effects: TextureEffects {
+            mirror: Some(Mirror { coeff: 0.8 }),
             ..Default::default()
         },
     };
@@ -136,6 +139,7 @@ pub(crate) fn generate_test_scene() -> Scene {
         ],
         options: SceneConfiguration {
             ambient_light: Some(Color::new(0.0, 0.0, 0.2)),
+            maximum_light_recursion: 2,
             ..Default::default()
         },
     }

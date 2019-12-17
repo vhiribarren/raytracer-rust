@@ -90,9 +90,7 @@ impl InfinitePlan {
 
 impl Shape for InfinitePlan {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
-        let denom = self
-            .normal_normalized
-            .dot_product(ray.direction);
+        let denom = self.normal_normalized.dot_product(ray.direction);
         if denom.abs() < 1e-6 {
             return None;
         }
@@ -251,13 +249,13 @@ mod tests {
     #[test]
     fn from_to_ray_has_normalized_direction() {
         let ray = Ray::ray_from_to(Vec3::new(0.0, 0.0, 0.0), Vec3::new(10.0, 10.0, 10.0));
-        assert!(f64_eq(ray.direction.norm(),1.0));
+        assert!(f64_eq(ray.direction.norm(), 1.0));
     }
 
     #[test]
     fn new_ray_has_normalized_direction() {
         let ray = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(10.0, 10.0, 10.0));
-        assert!(f64_eq(ray.direction.norm(),1.0));
+        assert!(f64_eq(ray.direction.norm(), 1.0));
     }
 
     #[test]

@@ -102,20 +102,27 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, Strin
         let refraction_direction = n_ratio * camera_ray.direction
             - (n_ratio * cos_refraction + (1.0 - sin_square_refraction).sqrt()) * surface_normal;
         // Go up to object exterior
-        let refraction_ray = Ray::new(
-            collision_point,
-            refraction_direction)
-        .shift_source();
+        let refraction_ray = Ray::new(collision_point, refraction_direction).shift_source();
         if let Some((_, exit_point)) = search_object_collision(&refraction_ray, &scene.objects) {
             // TODO only the nearest_object is necessary
             // launch new ray
-            let new_ray = Ray::new(
-                 exit_point,
-                camera_ray.direction
-            )
-            .shift_source();
+            let new_ray = Ray::new(exit_point, camera_ray.direction).shift_source();
             total_color += transparency.alpha * launch_ray(&new_ray, scene, depth + 1)?;
         }
+    }
+
+    // Reflexion
+    if let Some(mirror) = &nearest_object.effects().mirror {
+        let surface_normal = nearest_object
+            .normal_at(collision_point)
+            .ok_or_else(|| String::from("No normal found"))?
+            .normalize();
+        let ray_reflexion = Ray::new(
+            collision_point,
+            camera_ray.direction.reflect(surface_normal).normalize(),
+        )
+        .shift_source();
+        total_color += mirror.coeff * launch_ray(&ray_reflexion, scene, depth + 1)?;
     }
 
     // Ambient light

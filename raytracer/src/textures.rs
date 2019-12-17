@@ -72,6 +72,7 @@ impl Texture for CheckedPattern {
 pub struct TextureEffects {
     pub phong: Option<Phong>,
     pub transparency: Option<Transparency>,
+    pub mirror: Option<Mirror>,
 }
 
 impl Default for TextureEffects {
@@ -79,7 +80,18 @@ impl Default for TextureEffects {
         TextureEffects {
             phong: None,
             transparency: None,
+            mirror: None,
         }
+    }
+}
+
+pub struct Mirror {
+    pub coeff: UnitInterval,
+}
+
+impl Default for Mirror {
+    fn default() -> Self {
+        Mirror { coeff: 0.8 }
     }
 }
 

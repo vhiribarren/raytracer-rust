@@ -26,7 +26,7 @@ The sample scene is in `app/src/sample_1.rs`; it is currently the only way to de
 - [X] Cameras: perspective, orthogonal
 - [X] Colored light point
 - [X] Textures: plain color, procedural checked texture
-- [X] Effects: transparency
+- [X] Effects: transparency, mirror
 - [X] Shadow when object obstruction
 - [X] Ambiant light
 - [X] Diffuse light reflexion
@@ -41,7 +41,6 @@ RayTracing:
 
 - [ ] Anti-aliasing
 - [ ] Color shadow when going through transparent object
-- [ ] Mirror effect
 - [ ] Box primitive
 - [ ] Texture image mapping
 - [ ] Object transformation
