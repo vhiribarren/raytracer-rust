@@ -36,7 +36,7 @@ use raytracer::renderer::{render, RenderOptions};
 use raytracer::scene::Scene;
 
 const APP_AUTHOR: &str = "Vincent Hiribarren";
-const APP_NAME: &str = "raytracer-rust-wasm";
+const APP_NAME: &str = "raytracer-rust";
 const APP_ABOUT: &str = "Toy project to test Rust";
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
