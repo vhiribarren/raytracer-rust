@@ -334,7 +334,7 @@ mod tests {
                 [3.0, 4.0, 5.0],
                 [6.0, 7.0, 8.0]
             ]);
-            let result = mat * Mat3::id();
+            let result = mat * Mat3::ID;
             assert_eq!(mat, result);
         }
 
@@ -345,21 +345,21 @@ mod tests {
                 [3.0, 4.0, 5.0],
                 [6.0, 7.0, 8.0]
             ]);
-            let result = Mat3::id() * mat;
+            let result = Mat3::ID * mat;
             assert_eq!(mat, result);
         }
 
         #[test]
         fn mat3_id_with_vec3_is_vec3() {
             let vec = Vec3::new(-10.0, 0.0, 22.0);
-            let result = Mat3::id() * vec;
+            let result = Mat3::ID * vec;
             assert_eq!(vec, result);
         }
 
         #[test]
         fn same_direction_transform_is_id() {
             let vec = Vec3::new(1.1, 2.2, 2.2);
-            assert_eq!(Mat3::id(), Mat3::transformation_between(vec, vec) );
+            assert_eq!(Mat3::ID, Mat3::transformation_between(vec, vec) );
         }
     }
 }
