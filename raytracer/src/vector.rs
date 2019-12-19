@@ -32,16 +32,14 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-    pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
+    pub const ZERO: Vec3 = Vec3::new(0.0, 0.0, 0.0);
+
+    pub const fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x, y, z }
     }
 
-    pub fn zero() -> Self {
-        Vec3::new(0.0, 0.0, 0.0)
-    }
-
     pub fn is_null(self) -> bool {
-        self == Vec3::zero()
+        self == Vec3::ZERO
     }
 
     pub fn between_points(source: Vec3, destination: Vec3) -> Vec3 {
@@ -127,26 +125,23 @@ impl std::ops::Mul<Vec3> for f64 {
 pub struct Mat3([[f64; 3]; 3]);
 
 impl Mat3 {
-    pub fn new() -> Self {
-        Self::zero()
-    }
-
     #[rustfmt::skip]
-    pub fn id() -> Self {
+    pub const ID: Mat3 =
         Mat3([
             [1.0, 0.0, 0.0],
             [0.0, 1.0, 0.0],
             [0.0, 0.0, 1.0]
-        ])
-    }
+        ]);
 
     #[rustfmt::skip]
-    pub fn zero() -> Self {
-        Mat3([[0.0; 3]; 3])
+    pub const ZERO: Mat3 = Mat3([[0.0; 3]; 3]);
+
+    pub const fn new() -> Self {
+        Self::ZERO
     }
 
     pub fn is_null(self) -> bool {
-        self == Mat3::zero()
+        self == Self::ZERO
     }
 
     pub fn transformation_between(from: Vec3, to: Vec3) -> Self {
@@ -154,10 +149,10 @@ impl Mat3 {
         // https://gist.github.com/peteristhegreat/3b76d5169d7b9fc1e333
         let v = from.cross_product(to);
         if v.is_null() {
-            return Mat3::id();
+            return Mat3::ID;
         }
         let ssc = Mat3([[0.0, -v.z, v.y], [v.z, 0.0, -v.x], [-v.y, v.x, 0.0]]);
-        Mat3::id() + ssc + ((1.0 - from.dot_product(to)) / (v.norm().powi(2))) * ssc * ssc
+        Mat3::ID + ssc + ((1.0 - from.dot_product(to)) / (v.norm().powi(2))) * ssc * ssc
     }
 }
 
