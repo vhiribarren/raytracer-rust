@@ -53,11 +53,20 @@ pub fn render(
         return Err(String::from("There is no light in the scene"));
     }
     let camera = &scene.camera;
+
     // We scan the pixels of the canvas
-    for (x, y, camera_ray) in camera.generate_rays(options.canvas_width, options.canvas_height) {
-        let color = launch_ray(&camera_ray, scene, 0)?;
-        canvas.draw(x, options.canvas_height - y, &(color))?;
+    let width_step = 1.0 / options.canvas_width as f64;
+    let height_step = 1.0 / options.canvas_height as f64;
+    for x in 0..options.canvas_width {
+        for y in 0..options.canvas_height {
+            let x_unit = width_step / 2.0 + (x as f64) / (options.canvas_width as f64);
+            let y_unit = height_step / 2.0 + (y as f64) / (options.canvas_height as f64);
+            let camera_ray = camera.generate_ray(x_unit, y_unit);
+            let color = launch_ray(&camera_ray, scene, 0)?;
+            canvas.draw(x, y, &(color))?;
+        }
     }
+
     info!(
         "render: duration: {:.3} seconds",
         start_render_instant.elapsed().as_secs_f32()

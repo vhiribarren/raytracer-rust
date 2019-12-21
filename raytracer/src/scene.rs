@@ -27,6 +27,7 @@ use crate::lights::AnyLightObject;
 use crate::primitives::{Ray, Shape};
 use crate::textures::{Texture, TextureEffects};
 use crate::vector::Vec3;
+use crate::UnitInterval;
 
 pub struct Scene {
     pub camera: Box<dyn RayEmitter>,
@@ -86,9 +87,5 @@ impl<T: Texture, P: Shape> AnySceneObject for SceneObject<T, P> {
 }
 
 pub trait RayEmitter {
-    fn generate_rays<'a>(
-        &'a self,
-        screen_width: u32,
-        screen_height: u32,
-    ) -> Box<dyn Iterator<Item = (u32, u32, Ray)> + 'a>;
+    fn generate_ray(&self, canvas_x: UnitInterval, canvas_y: UnitInterval) -> Ray;
 }
