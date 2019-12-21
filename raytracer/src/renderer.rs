@@ -27,7 +27,7 @@ use crate::lights::AnyLightObject;
 use crate::primitives::Ray;
 use crate::scene::{AnySceneObject, Scene};
 use crate::vector::Vec3;
-use log::{debug, info};
+use log::{debug, info, warn};
 use std::f64;
 use std::time;
 
@@ -40,11 +40,15 @@ pub struct RenderOptions {
     pub canvas_height: u32,
 }
 
+
 pub fn render(
     scene: &Scene,
     canvas: &mut impl DrawCanvas,
     options: &RenderOptions,
 ) -> Result<(), String> {
+    if cfg!(debug_assertions) {
+        warn!("Debug compiled binary is used, performance will be low");
+    }
     info!("render: start process...");
     let start_render_instant = time::Instant::now();
     debug!("render: {} objects to process", scene.objects.len());
