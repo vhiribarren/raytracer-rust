@@ -27,7 +27,9 @@ use crate::lights::AnyLightObject;
 use crate::primitives::Ray;
 use crate::scene::{AnySceneObject, Scene};
 use crate::vector::Vec3;
+use crate::UnitInterval;
 use log::{debug, info, warn};
+use rand::Rng;
 use std::f64;
 use std::time;
 
@@ -35,16 +37,75 @@ pub trait DrawCanvas {
     fn draw(&mut self, x: u32, y: u32, color: &Color) -> Result<(), String>;
 }
 
-pub struct RenderOptions {
-    pub canvas_width: u32,
-    pub canvas_height: u32,
+pub trait AnyPixelRenderStrategy {
+    fn render_pixel(
+        &self,
+        scene: &Scene,
+        canvas_x: UnitInterval,
+        canvas_y: UnitInterval,
+        pixel_width: f64,
+        pixel_height: f64,
+    ) -> Result<Color, String>;
 }
 
+pub struct RenderConfiguration {
+    pub canvas_width: u32,
+    pub canvas_height: u32,
+    pub render_strategy: Box<dyn AnyPixelRenderStrategy>,
+}
+
+pub mod strategy {
+    use super::*;
+
+    pub struct StandardRenderStrategy;
+
+    impl AnyPixelRenderStrategy for StandardRenderStrategy {
+        fn render_pixel(
+            &self,
+            scene: &Scene,
+            canvas_x: UnitInterval,
+            canvas_y: UnitInterval,
+            pixel_width: f64,
+            pixel_height: f64,
+        ) -> Result<Color, String> {
+            let x_unit = pixel_width / 2.0 + canvas_x;
+            let y_unit = pixel_height / 2.0 + canvas_y;
+            let camera_ray = scene.camera.generate_ray(x_unit, y_unit);
+            launch_ray(&camera_ray, scene, 0)
+        }
+    }
+
+    pub struct RandomAntiAliasingRenderStrategy {
+        pub rays_per_pixel: u32,
+    }
+
+    impl AnyPixelRenderStrategy for RandomAntiAliasingRenderStrategy {
+        fn render_pixel(
+            &self,
+            scene: &Scene,
+            canvas_x: UnitInterval,
+            canvas_y: UnitInterval,
+            pixel_width: f64,
+            pixel_height: f64,
+        ) -> Result<Color, String> {
+            let mut rng = rand::thread_rng();
+            let mut result_color = Color::BLACK;
+            for _ in 0..self.rays_per_pixel {
+                let x_unit: f64 = rng.gen::<f64>() * pixel_width + canvas_x;
+                let y_unit: f64 = rng.gen::<f64>() * pixel_height + canvas_y;
+                let camera_ray = scene.camera.generate_ray(x_unit, y_unit);
+                result_color +=
+                    (1.0 / (self.rays_per_pixel as f64)) * launch_ray(&camera_ray, scene, 0)?;
+            }
+            Ok(result_color)
+        }
+    }
+}
 
 pub fn render(
     scene: &Scene,
     canvas: &mut impl DrawCanvas,
-    options: &RenderOptions,
+    config: &RenderConfiguration,
 ) -> Result<(), String> {
     if cfg!(debug_assertions) {
         warn!("Debug compiled binary is used, performance will be low");
@@ -56,18 +117,19 @@ pub fn render(
     if scene.lights.is_empty() {
         return Err(String::from("There is no light in the scene"));
     }
-    let camera = &scene.camera;
+
+    let render_strategy = &*config.render_strategy;
 
     // We scan the pixels of the canvas
-    let width_step = 1.0 / options.canvas_width as f64;
-    let height_step = 1.0 / options.canvas_height as f64;
-    for x in 0..options.canvas_width {
-        for y in 0..options.canvas_height {
-            let x_unit = width_step / 2.0 + (x as f64) / (options.canvas_width as f64);
-            let y_unit = height_step / 2.0 + (y as f64) / (options.canvas_height as f64);
-            let camera_ray = camera.generate_ray(x_unit, y_unit);
-            let color = launch_ray(&camera_ray, scene, 0)?;
-            canvas.draw(x, y, &(color))?;
+    let width_step = 1.0 / config.canvas_width as f64;
+    let height_step = 1.0 / config.canvas_height as f64;
+    for x in 0..config.canvas_width {
+        for y in 0..config.canvas_height {
+            let canvas_x = (x as f64) / (config.canvas_width as f64);
+            let canvas_y = (y as f64) / (config.canvas_height as f64);
+            let result_color =
+                render_strategy.render_pixel(scene, canvas_x, canvas_y, width_step, height_step)?;
+            canvas.draw(x, y, &(result_color))?;
         }
     }
 

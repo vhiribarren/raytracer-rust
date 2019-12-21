@@ -24,9 +24,10 @@ The sample scene is in `app/src/sample_1.rs`; it is currently the only way to de
 
 - [X] Primitives: sphere, plane, infinite plane
 - [X] Cameras: perspective, orthogonal
-- [X] Colored light point
+- [X] Light: colored light point
 - [X] Textures: plain color, procedural checked texture
 - [X] Effects: transparency, mirror
+- [X] Anti-aliasing: none, random strategy
 - [X] Shadow when object obstruction
 - [X] Ambiant light
 - [X] Diffuse light reflexion
@@ -39,7 +40,7 @@ The sample scene is in `app/src/sample_1.rs`; it is currently the only way to de
 
 RayTracing:
 
-- [ ] Anti-aliasing
+- [ ] Better anti-aliasing
 - [ ] Color shadow when going through transparent object
 - [ ] Box primitive
 - [ ] Texture image mapping

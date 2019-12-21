@@ -32,7 +32,8 @@ use std::time::Duration;
 use crate::utils::canvas::none::NoCanvas;
 use crate::utils::canvas::sdl::WrapperCanvas;
 use crate::utils::result::RaytracingResult;
-use raytracer::renderer::{render, RenderOptions};
+use raytracer::renderer::strategy::StandardRenderStrategy;
+use raytracer::renderer::{render, RenderConfiguration};
 use raytracer::scene::Scene;
 
 const APP_AUTHOR: &str = "Vincent Hiribarren";
@@ -60,9 +61,11 @@ pub fn main() -> RaytracingResult {
         .get_matches();
 
     let scene = sample_1::generate_test_scene();
-    let render_options = RenderOptions {
+    let render_options = RenderConfiguration {
         canvas_width: CANVAS_WIDTH,
         canvas_height: CANVAS_HEIGHT,
+        //render_strategy: Box::new(RandomAntiAliasingRenderStrategy {rays_per_pixel: 20}),
+        render_strategy: Box::new(StandardRenderStrategy),
     };
 
     if matches.is_present("no-gui") {
@@ -74,12 +77,18 @@ pub fn main() -> RaytracingResult {
     Ok(())
 }
 
-fn render_no_gui(scene: &Scene, render_options: &RenderOptions) -> utils::result::RaytracingResult {
+fn render_no_gui(
+    scene: &Scene,
+    render_options: &RenderConfiguration,
+) -> utils::result::RaytracingResult {
     render(&scene, &mut NoCanvas, &render_options)?;
     Ok(())
 }
 
-fn render_sdl(scene: &Scene, render_options: &RenderOptions) -> utils::result::RaytracingResult {
+fn render_sdl(
+    scene: &Scene,
+    render_options: &RenderConfiguration,
+) -> utils::result::RaytracingResult {
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
