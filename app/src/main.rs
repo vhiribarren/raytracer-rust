@@ -27,16 +27,17 @@ mod utils;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::utils::canvas::none::NoCanvas;
 use crate::utils::canvas::sdl::WrapperCanvas;
 use crate::utils::result::RaytracingResult;
 use log::warn;
 use raytracer::ray_algorithm::strategy::StandardRenderStrategy;
-use raytracer::renderer::{DrawCanvas, ProgressiveRenderer, RenderConfiguration};
+use raytracer::renderer::{DrawCanvas, ProgressiveRenderer, RenderConfiguration, AreaRenderIterator};
 use raytracer::scene::Scene;
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
+use sdl2::pixels::PixelFormatEnum;
 
 const APP_AUTHOR: &str = "Vincent Hiribarren";
 const APP_NAME: &str = "raytracer-rust";
@@ -123,6 +124,7 @@ fn render_sdl(
     scene: &Scene,
     render_options: &RenderConfiguration,
 ) -> utils::result::RaytracingResult {
+
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
@@ -130,29 +132,47 @@ fn render_sdl(
         .position_centered()
         .resizable()
         .build()?;
-    let mut canvas = window.into_canvas().build()?;
-    canvas.set_logical_size(CANVAS_WIDTH, CANVAS_HEIGHT)?;
-    canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
-    canvas.clear();
-    let mut wrapper_canvas = WrapperCanvas(&mut canvas);
 
-    render(&scene, &mut wrapper_canvas, &render_options)?;
+    let mut window_canvas = window.into_canvas().build()?;
+    window_canvas.set_logical_size(CANVAS_WIDTH, CANVAS_HEIGHT)?;
+    window_canvas.set_draw_color(sdl2::pixels::Color::RGB(77, 77, 170));
+    window_canvas.clear();
+    window_canvas.present();
+    window_canvas.clear();
 
-    canvas.present();
+    let texture_creator = window_canvas.texture_creator();
+
+    let mut render_canvas = sdl2::surface::Surface::new(WINDOW_WIDTH, WINDOW_HEIGHT, PixelFormatEnum::RGBA32)?.into_canvas()?;
+    let mut renderer_iterator = AreaRenderIterator::with_full_area(scene, render_options).peekable();
 
     let mut event_pump = sdl_context.event_pump()?;
-    'main_loop: loop {
+    'event_loop: loop {
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
-                } => break 'main_loop,
+                } => break 'event_loop,
                 _ => {}
             }
         }
-        std::thread::sleep(Duration::from_millis(100));
+        if let Some(val) = renderer_iterator.peek() {
+            let instant = Instant::now();
+            let mut wrapper_canvas = WrapperCanvas(&mut render_canvas);
+            while let Some(pixel) = renderer_iterator.next() {
+                wrapper_canvas.draw(pixel.unwrap())?;
+                if instant.elapsed().as_millis() > 20 {
+                    break;
+                }
+            }
+            let texture = texture_creator.create_texture_from_surface(render_canvas.surface())?;
+            window_canvas.copy(&texture, None, None);
+            window_canvas.present();
+        }
+        else {
+            std::thread::sleep(Duration::from_millis(100));
+        }
     }
 
     Ok(())

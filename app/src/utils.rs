@@ -29,6 +29,7 @@ pub mod result {
     use sdl2::IntegerOrSdlError;
     use std::fmt::Result;
     use std::fmt::{Display, Formatter};
+    use sdl2::render::TextureValueError;
 
     impl From<WindowBuildError> for AppError {
         fn from(err: WindowBuildError) -> Self {
@@ -45,6 +46,12 @@ pub mod result {
     impl From<SetLoggerError> for AppError {
         fn from(err: SetLoggerError) -> Self {
             LoggerError(err.to_string())
+        }
+    }
+
+    impl From<TextureValueError> for AppError {
+        fn from(err: TextureValueError) -> Self {
+            SdlError(err.to_string())
         }
     }
 
@@ -83,9 +90,9 @@ pub mod canvas {
         use sdl2::render::Canvas;
         use sdl2::video::Window;
 
-        pub struct WrapperCanvas<'a>(pub &'a mut Canvas<Window>);
+        pub struct WrapperCanvas<'a, T: sdl2::render::RenderTarget>(pub &'a mut Canvas<T>);
 
-        impl DrawCanvas for WrapperCanvas<'_> {
+        impl<T: sdl2::render::RenderTarget> DrawCanvas for WrapperCanvas<'_, T> {
             fn draw(&mut self, p: Pixel) -> std::result::Result<(), String> {
                 let draw_color = sdl2::pixels::Color::RGB(
                     (255.0 * p.color.red()) as u8,
