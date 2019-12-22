@@ -33,7 +33,7 @@ use crate::utils::canvas::none::NoCanvas;
 use crate::utils::canvas::sdl::WrapperCanvas;
 use crate::utils::result::RaytracingResult;
 use log::warn;
-use raytracer::renderer::strategy::StandardRenderStrategy;
+use raytracer::ray_algorithm::strategy::StandardRenderStrategy;
 use raytracer::renderer::{DrawCanvas, ProgressiveRenderer, RenderConfiguration};
 use raytracer::scene::Scene;
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
@@ -58,7 +58,7 @@ pub fn main() -> RaytracingResult {
         .arg(
             clap::Arg::with_name("no-gui")
                 .long("no-gui")
-                .help("Does not display the rendering canvas."),
+                .help("Does not display the ray_algorithm canvas."),
         )
         .get_matches();
 

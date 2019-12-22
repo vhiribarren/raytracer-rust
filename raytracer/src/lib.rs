@@ -26,12 +26,13 @@ pub mod cameras;
 pub mod colors;
 pub mod lights;
 pub mod primitives;
+pub mod ray_algorithm;
 pub mod renderer;
 pub mod scene;
 pub mod textures;
+pub mod vector;
 
 mod utils;
-pub mod vector;
 
 use wasm_bindgen::prelude::*;
 
