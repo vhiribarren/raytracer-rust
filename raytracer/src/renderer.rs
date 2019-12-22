@@ -35,8 +35,20 @@ use std::time;
 
 pub use iterator::*;
 
+pub struct Pixel {
+    pub x: u32,
+    pub y: u32,
+    pub color: Color,
+}
+
+impl Pixel {
+    pub fn new(x: u32, y: u32, color: Color) -> Pixel {
+        Pixel { x, y, color }
+    }
+}
+
 pub trait DrawCanvas {
-    fn draw(&mut self, x: u32, y: u32, color: &Color) -> Result<(), String>;
+    fn draw(&mut self, pixel: Pixel) -> Result<(), String>;
 }
 
 pub trait AnyPixelRenderStrategy {
@@ -104,38 +116,66 @@ pub mod strategy {
     }
 }
 
-pub fn render(
+pub struct ProgressiveRenderer<'a> {
+    scene: &'a Scene,
+    config: &'a RenderConfiguration,
+}
+
+impl ProgressiveRenderer<'_> {
+    pub fn new<'a>(scene: &'a Scene, config: &'a RenderConfiguration) -> ProgressiveRenderer<'a> {
+        ProgressiveRenderer { scene, config }
+    }
+
+    pub fn total_pixels(&self) -> u32 {
+        self.config.canvas_width * self.config.canvas_height
+    }
+
+    pub fn render<E, F>(&self, mut callback: E, mut finally: F) -> Result<(), String>
+    where
+        E: FnMut(Pixel) -> Result<(), String>,
+        F: FnMut(),
+    {
+        if cfg!(debug_assertions) {
+            warn!("Debug compiled binary is used, performance will be low!");
+        }
+
+        debug!("render: {} objects to process", self.scene.objects.len());
+        debug!("render: {} lights to process", self.scene.lights.len());
+        if self.scene.lights.is_empty() {
+            return Err(String::from("There is no light in the scene"));
+        }
+
+        let area_iterator = AreaRenderIterator::with_full_area(self.scene, self.config);
+
+        {
+            info!("render: start process...");
+            let start_render_instant = time::Instant::now();
+            for result in area_iterator {
+                match result {
+                    Err(val) => return Err(val),
+                    Ok(pixel) => {
+                        callback(pixel)?;
+                    }
+                }
+            }
+            finally();
+            info!("render: done!");
+            info!(
+                "render: duration: {:.3} seconds",
+                start_render_instant.elapsed().as_secs_f32()
+            );
+        }
+
+        Ok(())
+    }
+}
+
+pub fn simple_render_to_canvas(
     scene: &Scene,
     canvas: &mut impl DrawCanvas,
     config: &RenderConfiguration,
 ) -> Result<(), String> {
-    if cfg!(debug_assertions) {
-        warn!("Debug compiled binary is used, performance will be low");
-    }
-    info!("render: start process...");
-    let start_render_instant = time::Instant::now();
-    debug!("render: {} objects to process", scene.objects.len());
-    debug!("render: {} lights to process", scene.lights.len());
-    if scene.lights.is_empty() {
-        return Err(String::from("There is no light in the scene"));
-    }
-
-    let area_iterator = AreaRenderIterator::with_full_area(scene, config);
-    for result in area_iterator {
-        match result {
-            Err(val) => return Err(val),
-            Ok((x, y, color)) => {
-                canvas.draw(x, y, &(color))?;
-            }
-        }
-    }
-
-    info!(
-        "render: duration: {:.3} seconds",
-        start_render_instant.elapsed().as_secs_f32()
-    );
-    info!("render: done!");
-    Ok(())
+    ProgressiveRenderer::new(scene, config).render(|pixel| canvas.draw(pixel), || {})
 }
 
 pub mod iterator {
@@ -191,10 +231,14 @@ pub mod iterator {
                 config.canvas_height,
             )
         }
+
+        pub fn total_pixels(&self) -> usize {
+            (self.area_width * self.area_height) as usize
+        }
     }
 
     impl Iterator for AreaRenderIterator<'_> {
-        type Item = Result<(u32, u32, Color), String>;
+        type Item = Result<Pixel, String>;
 
         fn next(&mut self) -> Option<Self::Item> {
             if self.area_y_current >= self.area_height {
@@ -221,7 +265,7 @@ pub mod iterator {
                 self.area_x_current = self.area_x_origin;
                 self.area_y_current += 1;
             }
-            Some(Ok((x, y, color)))
+            Some(Ok(Pixel::new(x, y, color)))
         }
     }
 }

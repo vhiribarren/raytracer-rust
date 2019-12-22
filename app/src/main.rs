@@ -32,8 +32,9 @@ use std::time::Duration;
 use crate::utils::canvas::none::NoCanvas;
 use crate::utils::canvas::sdl::WrapperCanvas;
 use crate::utils::result::RaytracingResult;
+use log::warn;
 use raytracer::renderer::strategy::StandardRenderStrategy;
-use raytracer::renderer::{render, RenderConfiguration};
+use raytracer::renderer::{DrawCanvas, ProgressiveRenderer, RenderConfiguration};
 use raytracer::scene::Scene;
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 
@@ -74,6 +75,38 @@ pub fn main() -> RaytracingResult {
     } else {
         render_sdl(&scene, &render_options)?;
     }
+
+    Ok(())
+}
+
+fn render(
+    scene: &Scene,
+    canvas: &mut impl DrawCanvas,
+    config: &RenderConfiguration,
+) -> Result<(), String> {
+    let progressive_renderer = ProgressiveRenderer::new(scene, config);
+
+    let total_pixels = progressive_renderer.total_pixels();
+    let progress_bar = indicatif::ProgressBar::new(total_pixels as u64);
+    progress_bar.set_style(
+        indicatif::ProgressStyle::default_bar().template("{msg} {bar} {percent}% ETA: {eta}"),
+    );
+    progress_bar.set_draw_delta((total_pixels / 100) as u64);
+    progress_bar.set_message(format!("Processing {} pixels...", total_pixels).as_str());
+    if progress_bar.is_hidden() {
+        warn!("Cannot show progress bar, requires TTY");
+    }
+
+    progressive_renderer.render(
+        |pixel| {
+            canvas.draw(pixel)?;
+            progress_bar.inc(1);
+            Ok(())
+        },
+        || {
+            progress_bar.finish_and_clear();
+        },
+    )?;
 
     Ok(())
 }

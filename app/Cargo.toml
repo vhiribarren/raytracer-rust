@@ -12,3 +12,4 @@ sdl2 = { version = "0.32.0", features = ["bundled"] }   # static-link feature do
 log = "0.4.8"
 simplelog = "0.7.4"
 clap = "2.33.0"
+indicatif = "0.13.0"
