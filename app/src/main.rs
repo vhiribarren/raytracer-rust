@@ -35,6 +35,7 @@ use crate::utils::result::RaytracingResult;
 use raytracer::renderer::strategy::StandardRenderStrategy;
 use raytracer::renderer::{render, RenderConfiguration};
 use raytracer::scene::Scene;
+use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 
 const APP_AUTHOR: &str = "Vincent Hiribarren";
 const APP_NAME: &str = "raytracer-rust";
@@ -47,7 +48,7 @@ const CANVAS_WIDTH: u32 = 1024;
 const CANVAS_HEIGHT: u32 = 576;
 
 pub fn main() -> RaytracingResult {
-    stderrlog::new().verbosity(4).init()?;
+    TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Mixed).unwrap();
 
     let matches = clap::App::new(APP_NAME)
         .author(APP_AUTHOR)
