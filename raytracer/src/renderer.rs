@@ -33,6 +33,8 @@ use rand::Rng;
 use std::f64;
 use std::time;
 
+pub use iterator::*;
+
 pub trait DrawCanvas {
     fn draw(&mut self, x: u32, y: u32, color: &Color) -> Result<(), String>;
 }
@@ -118,18 +120,13 @@ pub fn render(
         return Err(String::from("There is no light in the scene"));
     }
 
-    let render_strategy = &*config.render_strategy;
-
-    // We scan the pixels of the canvas
-    let width_step = 1.0 / config.canvas_width as f64;
-    let height_step = 1.0 / config.canvas_height as f64;
-    for x in 0..config.canvas_width {
-        for y in 0..config.canvas_height {
-            let canvas_x = (x as f64) / (config.canvas_width as f64);
-            let canvas_y = (y as f64) / (config.canvas_height as f64);
-            let result_color =
-                render_strategy.render_pixel(scene, canvas_x, canvas_y, width_step, height_step)?;
-            canvas.draw(x, y, &(result_color))?;
+    let area_iterator = AreaRenderIterator::with_full_area(scene, config);
+    for result in area_iterator {
+        match result {
+            Err(val) => return Err(val),
+            Ok((x, y, color)) => {
+                canvas.draw(x, y, &(color))?;
+            }
         }
     }
 
@@ -139,6 +136,94 @@ pub fn render(
     );
     info!("render: done!");
     Ok(())
+}
+
+pub mod iterator {
+    use super::*;
+
+    pub struct AreaRenderIterator<'a> {
+        scene: &'a Scene,
+        config: &'a RenderConfiguration,
+        area_x_origin: u32,
+        #[allow(dead_code)]
+        area_y_origin: u32,
+        area_width: u32,
+        area_height: u32,
+        area_x_current: u32,
+        area_y_current: u32,
+        pixel_width: f64,
+        pixel_height: f64,
+    }
+
+    impl AreaRenderIterator<'_> {
+        pub fn new<'a>(
+            scene: &'a Scene,
+            config: &'a RenderConfiguration,
+            area_x: u32,
+            area_y: u32,
+            area_width: u32,
+            area_height: u32,
+        ) -> AreaRenderIterator<'a> {
+            AreaRenderIterator {
+                scene,
+                config,
+                area_x_origin: area_x,
+                area_y_origin: area_y,
+                area_width,
+                area_height,
+                area_x_current: area_x,
+                area_y_current: area_y,
+                pixel_width: 1.0 / config.canvas_width as f64,
+                pixel_height: 1.0 / config.canvas_height as f64,
+            }
+        }
+
+        pub fn with_full_area<'a>(
+            scene: &'a Scene,
+            config: &'a RenderConfiguration,
+        ) -> AreaRenderIterator<'a> {
+            Self::new(
+                scene,
+                config,
+                0,
+                0,
+                config.canvas_width,
+                config.canvas_height,
+            )
+        }
+    }
+
+    impl Iterator for AreaRenderIterator<'_> {
+        type Item = Result<(u32, u32, Color), String>;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.area_y_current >= self.area_height {
+                return None;
+            }
+            let x = self.area_x_current;
+            let y = self.area_y_current;
+            let canvas_x = (self.area_x_current as f64) / (self.config.canvas_width as f64);
+            let canvas_y = (self.area_y_current as f64) / (self.config.canvas_height as f64);
+            let render_strategy = &*self.config.render_strategy;
+            let result_color = render_strategy.render_pixel(
+                self.scene,
+                canvas_x,
+                canvas_y,
+                self.pixel_width,
+                self.pixel_height,
+            );
+            let color = match result_color {
+                Ok(val) => val,
+                Err(val) => return Some(Err(val)),
+            };
+            self.area_x_current += 1;
+            if self.area_x_current >= self.area_width {
+                self.area_x_current = self.area_x_origin;
+                self.area_y_current += 1;
+            }
+            Some(Ok((x, y, color)))
+        }
+    }
 }
 
 fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, String> {
