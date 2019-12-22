@@ -26,7 +26,8 @@ use crate::colors::Color;
 use crate::ray_algorithm::AnyPixelRenderStrategy;
 use crate::scene::Scene;
 use log::{debug, info, warn};
-use std::time;
+use std::iter::{from_fn};
+use std::time::Instant;
 
 pub trait DrawCanvas {
     fn draw(&mut self, pixel: Pixel) -> Result<(), String>;
@@ -64,42 +65,20 @@ impl ProgressiveRenderer<'_> {
         self.config.canvas_width * self.config.canvas_height
     }
 
-    pub fn render<E, F>(&self, mut callback: E, mut finally: F) -> Result<(), String>
+    pub fn render<E, F>(&self, mut callback: E, finally: F) -> Result<(), String>
     where
         E: FnMut(Pixel) -> Result<(), String>,
-        F: FnMut(),
+        F: Fn(),
     {
-        if cfg!(debug_assertions) {
-            warn!("Debug compiled binary is used, performance will be low!");
-        }
-
-        debug!("render: {} objects to process", self.scene.objects.len());
-        debug!("render: {} lights to process", self.scene.lights.len());
-        if self.scene.lights.is_empty() {
-            return Err(String::from("There is no light in the scene"));
-        }
-
-        let area_iterator = AreaRenderIterator::with_full_area(self.scene, self.config);
-
-        {
-            info!("render: start process...");
-            let start_render_instant = time::Instant::now();
-            for result in area_iterator {
-                match result {
-                    Err(val) => return Err(val),
-                    Ok(pixel) => {
-                        callback(pixel)?;
-                    }
+        let area_iterator = ProgressiveRendererIterator::new_try(self.scene, self.config, finally)?;
+        for result in area_iterator {
+            match result {
+                Err(val) => return Err(val),
+                Ok(pixel) => {
+                    callback(pixel)?;
                 }
             }
-            finally();
-            info!("render: done!");
-            info!(
-                "render: duration: {:.3} seconds",
-                start_render_instant.elapsed().as_secs_f32()
-            );
         }
-
         Ok(())
     }
 }
@@ -110,6 +89,48 @@ pub fn simple_render_to_canvas(
     config: &RenderConfiguration,
 ) -> Result<(), String> {
     ProgressiveRenderer::new(scene, config).render(|pixel| canvas.draw(pixel), || {})
+}
+
+pub struct ProgressiveRendererIterator<'a>(Box<dyn Iterator<Item = Result<Pixel, String>> + 'a>);
+
+impl ProgressiveRendererIterator<'_> {
+    pub fn new_try<'a, F: 'a + Fn()>(
+        scene: &'a Scene,
+        config: &'a RenderConfiguration,
+        finally: F,
+    ) -> Result<ProgressiveRendererIterator<'a>, String> {
+        if cfg!(debug_assertions) {
+            warn!("Debug compiled binary is used, performance will be low!");
+        }
+        debug!("render: {} objects to process", scene.objects.len());
+        debug!("render: {} lights to process", scene.lights.len());
+        if scene.lights.is_empty() {
+            return Err(String::from("There is no light in the scene"));
+        }
+        let instant = Instant::now();
+        let iter_end = move || {
+            let instant_start = instant;
+            finally();
+            info!("render: done!");
+            info!(
+                "render: duration: {:.3} seconds",
+                instant_start.elapsed().as_secs_f32()
+            );
+            None::<Result<Pixel, String>>
+        };
+        let area_render_iterator = AreaRenderIterator::with_full_area(scene, config);
+        let render_iterator = area_render_iterator.chain(from_fn(iter_end)).fuse();
+
+        Ok(ProgressiveRendererIterator(Box::new(render_iterator)))
+    }
+}
+
+impl Iterator for ProgressiveRendererIterator<'_> {
+    type Item = Result<Pixel, String>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
 }
 
 pub struct AreaRenderIterator<'a> {

@@ -25,11 +25,11 @@ SOFTWARE.
 pub mod result {
     use crate::utils::result::AppError::*;
     use log::SetLoggerError;
+    use sdl2::render::TextureValueError;
     use sdl2::video::WindowBuildError;
     use sdl2::IntegerOrSdlError;
     use std::fmt::Result;
     use std::fmt::{Display, Formatter};
-    use sdl2::render::TextureValueError;
 
     impl From<WindowBuildError> for AppError {
         fn from(err: WindowBuildError) -> Self {
@@ -88,7 +88,6 @@ pub mod canvas {
     pub mod sdl {
         use raytracer::renderer::{DrawCanvas, Pixel};
         use sdl2::render::Canvas;
-        use sdl2::video::Window;
 
         pub struct WrapperCanvas<'a, T: sdl2::render::RenderTarget>(pub &'a mut Canvas<T>);
 

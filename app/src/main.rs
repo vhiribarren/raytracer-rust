@@ -34,10 +34,13 @@ use crate::utils::canvas::sdl::WrapperCanvas;
 use crate::utils::result::RaytracingResult;
 use log::warn;
 use raytracer::ray_algorithm::strategy::StandardRenderStrategy;
-use raytracer::renderer::{DrawCanvas, ProgressiveRenderer, RenderConfiguration, AreaRenderIterator};
+use raytracer::renderer::{
+    DrawCanvas, ProgressiveRenderer, ProgressiveRendererIterator,
+    RenderConfiguration,
+};
 use raytracer::scene::Scene;
-use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 use sdl2::pixels::PixelFormatEnum;
+use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 
 const APP_AUTHOR: &str = "Vincent Hiribarren";
 const APP_NAME: &str = "raytracer-rust";
@@ -124,7 +127,6 @@ fn render_sdl(
     scene: &Scene,
     render_options: &RenderConfiguration,
 ) -> utils::result::RaytracingResult {
-
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
@@ -142,8 +144,11 @@ fn render_sdl(
 
     let texture_creator = window_canvas.texture_creator();
 
-    let mut render_canvas = sdl2::surface::Surface::new(WINDOW_WIDTH, WINDOW_HEIGHT, PixelFormatEnum::RGBA32)?.into_canvas()?;
-    let mut renderer_iterator = AreaRenderIterator::with_full_area(scene, render_options).peekable();
+    let mut render_canvas =
+        sdl2::surface::Surface::new(WINDOW_WIDTH, WINDOW_HEIGHT, PixelFormatEnum::RGBA32)?
+            .into_canvas()?;
+    let mut renderer_iterator =
+        ProgressiveRendererIterator::new_try(scene, render_options, || {})?.peekable();
 
     let mut event_pump = sdl_context.event_pump()?;
     'event_loop: loop {
@@ -157,7 +162,7 @@ fn render_sdl(
                 _ => {}
             }
         }
-        if let Some(val) = renderer_iterator.peek() {
+        if let Some(_) = renderer_iterator.peek() {
             let instant = Instant::now();
             let mut wrapper_canvas = WrapperCanvas(&mut render_canvas);
             while let Some(pixel) = renderer_iterator.next() {
@@ -167,10 +172,9 @@ fn render_sdl(
                 }
             }
             let texture = texture_creator.create_texture_from_surface(render_canvas.surface())?;
-            window_canvas.copy(&texture, None, None);
+            window_canvas.copy(&texture, None, None)?;
             window_canvas.present();
-        }
-        else {
+        } else {
             std::thread::sleep(Duration::from_millis(100));
         }
     }
