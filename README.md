@@ -16,7 +16,15 @@ Tested under MacOS 10.14.6 with Rust 1.39.0.
 
     cargo run
 
-The `raytracking` directory contains the main engine. The `app` directory launches the engine with a sample scene.
+Default compilation option make the rendering process quite slow, you may also test the result using:
+
+    cargo run --release
+
+Some options are available in the boot binary:
+
+    cargo run -- --help
+
+The `raytracing` directory contains the main engine. The `app` directory launches the engine with a sample scene.
 
 The sample scene is in `app/src/sample_1.rs`; it is currently the only way to define a scene.
 
