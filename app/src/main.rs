@@ -234,6 +234,12 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'event_loop,
+                Event::KeyDown {
+                    keycode: Some(Keycode::F),
+                    ..
+                } => window_canvas
+                    .window_mut()
+                    .set_size(render_options.canvas_width, render_options.canvas_height)?,
                 _ => {}
             }
         }
