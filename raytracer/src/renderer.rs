@@ -26,7 +26,7 @@ use crate::colors::Color;
 use crate::ray_algorithm::AnyPixelRenderStrategy;
 use crate::scene::Scene;
 use log::{debug, info, warn};
-use std::iter::{from_fn};
+use std::iter::from_fn;
 use std::time::Instant;
 
 pub trait DrawCanvas {
@@ -91,7 +91,10 @@ pub fn simple_render_to_canvas(
     ProgressiveRenderer::new(scene, config).render(|pixel| canvas.draw(pixel), || {})
 }
 
-pub struct ProgressiveRendererIterator<'a>(Box<dyn Iterator<Item = Result<Pixel, String>> + 'a>);
+pub struct ProgressiveRendererIterator<'a> {
+    render_iterator: Box<dyn Iterator<Item = Result<Pixel, String>> + 'a>,
+    total_pixels: u32,
+}
 
 impl ProgressiveRendererIterator<'_> {
     pub fn new_try<'a, F: 'a + Fn()>(
@@ -119,9 +122,15 @@ impl ProgressiveRendererIterator<'_> {
             None::<Result<Pixel, String>>
         };
         let area_render_iterator = AreaRenderIterator::with_full_area(scene, config);
-        let render_iterator = area_render_iterator.chain(from_fn(iter_end)).fuse();
-
-        Ok(ProgressiveRendererIterator(Box::new(render_iterator)))
+        let render_iterator = Box::new(area_render_iterator.chain(from_fn(iter_end)).fuse());
+        let total_pixels = config.canvas_width * config.canvas_height;
+        Ok(ProgressiveRendererIterator {
+            render_iterator,
+            total_pixels,
+        })
+    }
+    pub fn total_pixels(&self) -> u32 {
+        self.total_pixels
     }
 }
 
@@ -129,7 +138,7 @@ impl Iterator for ProgressiveRendererIterator<'_> {
     type Item = Result<Pixel, String>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next()
+        self.render_iterator.next()
     }
 }
 

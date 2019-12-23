@@ -22,6 +22,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+pub mod monitor {
+    use log::warn;
+    pub struct TermMonitor(indicatif::ProgressBar);
+
+    impl TermMonitor {
+        pub fn new(total_pixels: u64) -> TermMonitor {
+            let progress_bar = indicatif::ProgressBar::new(total_pixels as u64);
+            progress_bar.set_style(
+                indicatif::ProgressStyle::default_bar()
+                    .template("{msg} {bar} {percent}% ETA: {eta}"),
+            );
+            progress_bar.set_draw_delta((total_pixels / 100) as u64);
+            progress_bar.set_message(format!("Processing {} pixels...", total_pixels).as_str());
+            if progress_bar.is_hidden() {
+                warn!("Cannot show progress bar, requires TTY");
+            }
+            TermMonitor(progress_bar)
+        }
+        pub fn update(&self) {
+            self.0.inc(1);
+        }
+        pub fn clean(&self) {
+            self.0.finish_and_clear();
+        }
+    }
+}
+
 pub mod result {
     use crate::utils::result::AppError::*;
     use log::SetLoggerError;

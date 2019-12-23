@@ -31,13 +31,10 @@ use std::time::{Duration, Instant};
 
 use crate::utils::canvas::none::NoCanvas;
 use crate::utils::canvas::sdl::WrapperCanvas;
+use crate::utils::monitor::TermMonitor;
 use crate::utils::result::RaytracingResult;
-use log::warn;
 use raytracer::ray_algorithm::strategy::StandardRenderStrategy;
-use raytracer::renderer::{
-    DrawCanvas, ProgressiveRenderer, ProgressiveRendererIterator,
-    RenderConfiguration,
-};
+use raytracer::renderer::{DrawCanvas, ProgressiveRendererIterator, RenderConfiguration};
 use raytracer::scene::Scene;
 use sdl2::pixels::PixelFormatEnum;
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
@@ -83,46 +80,26 @@ pub fn main() -> RaytracingResult {
     Ok(())
 }
 
-fn render(
-    scene: &Scene,
-    canvas: &mut impl DrawCanvas,
-    config: &RenderConfiguration,
-) -> Result<(), String> {
-    let progressive_renderer = ProgressiveRenderer::new(scene, config);
-
-    let total_pixels = progressive_renderer.total_pixels();
-    let progress_bar = indicatif::ProgressBar::new(total_pixels as u64);
-    progress_bar.set_style(
-        indicatif::ProgressStyle::default_bar().template("{msg} {bar} {percent}% ETA: {eta}"),
-    );
-    progress_bar.set_draw_delta((total_pixels / 100) as u64);
-    progress_bar.set_message(format!("Processing {} pixels...", total_pixels).as_str());
-    if progress_bar.is_hidden() {
-        warn!("Cannot show progress bar, requires TTY");
-    }
-
-    progressive_renderer.render(
-        |pixel| {
-            canvas.draw(pixel)?;
-            progress_bar.inc(1);
-            Ok(())
-        },
-        || {
-            progress_bar.finish_and_clear();
-        },
-    )?;
-
-    Ok(())
-}
-
 fn render_no_gui(
     scene: &Scene,
     render_options: &RenderConfiguration,
 ) -> utils::result::RaytracingResult {
-    render(&scene, &mut NoCanvas, &render_options)?;
+    let total_pixels = render_options.canvas_height * render_options.canvas_width;
+    let term_monitor = TermMonitor::new(total_pixels as u64);
+    let finally = || {
+        term_monitor.clean();
+    };
+    let render_iterator = ProgressiveRendererIterator::new_try(scene, render_options, finally)?;
+    let mut canvas = NoCanvas;
+
+    for pixel in render_iterator {
+        canvas.draw(pixel.unwrap())?;
+        term_monitor.update();
+    }
     Ok(())
 }
 
+#[allow(clippy::while_let_on_iterator)]
 fn render_sdl(
     scene: &Scene,
     render_options: &RenderConfiguration,
@@ -147,8 +124,14 @@ fn render_sdl(
     let mut render_canvas =
         sdl2::surface::Surface::new(WINDOW_WIDTH, WINDOW_HEIGHT, PixelFormatEnum::RGBA32)?
             .into_canvas()?;
-    let mut renderer_iterator =
-        ProgressiveRendererIterator::new_try(scene, render_options, || {})?.peekable();
+
+    let total_pixels = render_options.canvas_width * render_options.canvas_height;
+    let term_monitor = TermMonitor::new(total_pixels as u64);
+    let finally = || {
+        term_monitor.clean();
+    };
+    let renderer_iterator = ProgressiveRendererIterator::new_try(scene, render_options, finally)?;
+    let mut renderer_iterator = renderer_iterator.peekable();
 
     let mut event_pump = sdl_context.event_pump()?;
     'event_loop: loop {
@@ -162,11 +145,13 @@ fn render_sdl(
                 _ => {}
             }
         }
-        if let Some(_) = renderer_iterator.peek() {
+        if renderer_iterator.peek().is_some() {
             let instant = Instant::now();
             let mut wrapper_canvas = WrapperCanvas(&mut render_canvas);
+
             while let Some(pixel) = renderer_iterator.next() {
                 wrapper_canvas.draw(pixel.unwrap())?;
+                term_monitor.update();
                 if instant.elapsed().as_millis() > 20 {
                     break;
                 }
