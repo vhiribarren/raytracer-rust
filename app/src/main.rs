@@ -31,7 +31,8 @@ use std::time::{Duration, Instant};
 
 use crate::utils::canvas::none::NoCanvas;
 use crate::utils::canvas::sdl::WrapperCanvas;
-use crate::utils::monitor::TermMonitor;
+use crate::utils::monitor::ProgressionMonitor;
+use crate::utils::monitor::{NoMonitor, TermMonitor};
 use crate::utils::result::RaytracingResult;
 use raytracer::ray_algorithm::strategy::StandardRenderStrategy;
 use raytracer::renderer::{DrawCanvas, ProgressiveRendererIterator, RenderConfiguration};
@@ -57,9 +58,14 @@ pub fn main() -> RaytracingResult {
         .about(APP_ABOUT)
         .version(APP_VERSION)
         .arg(
+            clap::Arg::with_name("no-status")
+                .long("no-status")
+                .help("Do not display textual progressive bar (quicker)."),
+        )
+        .arg(
             clap::Arg::with_name("no-gui")
                 .long("no-gui")
-                .help("Does not display the ray_algorithm canvas."),
+                .help("Do not display the result of the rendering."),
         )
         .get_matches();
 
@@ -71,39 +77,49 @@ pub fn main() -> RaytracingResult {
         render_strategy: Box::new(StandardRenderStrategy),
     };
 
-    if matches.is_present("no-gui") {
-        render_no_gui(&scene, &render_options)?;
+    let monitor: Box<dyn ProgressionMonitor> = if matches.is_present("no-status") {
+        Box::new(NoMonitor)
     } else {
-        render_sdl(&scene, &render_options)?;
+        Box::new(TermMonitor::new(
+            (render_options.canvas_height * render_options.canvas_width) as u64,
+        ))
+    };
+
+    if matches.is_present("no-gui") {
+        render_no_gui(&scene, &render_options, monitor)?;
+    } else {
+        render_sdl(&scene, &render_options, monitor)?;
     }
 
     Ok(())
 }
 
-fn render_no_gui(
+fn render_no_gui<M: AsRef<dyn ProgressionMonitor>>(
     scene: &Scene,
     render_options: &RenderConfiguration,
+    monitor: M,
 ) -> utils::result::RaytracingResult {
-    let total_pixels = render_options.canvas_height * render_options.canvas_width;
-    let term_monitor = TermMonitor::new(total_pixels as u64);
+    let monitor = monitor.as_ref();
     let finally = || {
-        term_monitor.clean();
+        monitor.clean();
     };
     let render_iterator = ProgressiveRendererIterator::new_try(scene, render_options, finally)?;
     let mut canvas = NoCanvas;
 
     for pixel in render_iterator {
         canvas.draw(pixel.unwrap())?;
-        term_monitor.update();
+        monitor.update();
     }
     Ok(())
 }
 
 #[allow(clippy::while_let_on_iterator)]
-fn render_sdl(
+fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     scene: &Scene,
     render_options: &RenderConfiguration,
+    monitor: M,
 ) -> utils::result::RaytracingResult {
+    let monitor = monitor.as_ref();
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
@@ -124,11 +140,8 @@ fn render_sdl(
     let mut render_canvas =
         sdl2::surface::Surface::new(WINDOW_WIDTH, WINDOW_HEIGHT, PixelFormatEnum::RGBA32)?
             .into_canvas()?;
-
-    let total_pixels = render_options.canvas_width * render_options.canvas_height;
-    let term_monitor = TermMonitor::new(total_pixels as u64);
     let finally = || {
-        term_monitor.clean();
+        monitor.clean();
     };
     let renderer_iterator = ProgressiveRendererIterator::new_try(scene, render_options, finally)?;
     let mut renderer_iterator = renderer_iterator.peekable();
@@ -151,7 +164,7 @@ fn render_sdl(
 
             while let Some(pixel) = renderer_iterator.next() {
                 wrapper_canvas.draw(pixel.unwrap())?;
-                term_monitor.update();
+                monitor.update();
                 if instant.elapsed().as_millis() > 20 {
                     break;
                 }

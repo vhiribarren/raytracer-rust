@@ -24,6 +24,11 @@ SOFTWARE.
 
 pub mod monitor {
     use log::warn;
+    pub trait ProgressionMonitor {
+        fn update(&self);
+        fn clean(&self);
+    }
+
     pub struct TermMonitor(indicatif::ProgressBar);
 
     impl TermMonitor {
@@ -40,12 +45,23 @@ pub mod monitor {
             }
             TermMonitor(progress_bar)
         }
-        pub fn update(&self) {
+    }
+
+    impl ProgressionMonitor for TermMonitor {
+        fn update(&self) {
             self.0.inc(1);
         }
-        pub fn clean(&self) {
+        fn clean(&self) {
             self.0.finish_and_clear();
         }
+    }
+
+    pub struct NoMonitor;
+
+    impl ProgressionMonitor for NoMonitor {
+        fn update(&self) {}
+
+        fn clean(&self) {}
     }
 }
 
