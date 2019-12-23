@@ -25,7 +25,7 @@ SOFTWARE.
 mod sample_1;
 mod utils;
 
-use sdl2::event::Event;
+use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use std::time::{Duration, Instant};
 
@@ -229,6 +229,17 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     'event_loop: loop {
         for event in event_pump.poll_iter() {
             match event {
+                Event::Window {
+                    win_event: WindowEvent::Resized(w, h),
+                    ..
+                } => {
+                    let (new_w, new_h) = if w as f64 / h as f64 > scene.camera.size_ratio() {
+                        (w as u32, (w as f64 / scene.camera.size_ratio()) as u32)
+                    } else {
+                        ((h as f64 * scene.camera.size_ratio()) as u32, h as u32)
+                    };
+                    window_canvas.window_mut().set_size(new_w, new_h)?
+                }
                 Event::Quit { .. }
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
