@@ -35,7 +35,10 @@ use crate::utils::monitor::ProgressionMonitor;
 use crate::utils::monitor::{NoMonitor, TermMonitor};
 use crate::utils::result::RaytracingResult;
 use log::info;
-use raytracer::ray_algorithm::strategy::StandardRenderStrategy;
+use raytracer::ray_algorithm::strategy::{
+    RandomAntiAliasingRenderStrategy, StandardRenderStrategy,
+};
+use raytracer::ray_algorithm::AnyPixelRenderStrategy;
 use raytracer::renderer::{DrawCanvas, ProgressiveRendererIterator, RenderConfiguration};
 use raytracer::scene::Scene;
 use sdl2::pixels::PixelFormatEnum;
@@ -88,20 +91,27 @@ pub fn main() -> RaytracingResult {
                 .conflicts_with("width")
                 .help("Canvas height."),
         )
+        .arg(
+            clap::Arg::with_name("strategy-random")
+                .long("strategy-random")
+                .value_name("RAY_COUNT")
+                .help("Average of RAY_COUNT random rays sent."),
+        )
         .get_matches();
 
     let scene = sample_1::generate_test_scene();
 
+    // Camera ratio
     let camera_ratio = scene.camera.size_ratio();
     let (canvas_width, canvas_height) =
         match (matches.value_of("width"), matches.value_of("height")) {
             (Some(_), Some(_)) => unreachable!(),
             (Some(w), None) => {
-                let width = w.parse::<f64>().unwrap();
+                let width = w.parse::<f64>().expect("A number is expected");
                 (width as u32, (width / camera_ratio) as u32)
             }
             (None, Some(h)) => {
-                let height = h.parse::<f64>().unwrap();
+                let height = h.parse::<f64>().expect("A number is expected");
                 ((height * camera_ratio) as u32, height as u32)
             }
             (None, None) => {
@@ -113,17 +123,31 @@ pub fn main() -> RaytracingResult {
     info!("Camera ratio; {:.2}", camera_ratio);
     info!("Canvas size: {}x{}", canvas_width, canvas_height);
 
+    // Ray casting strategy
+    let render_strategy: Box<dyn AnyPixelRenderStrategy> = if matches.is_present("strategy-random")
+    {
+        let rays_per_pixel: u32 = matches
+            .value_of("strategy-random")
+            .unwrap()
+            .parse()
+            .expect("A number is expected");
+        Box::new(RandomAntiAliasingRenderStrategy { rays_per_pixel })
+    } else {
+        Box::new(StandardRenderStrategy)
+    };
+
+    // Terminal progress bar
     let monitor: Box<dyn ProgressionMonitor> = if matches.is_present("no-status") {
         Box::new(NoMonitor)
     } else {
         Box::new(TermMonitor::new((canvas_height * canvas_width) as u64))
     };
 
+    // Build options
     let render_options = RenderConfiguration {
         canvas_width,
         canvas_height,
-        //render_strategy: Box::new(RandomAntiAliasingRenderStrategy {rays_per_pixel: 20}),
-        render_strategy: Box::new(StandardRenderStrategy),
+        render_strategy,
     };
 
     if matches.is_present("no-gui") {
