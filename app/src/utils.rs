@@ -38,7 +38,7 @@ pub mod monitor {
                 indicatif::ProgressStyle::default_bar()
                     .template("{msg} {bar} {percent}% ETA: {eta}"),
             );
-            progress_bar.set_draw_delta((total_pixels / 100) as u64);
+            progress_bar.set_draw_delta((total_pixels / 100) as u64); // Update every percent
             progress_bar.set_message(format!("Processing {} pixels...", total_pixels).as_str());
             if progress_bar.is_hidden() {
                 warn!("Cannot show progress bar, requires TTY");

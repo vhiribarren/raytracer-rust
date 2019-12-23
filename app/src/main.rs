@@ -67,6 +67,11 @@ pub fn main() -> RaytracingResult {
                 .long("no-gui")
                 .help("Do not display the result of the rendering."),
         )
+        .arg(
+            clap::Arg::with_name("no-progressive")
+                .long("no-progressive")
+                .help("Do not render in realtime in the window if GUI is activate (quicker)."),
+        )
         .get_matches();
 
     let scene = sample_1::generate_test_scene();
@@ -88,7 +93,8 @@ pub fn main() -> RaytracingResult {
     if matches.is_present("no-gui") {
         render_no_gui(&scene, &render_options, monitor)?;
     } else {
-        render_sdl(&scene, &render_options, monitor)?;
+        let progressive_rendering = !matches.is_present("no-progressive");
+        render_sdl(&scene, &render_options, monitor, progressive_rendering)?;
     }
 
     Ok(())
@@ -114,10 +120,12 @@ fn render_no_gui<M: AsRef<dyn ProgressionMonitor>>(
 }
 
 #[allow(clippy::while_let_on_iterator)]
+#[allow(clippy::collapsible_if)]
 fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     scene: &Scene,
     render_options: &RenderConfiguration,
     monitor: M,
+    progressive_rendering: bool,
 ) -> utils::result::RaytracingResult {
     let monitor = monitor.as_ref();
     let sdl_context = sdl2::init()?;
@@ -131,9 +139,13 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     let mut window_canvas = window.into_canvas().build()?;
     window_canvas.set_logical_size(CANVAS_WIDTH, CANVAS_HEIGHT)?;
     window_canvas.set_draw_color(sdl2::pixels::Color::RGB(77, 77, 170));
+    // Paint and blit back buffer
     window_canvas.clear();
     window_canvas.present();
-    window_canvas.clear();
+    if progressive_rendering {
+        // Paint new back buffer
+        window_canvas.clear();
+    }
 
     let texture_creator = window_canvas.texture_creator();
 
@@ -165,8 +177,10 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
             while let Some(pixel) = renderer_iterator.next() {
                 wrapper_canvas.draw(pixel.unwrap())?;
                 monitor.update();
-                if instant.elapsed().as_millis() > 20 {
-                    break;
+                if progressive_rendering {
+                    if instant.elapsed().as_millis() > 20 {
+                        break;
+                    }
                 }
             }
             let texture = texture_creator.create_texture_from_surface(render_canvas.surface())?;
