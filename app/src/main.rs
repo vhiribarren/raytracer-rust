@@ -51,6 +51,12 @@ const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const WINDOW_WIDTH: u32 = 800;
 const CANVAS_WIDTH: u32 = 1024;
+const SDL_WINDOW_CLEAR_COLOR: sdl2::pixels::Color = sdl2::pixels::Color {
+    r: 77,
+    g: 77,
+    b: 170,
+    a: 255,
+};
 
 pub fn main() -> RaytracingResult {
     TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Mixed).unwrap();
@@ -202,14 +208,10 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
 
     let mut window_canvas = window.into_canvas().build()?;
     window_canvas.set_logical_size(render_options.canvas_width, render_options.canvas_height)?;
-    window_canvas.set_draw_color(sdl2::pixels::Color::RGB(77, 77, 170));
+    window_canvas.set_draw_color(SDL_WINDOW_CLEAR_COLOR);
     // Paint and blit back buffer
     window_canvas.clear();
     window_canvas.present();
-    if progressive_rendering {
-        // Paint new back buffer
-        window_canvas.clear();
-    }
 
     let texture_creator = window_canvas.texture_creator();
 
@@ -219,6 +221,8 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
         PixelFormatEnum::RGBA32,
     )?
     .into_canvas()?;
+    render_canvas.clear();
+
     let finally = || {
         monitor.clean();
     };
@@ -268,6 +272,7 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
                 }
             }
             let texture = texture_creator.create_texture_from_surface(render_canvas.surface())?;
+            window_canvas.clear();
             window_canvas.copy(&texture, None, None)?;
             window_canvas.present();
         } else {
