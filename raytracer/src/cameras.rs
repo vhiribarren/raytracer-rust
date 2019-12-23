@@ -80,6 +80,14 @@ impl Default for PerspectiveCamera {
 }
 
 impl RayEmitter for PerspectiveCamera {
+    fn width(&self) -> f64 {
+        self.width
+    }
+
+    fn height(&self) -> f64 {
+        self.height
+    }
+
     fn generate_ray(&self, canvas_x: UnitInterval, canvas_y: UnitInterval) -> Ray {
         assert!(
             f64_lt(canvas_x, 1.0) && f64_gt(canvas_x, 0.0),
@@ -138,6 +146,13 @@ impl Default for OrthogonalCamera {
 }
 
 impl RayEmitter for OrthogonalCamera {
+    fn width(&self) -> f64 {
+        self.width
+    }
+
+    fn height(&self) -> f64 {
+        self.height
+    }
     fn generate_ray(&self, canvas_x: UnitInterval, canvas_y: UnitInterval) -> Ray {
         assert!(
             f64_lt(canvas_x, 1.0) && f64_gt(canvas_x, 0.0),

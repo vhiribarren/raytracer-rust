@@ -87,5 +87,10 @@ impl<T: Texture, P: Shape> AnySceneObject for SceneObject<T, P> {
 }
 
 pub trait RayEmitter {
+    fn width(&self) -> f64;
+    fn height(&self) -> f64;
+    fn size_ratio(&self) -> f64 {
+        self.width() / self.height()
+    }
     fn generate_ray(&self, canvas_x: UnitInterval, canvas_y: UnitInterval) -> Ray;
 }

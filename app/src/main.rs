@@ -34,6 +34,7 @@ use crate::utils::canvas::sdl::WrapperCanvas;
 use crate::utils::monitor::ProgressionMonitor;
 use crate::utils::monitor::{NoMonitor, TermMonitor};
 use crate::utils::result::RaytracingResult;
+use log::info;
 use raytracer::ray_algorithm::strategy::StandardRenderStrategy;
 use raytracer::renderer::{DrawCanvas, ProgressiveRendererIterator, RenderConfiguration};
 use raytracer::scene::Scene;
@@ -45,10 +46,8 @@ const APP_NAME: &str = "raytracer-rust";
 const APP_ABOUT: &str = "Toy project to test Rust";
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-const WINDOW_WIDTH: u32 = 1024;
-const WINDOW_HEIGHT: u32 = 576;
+const WINDOW_WIDTH: u32 = 800;
 const CANVAS_WIDTH: u32 = 1024;
-const CANVAS_HEIGHT: u32 = 576;
 
 pub fn main() -> RaytracingResult {
     TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Mixed).unwrap();
@@ -70,24 +69,61 @@ pub fn main() -> RaytracingResult {
         .arg(
             clap::Arg::with_name("no-progressive")
                 .long("no-progressive")
+                .conflicts_with("no-gui")
                 .help("Do not render in realtime in the window if GUI is activate (quicker)."),
+        )
+        .arg(
+            clap::Arg::with_name("width")
+                .short("w")
+                .long("width")
+                .takes_value(true)
+                .conflicts_with("height")
+                .help(format!("Canvas width, default: {}.", CANVAS_WIDTH).as_str()),
+        )
+        .arg(
+            clap::Arg::with_name("height")
+                .short("h")
+                .long("height")
+                .takes_value(true)
+                .conflicts_with("width")
+                .help("Canvas height."),
         )
         .get_matches();
 
     let scene = sample_1::generate_test_scene();
-    let render_options = RenderConfiguration {
-        canvas_width: CANVAS_WIDTH,
-        canvas_height: CANVAS_HEIGHT,
-        //render_strategy: Box::new(RandomAntiAliasingRenderStrategy {rays_per_pixel: 20}),
-        render_strategy: Box::new(StandardRenderStrategy),
-    };
+
+    let camera_ratio = scene.camera.size_ratio();
+    let (canvas_width, canvas_height) =
+        match (matches.value_of("width"), matches.value_of("height")) {
+            (Some(_), Some(_)) => unreachable!(),
+            (Some(w), None) => {
+                let width = w.parse::<f64>().unwrap();
+                (width as u32, (width / camera_ratio) as u32)
+            }
+            (None, Some(h)) => {
+                let height = h.parse::<f64>().unwrap();
+                ((height * camera_ratio) as u32, height as u32)
+            }
+            (None, None) => {
+                let width = CANVAS_WIDTH as f64;
+                (width as u32, (width / camera_ratio) as u32)
+            }
+        };
+
+    info!("Camera ratio; {:.2}", camera_ratio);
+    info!("Canvas size: {}x{}", canvas_width, canvas_height);
 
     let monitor: Box<dyn ProgressionMonitor> = if matches.is_present("no-status") {
         Box::new(NoMonitor)
     } else {
-        Box::new(TermMonitor::new(
-            (render_options.canvas_height * render_options.canvas_width) as u64,
-        ))
+        Box::new(TermMonitor::new((canvas_height * canvas_width) as u64))
+    };
+
+    let render_options = RenderConfiguration {
+        canvas_width,
+        canvas_height,
+        //render_strategy: Box::new(RandomAntiAliasingRenderStrategy {rays_per_pixel: 20}),
+        render_strategy: Box::new(StandardRenderStrategy),
     };
 
     if matches.is_present("no-gui") {
@@ -131,13 +167,17 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
-        .window("RayTracer Test", WINDOW_WIDTH, WINDOW_HEIGHT)
+        .window(
+            "RayTracer Test",
+            WINDOW_WIDTH,
+            (WINDOW_WIDTH as f64 / scene.camera.size_ratio()) as u32,
+        )
         .position_centered()
         .resizable()
         .build()?;
 
     let mut window_canvas = window.into_canvas().build()?;
-    window_canvas.set_logical_size(CANVAS_WIDTH, CANVAS_HEIGHT)?;
+    window_canvas.set_logical_size(render_options.canvas_width, render_options.canvas_height)?;
     window_canvas.set_draw_color(sdl2::pixels::Color::RGB(77, 77, 170));
     // Paint and blit back buffer
     window_canvas.clear();
@@ -149,9 +189,12 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
 
     let texture_creator = window_canvas.texture_creator();
 
-    let mut render_canvas =
-        sdl2::surface::Surface::new(WINDOW_WIDTH, WINDOW_HEIGHT, PixelFormatEnum::RGBA32)?
-            .into_canvas()?;
+    let mut render_canvas = sdl2::surface::Surface::new(
+        render_options.canvas_width,
+        render_options.canvas_height,
+        PixelFormatEnum::RGBA32,
+    )?
+    .into_canvas()?;
     let finally = || {
         monitor.clean();
     };
