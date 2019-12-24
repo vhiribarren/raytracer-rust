@@ -28,6 +28,7 @@ use crate::scene::Scene;
 use log::{debug, info, warn};
 use std::iter::from_fn;
 use std::time::Instant;
+use std::sync::mpsc::channel;
 
 pub trait DrawCanvas {
     fn draw(&mut self, pixel: Pixel) -> Result<(), String>;
@@ -50,6 +51,67 @@ pub struct RenderConfiguration {
     pub canvas_height: u32,
     pub render_strategy: Box<dyn AnyPixelRenderStrategy>,
 }
+
+
+pub fn render_parallel<U, F>(
+    scene: &Scene,
+    config: &RenderConfiguration,
+    mut update: U,
+    mut finally: F,
+) -> Result<(), String> where U:FnMut(Pixel)+Send, F: FnMut()+Send {
+    if cfg!(debug_assertions) {
+        warn!("Debug compiled binary is used, performance will be low!");
+    }
+    debug!("render: {} objects to process", scene.objects.len());
+    debug!("render: {} lights to process", scene.lights.len());
+    if scene.lights.is_empty() {
+        return Err(String::from("There is no light in the scene"));
+    }
+    let instant_start = Instant::now();
+
+    let mut result: Result<(), String> = Ok(());
+    rayon::scope(|s| {
+        debug!("render: spawning rendering tasks...");
+        let pixel_width = 1.0 / config.canvas_width as f64;
+        let pixel_height = 1.0 / config.canvas_height as f64;
+        let (tx, rx) = channel();
+        for x in 0..config.canvas_width {
+            for y in 0..config.canvas_height {
+                let tx = tx.clone();
+                s.spawn(move |_| {
+                    let canvas_x = x as f64 / (config.canvas_width as f64);
+                    let canvas_y = y as f64 / (config.canvas_width as f64);
+                    let res_color = config.render_strategy.render_pixel(scene, canvas_x, canvas_y, pixel_width, pixel_height);
+                    let pixel = match res_color {
+                        Ok(color) => Ok(Pixel::new(x, y, color)),
+                        Err(err) => Err(err),
+                    };
+                    tx.send(pixel).unwrap();
+                });
+            }
+        }
+        debug!("render; end of task preparation");
+        let total_thread = config.canvas_width * config.canvas_height;
+        for _ in 0..total_thread {
+            match rx.recv().unwrap() {
+                Err(e) => {
+                    result = Err(e.to_string());
+                    return;
+                },
+                Ok(pixel) => update(pixel),
+            }
+        }
+    });
+    finally();
+    info!("render: done!");
+    info!(
+        "render: duration: {:.3} seconds",
+        instant_start.elapsed().as_secs_f32()
+    );
+    result
+}
+
+
 
 pub struct ProgressiveRenderer<'a> {
     scene: &'a Scene,

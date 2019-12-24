@@ -54,20 +54,20 @@ impl Default for SceneConfiguration {
     }
 }
 
-pub trait AnySceneObject {
+pub trait AnySceneObject: Sync {
     fn color_at(&self, point: Vec3) -> Color;
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
     fn normal_at(&self, point: Vec3) -> Option<Vec3>;
     fn effects(&self) -> &TextureEffects;
 }
 
-pub struct SceneObject<T: Texture, P: Shape> {
+pub struct SceneObject<T: Texture + Sync, P: Shape + Sync> {
     pub texture: T,
     pub primitive: P,
     pub effects: TextureEffects,
 }
 
-impl<T: Texture, P: Shape> AnySceneObject for SceneObject<T, P> {
+impl<T: Texture + Sync, P: Shape + Sync> AnySceneObject for SceneObject<T, P> {
     fn color_at(&self, point: Vec3) -> Color {
         let (u, v) = self.primitive.surface_mapping_at(point).unwrap();
         self.texture.color_at(u, v)
@@ -86,7 +86,7 @@ impl<T: Texture, P: Shape> AnySceneObject for SceneObject<T, P> {
     }
 }
 
-pub trait RayEmitter {
+pub trait RayEmitter: Sync {
     fn width(&self) -> f64;
     fn height(&self) -> f64;
     fn size_ratio(&self) -> f64 {

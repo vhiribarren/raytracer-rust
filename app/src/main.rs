@@ -25,23 +25,23 @@ SOFTWARE.
 mod sample_1;
 mod utils;
 
+use std::time::{Duration, Instant};
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
-use std::time::{Duration, Instant};
-
+use sdl2::pixels::PixelFormatEnum;
 use crate::utils::canvas::none::NoCanvas;
 use crate::utils::canvas::sdl::WrapperCanvas;
 use crate::utils::monitor::ProgressionMonitor;
 use crate::utils::monitor::{NoMonitor, TermMonitor};
-use crate::utils::result::RaytracingResult;
-use log::info;
+use crate::utils::result::{RaytracingResult};
+use log::{info};
 use raytracer::ray_algorithm::strategy::{
     RandomAntiAliasingRenderStrategy, StandardRenderStrategy,
 };
 use raytracer::ray_algorithm::AnyPixelRenderStrategy;
-use raytracer::renderer::{DrawCanvas, ProgressiveRendererIterator, RenderConfiguration};
+use raytracer::renderer::{DrawCanvas, ProgressiveRendererIterator, RenderConfiguration, render_parallel};
 use raytracer::scene::Scene;
-use sdl2::pixels::PixelFormatEnum;
+
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 
 const APP_AUTHOR: &str = "Vincent Hiribarren";
@@ -157,7 +157,7 @@ pub fn main() -> RaytracingResult {
     };
 
     if matches.is_present("no-gui") {
-        render_no_gui(&scene, &render_options, monitor)?;
+        render_no_gui_parallel(&scene, &render_options, monitor)?;
     } else {
         let progressive_rendering = !matches.is_present("no-progressive");
         render_sdl(&scene, &render_options, monitor, progressive_rendering)?;
@@ -172,9 +172,7 @@ fn render_no_gui<M: AsRef<dyn ProgressionMonitor>>(
     monitor: M,
 ) -> utils::result::RaytracingResult {
     let monitor = monitor.as_ref();
-    let finally = || {
-        monitor.clean();
-    };
+    let finally = || monitor.clean();
     let render_iterator = ProgressiveRendererIterator::new_try(scene, render_options, finally)?;
     let mut canvas = NoCanvas;
 
@@ -184,6 +182,27 @@ fn render_no_gui<M: AsRef<dyn ProgressionMonitor>>(
     }
     Ok(())
 }
+
+fn render_no_gui_parallel<M: AsRef<dyn ProgressionMonitor>>(
+    scene: &Scene,
+    render_options: &RenderConfiguration,
+    monitor: M,
+) -> utils::result::RaytracingResult {
+    let mut canvas = NoCanvas;
+    let monitor = monitor.as_ref();
+    let mut update = move |pixel| {
+        canvas.draw(pixel).unwrap();
+        monitor.update();
+    };
+    let mut finally = move || {
+        monitor.clean();
+    };
+    render_parallel(scene, render_options, update, finally).map_err(|e| e.into())
+}
+
+
+
+
 
 #[allow(clippy::while_let_on_iterator)]
 #[allow(clippy::collapsible_if)]

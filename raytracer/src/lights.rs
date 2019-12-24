@@ -25,7 +25,7 @@ SOFTWARE.
 use crate::colors::Color;
 use crate::vector::Vec3;
 
-pub trait AnyLightObject {
+pub trait AnyLightObject: Sync {
     fn source(&self) -> Vec3;
     fn light_color_at(&self, point: Vec3) -> Color;
 }

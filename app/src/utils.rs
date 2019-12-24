@@ -24,7 +24,7 @@ SOFTWARE.
 
 pub mod monitor {
     use log::warn;
-    pub trait ProgressionMonitor {
+    pub trait ProgressionMonitor: Sync {
         fn update(&self);
         fn clean(&self);
     }
@@ -36,7 +36,7 @@ pub mod monitor {
             let progress_bar = indicatif::ProgressBar::new(total_pixels as u64);
             progress_bar.set_style(
                 indicatif::ProgressStyle::default_bar()
-                    .template("{msg} {bar} {percent}% ETA: {eta}"),
+                    .template("{msg} {bar} {percent}% Elapsed: {elapsed} ETA: {eta}"),
             );
             progress_bar.set_draw_delta((total_pixels / 100) as u64); // Update every percent
             progress_bar.set_message(format!("Processing {} pixels...", total_pixels).as_str());
