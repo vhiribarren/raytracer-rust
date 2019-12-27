@@ -29,6 +29,7 @@ use log::{debug, info, warn};
 use std::iter::from_fn;
 use std::time::Instant;
 use std::sync::mpsc::channel;
+use std::sync::mpsc;
 
 pub trait DrawCanvas {
     fn draw(&mut self, pixel: Pixel) -> Result<(), String>;
@@ -52,13 +53,11 @@ pub struct RenderConfiguration {
     pub render_strategy: Box<dyn AnyPixelRenderStrategy>,
 }
 
-
-pub fn render_parallel<U, F>(
+pub fn render_parallel_context<F>(
     scene: &Scene,
     config: &RenderConfiguration,
-    mut update: U,
-    mut finally: F,
-) -> Result<(), String> where U:FnMut(Pixel)+Send, F: FnMut()+Send {
+    mut closure: F,
+) -> Result<(), String> where F :FnMut(&mpsc::Receiver<Result<Pixel, String>>) + Send {
     if cfg!(debug_assertions) {
         warn!("Debug compiled binary is used, performance will be low!");
     }
@@ -91,18 +90,12 @@ pub fn render_parallel<U, F>(
             }
         }
         debug!("render; end of task preparation");
-        let total_thread = config.canvas_width * config.canvas_height;
-        for _ in 0..total_thread {
-            match rx.recv().unwrap() {
-                Err(e) => {
-                    result = Err(e.to_string());
-                    return;
-                },
-                Ok(pixel) => update(pixel),
-            }
-        }
+
+        drop(tx); // We close the transmitter channel, so the closure knows there is no more data
+        closure(&rx);
+
     });
-    finally();
+
     info!("render: done!");
     info!(
         "render: duration: {:.3} seconds",

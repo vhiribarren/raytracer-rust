@@ -39,7 +39,7 @@ use raytracer::ray_algorithm::strategy::{
     RandomAntiAliasingRenderStrategy, StandardRenderStrategy,
 };
 use raytracer::ray_algorithm::AnyPixelRenderStrategy;
-use raytracer::renderer::{DrawCanvas, ProgressiveRendererIterator, RenderConfiguration, render_parallel};
+use raytracer::renderer::{DrawCanvas, ProgressiveRendererIterator, RenderConfiguration, render_parallel_context};
 use raytracer::scene::Scene;
 
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
@@ -188,21 +188,17 @@ fn render_no_gui_parallel<M: AsRef<dyn ProgressionMonitor>>(
     render_options: &RenderConfiguration,
     monitor: M,
 ) -> utils::result::RaytracingResult {
-    let mut canvas = NoCanvas;
     let monitor = monitor.as_ref();
-    let mut update = move |pixel| {
-        canvas.draw(pixel).unwrap();
-        monitor.update();
-    };
-    let mut finally = move || {
+    let mut canvas = NoCanvas;
+    render_parallel_context(scene, render_options, |receiver|{
+        for result in receiver {
+            canvas.draw(result.unwrap()).unwrap();
+            monitor.update();
+        }
         monitor.clean();
-    };
-    render_parallel(scene, render_options, update, finally).map_err(|e| e.into())
+    }).map_err(|e| e.into())
+
 }
-
-
-
-
 
 #[allow(clippy::while_let_on_iterator)]
 #[allow(clippy::collapsible_if)]
