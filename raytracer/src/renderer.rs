@@ -28,8 +28,6 @@ use crate::scene::Scene;
 use log::{debug, info, warn};
 use std::iter::from_fn;
 use std::sync::mpsc;
-use std::sync::mpsc::channel;
-use std::thread::JoinHandle;
 use std::time::Instant;
 
 pub struct Pixel {
@@ -50,7 +48,15 @@ pub struct RenderConfiguration {
     pub render_strategy: Box<dyn AnyPixelRenderStrategy>,
 }
 
-pub fn check_rendering_context(scene: &Scene) -> Result<(), String> {
+pub fn render_scene<F>(
+    scene: Scene,
+    config: RenderConfiguration,
+    parallel: bool,
+    mut finally: F,
+) -> Result<impl Iterator<Item = Result<Pixel, String>>, String>
+where
+    F: FnMut(),
+{
     if cfg!(debug_assertions) {
         warn!("Debug compiled binary is used, performance will be low!");
     }
@@ -59,16 +65,31 @@ pub fn check_rendering_context(scene: &Scene) -> Result<(), String> {
     if scene.lights.is_empty() {
         return Err(String::from("There is no light in the scene"));
     }
-    Ok(())
+    info!("Rendering start...");
+    let instant_start = Instant::now();
+    let iter_end = move || {
+        finally();
+        info!("Rendering done!");
+        info!(
+            "Rendering duration: {:.3} seconds",
+            instant_start.elapsed().as_secs_f32()
+        );
+        None
+    };
+    let render_iter: Box<dyn Iterator<Item = Result<Pixel, String>>> = if parallel {
+        Box::new(renderer_parallel(scene, config)?)
+    } else {
+        Box::new(renderer_sequential(scene, config)?)
+    };
+    let render_iter = render_iter.chain(from_fn(iter_end)).fuse();
+    Ok(render_iter)
 }
 
-pub fn render_parallel(
+pub fn renderer_parallel(
     scene: Scene,
     config: RenderConfiguration,
 ) -> Result<impl Iterator<Item = Result<Pixel, String>>, String> {
-    check_rendering_context(&scene)?;
-
-    let (tx, rx) = channel();
+    let (tx, rx) = mpsc::channel();
 
     std::thread::spawn(move || {
         let scene = &scene;
@@ -101,18 +122,17 @@ pub fn render_parallel(
         });
     });
 
-    Ok((rx.into_iter()))
+    Ok(rx.into_iter())
 }
 
-pub fn render_sequential(
+pub fn renderer_sequential(
     scene: Scene,
     config: RenderConfiguration,
 ) -> Result<impl Iterator<Item = Result<Pixel, String>>, String> {
-    check_rendering_context(&scene)?;
     Ok(AreaRenderIterator::with_full_area(scene, config))
 }
 
-pub struct AreaRenderIterator{
+pub struct AreaRenderIterator {
     scene: Scene,
     config: RenderConfiguration,
     area_x_origin: u32,
@@ -146,24 +166,13 @@ impl AreaRenderIterator {
             area_height,
             area_x_current: area_x,
             area_y_current: area_y,
-
         }
     }
 
-    pub fn with_full_area(
-        scene: Scene,
-        config: RenderConfiguration,
-    ) -> AreaRenderIterator {
+    pub fn with_full_area(scene: Scene, config: RenderConfiguration) -> AreaRenderIterator {
         let area_width = config.canvas_width;
         let area_height = config.canvas_height;
-        Self::new(
-            scene,
-            config,
-            0,
-            0,
-            area_width,
-            area_height,
-        )
+        Self::new(scene, config, 0, 0, area_width, area_height)
     }
 
     pub fn total_pixels(&self) -> usize {

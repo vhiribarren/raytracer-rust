@@ -42,7 +42,7 @@ The sample scene is in `app/src/sample_1.rs`; it is currently the only way to de
 - [X] Specular light reflexion
 - [X] Light refraction
 - [X] Ray launcher recursion for transparent/mirror texture
-
+- [X] Parallel computing
 
 ## To do
 
@@ -59,7 +59,6 @@ Rust:
 
 - [ ] More unit tests
 - [ ] Define a better abstraction for AnyLightObject trait
-- [ ] Parallel computing
 - [ ] WebAssembly compatibility
 - [ ] Scene language/configuration description
 
