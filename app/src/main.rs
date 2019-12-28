@@ -190,13 +190,12 @@ fn render_no_gui_parallel<M: AsRef<dyn ProgressionMonitor>>(
 ) -> utils::result::RaytracingResult {
     let monitor = monitor.as_ref();
     let mut canvas = NoCanvas;
-    let (receiver, join_handle) = render_parallel(scene, config).unwrap();
+    let receiver = render_parallel(scene, config).unwrap();
     for result in receiver {
         canvas.draw(result.unwrap()).unwrap();
         monitor.update();
     }
     monitor.clean();
-    join_handle.join();
     Ok(())
 
 }
@@ -248,8 +247,7 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     let camera_size_ratio = scene.camera.size_ratio();
 
     //let renderer_iterator = ProgressiveRendererIterator::new_try(scene, render_options, finally)?;
-    let ( renderer_iterator, ..) = render_parallel(scene, render_options).unwrap();
-    let mut renderer_iterator = renderer_iterator.into_iter().peekable();
+    let mut renderer_iterator = render_parallel(scene, render_options).unwrap().peekable();
 
     let mut event_pump = sdl_context.event_pump()?;
     'event_loop: loop {

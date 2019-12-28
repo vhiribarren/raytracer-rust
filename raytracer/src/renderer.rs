@@ -59,7 +59,7 @@ pub fn render_parallel(
     scene: Scene,
     config: RenderConfiguration,
 
-) -> Result<(mpsc::Receiver<Result<Pixel, String>>, JoinHandle<()>), String> {
+) -> Result<impl Iterator<Item=Result<Pixel, String>>, String> {
     if cfg!(debug_assertions) {
         warn!("Debug compiled binary is used, performance will be low!");
     }
@@ -71,7 +71,7 @@ pub fn render_parallel(
 
     let (tx, rx) = channel();
 
-    let join_handle = std::thread::spawn(move || {
+    std::thread::spawn(move || {
 
         let instant_start = Instant::now();
         let scene = &scene;
@@ -105,7 +105,7 @@ pub fn render_parallel(
 
     });
 
-    Ok((rx, join_handle))
+    Ok((rx.into_iter()))
 
 }
 
