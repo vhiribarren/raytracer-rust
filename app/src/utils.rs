@@ -127,10 +127,15 @@ pub mod result {
 }
 
 pub mod canvas {
+    use raytracer::renderer::Pixel;
 
+    pub trait DrawCanvas {
+        fn draw(&mut self, pixel: Pixel) -> Result<(), String>;
+    }
     pub mod sdl {
-        use raytracer::renderer::{DrawCanvas, Pixel};
+        use raytracer::renderer::{Pixel};
         use sdl2::render::Canvas;
+        use crate::utils::canvas::DrawCanvas;
 
         pub struct WrapperCanvas<'a, T: sdl2::render::RenderTarget>(pub &'a mut Canvas<T>);
 
@@ -150,7 +155,8 @@ pub mod canvas {
     }
 
     pub mod none {
-        use raytracer::renderer::{DrawCanvas, Pixel};
+        use raytracer::renderer::{Pixel};
+        use crate::utils::canvas::DrawCanvas;
 
         pub struct NoCanvas;
 

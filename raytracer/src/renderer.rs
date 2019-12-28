@@ -27,14 +27,10 @@ use crate::ray_algorithm::AnyPixelRenderStrategy;
 use crate::scene::Scene;
 use log::{debug, info, warn};
 use std::iter::from_fn;
-use std::time::Instant;
-use std::sync::mpsc::channel;
 use std::sync::mpsc;
+use std::sync::mpsc::channel;
 use std::thread::JoinHandle;
-
-pub trait DrawCanvas {
-    fn draw(&mut self, pixel: Pixel) -> Result<(), String>;
-}
+use std::time::Instant;
 
 pub struct Pixel {
     pub x: u32,
@@ -54,12 +50,7 @@ pub struct RenderConfiguration {
     pub render_strategy: Box<dyn AnyPixelRenderStrategy>,
 }
 
-
-pub fn render_parallel(
-    scene: Scene,
-    config: RenderConfiguration,
-
-) -> Result<impl Iterator<Item=Result<Pixel, String>>, String> {
+pub fn check_rendering_context(scene: &Scene) -> Result<(), String> {
     if cfg!(debug_assertions) {
         warn!("Debug compiled binary is used, performance will be low!");
     }
@@ -68,12 +59,18 @@ pub fn render_parallel(
     if scene.lights.is_empty() {
         return Err(String::from("There is no light in the scene"));
     }
+    Ok(())
+}
+
+pub fn render_parallel(
+    scene: Scene,
+    config: RenderConfiguration,
+) -> Result<impl Iterator<Item = Result<Pixel, String>>, String> {
+    check_rendering_context(&scene)?;
 
     let (tx, rx) = channel();
 
     std::thread::spawn(move || {
-
-        let instant_start = Instant::now();
         let scene = &scene;
         let config = &config;
         let pixel_width = 1.0 / config.canvas_width as f64;
@@ -86,7 +83,13 @@ pub fn render_parallel(
                     s.spawn(move |_| {
                         let canvas_x = x as f64 / (config.canvas_width as f64);
                         let canvas_y = y as f64 / (config.canvas_height as f64);
-                        let res_color = config.render_strategy.render_pixel(&scene, canvas_x, canvas_y, pixel_width, pixel_height);
+                        let res_color = config.render_strategy.render_pixel(
+                            &scene,
+                            canvas_x,
+                            canvas_y,
+                            pixel_width,
+                            pixel_height,
+                        );
                         let pixel = match res_color {
                             Ok(color) => Ok(Pixel::new(x, y, color)),
                             Err(err) => Err(err),
@@ -96,113 +99,22 @@ pub fn render_parallel(
                 }
             }
         });
-
-        info!("render: done!");
-        info!(
-            "render: duration: {:.3} seconds",
-            instant_start.elapsed().as_secs_f32()
-        );
-
     });
 
     Ok((rx.into_iter()))
-
 }
 
-pub struct ProgressiveRenderer<'a> {
-    scene: &'a Scene,
-    config: &'a RenderConfiguration,
+pub fn render_sequential(
+    scene: Scene,
+    config: RenderConfiguration,
+) -> Result<impl Iterator<Item = Result<Pixel, String>>, String> {
+    check_rendering_context(&scene)?;
+    Ok(AreaRenderIterator::with_full_area(scene, config))
 }
 
-impl ProgressiveRenderer<'_> {
-    pub fn new<'a>(scene: &'a Scene, config: &'a RenderConfiguration) -> ProgressiveRenderer<'a> {
-        ProgressiveRenderer { scene, config }
-    }
-
-    pub fn total_pixels(&self) -> u32 {
-        self.config.canvas_width * self.config.canvas_height
-    }
-
-    pub fn render<E, F>(&self, mut callback: E, finally: F) -> Result<(), String>
-    where
-        E: FnMut(Pixel) -> Result<(), String>,
-        F: Fn(),
-    {
-        let area_iterator = ProgressiveRendererIterator::new_try(self.scene, self.config, finally)?;
-        for result in area_iterator {
-            match result {
-                Err(val) => return Err(val),
-                Ok(pixel) => {
-                    callback(pixel)?;
-                }
-            }
-        }
-        Ok(())
-    }
-}
-
-pub fn simple_render_to_canvas(
-    scene: &Scene,
-    canvas: &mut impl DrawCanvas,
-    config: &RenderConfiguration,
-) -> Result<(), String> {
-    ProgressiveRenderer::new(scene, config).render(|pixel| canvas.draw(pixel), || {})
-}
-
-pub struct ProgressiveRendererIterator<'a> {
-    render_iterator: Box<dyn Iterator<Item = Result<Pixel, String>> + 'a>,
-    total_pixels: u32,
-}
-
-impl ProgressiveRendererIterator<'_> {
-    pub fn new_try<'a, F: 'a + Fn()>(
-        scene: &'a Scene,
-        config: &'a RenderConfiguration,
-        finally: F,
-    ) -> Result<ProgressiveRendererIterator<'a>, String> {
-        if cfg!(debug_assertions) {
-            warn!("Debug compiled binary is used, performance will be low!");
-        }
-        debug!("render: {} objects to process", scene.objects.len());
-        debug!("render: {} lights to process", scene.lights.len());
-        if scene.lights.is_empty() {
-            return Err(String::from("There is no light in the scene"));
-        }
-        let instant = Instant::now();
-        let iter_end = move || {
-            let instant_start = instant;
-            finally();
-            info!("render: done!");
-            info!(
-                "render: duration: {:.3} seconds",
-                instant_start.elapsed().as_secs_f32()
-            );
-            None::<Result<Pixel, String>>
-        };
-        let area_render_iterator = AreaRenderIterator::with_full_area(scene, config);
-        let render_iterator = Box::new(area_render_iterator.chain(from_fn(iter_end)).fuse());
-        let total_pixels = config.canvas_width * config.canvas_height;
-        Ok(ProgressiveRendererIterator {
-            render_iterator,
-            total_pixels,
-        })
-    }
-    pub fn total_pixels(&self) -> u32 {
-        self.total_pixels
-    }
-}
-
-impl Iterator for ProgressiveRendererIterator<'_> {
-    type Item = Result<Pixel, String>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.render_iterator.next()
-    }
-}
-
-pub struct AreaRenderIterator<'a> {
-    scene: &'a Scene,
-    config: &'a RenderConfiguration,
+pub struct AreaRenderIterator{
+    scene: Scene,
+    config: RenderConfiguration,
     area_x_origin: u32,
     #[allow(dead_code)]
     area_y_origin: u32,
@@ -214,16 +126,18 @@ pub struct AreaRenderIterator<'a> {
     pixel_height: f64,
 }
 
-impl AreaRenderIterator<'_> {
-    pub fn new<'a>(
-        scene: &'a Scene,
-        config: &'a RenderConfiguration,
+impl AreaRenderIterator {
+    pub fn new(
+        scene: Scene,
+        config: RenderConfiguration,
         area_x: u32,
         area_y: u32,
         area_width: u32,
         area_height: u32,
-    ) -> AreaRenderIterator<'a> {
+    ) -> AreaRenderIterator {
         AreaRenderIterator {
+            pixel_width: 1.0 / config.canvas_width as f64,
+            pixel_height: 1.0 / config.canvas_height as f64,
             scene,
             config,
             area_x_origin: area_x,
@@ -232,22 +146,23 @@ impl AreaRenderIterator<'_> {
             area_height,
             area_x_current: area_x,
             area_y_current: area_y,
-            pixel_width: 1.0 / config.canvas_width as f64,
-            pixel_height: 1.0 / config.canvas_height as f64,
+
         }
     }
 
-    pub fn with_full_area<'a>(
-        scene: &'a Scene,
-        config: &'a RenderConfiguration,
-    ) -> AreaRenderIterator<'a> {
+    pub fn with_full_area(
+        scene: Scene,
+        config: RenderConfiguration,
+    ) -> AreaRenderIterator {
+        let area_width = config.canvas_width;
+        let area_height = config.canvas_height;
         Self::new(
             scene,
             config,
             0,
             0,
-            config.canvas_width,
-            config.canvas_height,
+            area_width,
+            area_height,
         )
     }
 
@@ -256,7 +171,7 @@ impl AreaRenderIterator<'_> {
     }
 }
 
-impl Iterator for AreaRenderIterator<'_> {
+impl Iterator for AreaRenderIterator {
     type Item = Result<Pixel, String>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -269,7 +184,7 @@ impl Iterator for AreaRenderIterator<'_> {
         let canvas_y = (self.area_y_current as f64) / (self.config.canvas_height as f64);
         let render_strategy = &*self.config.render_strategy;
         let result_color = render_strategy.render_pixel(
-            self.scene,
+            &self.scene,
             canvas_x,
             canvas_y,
             self.pixel_width,

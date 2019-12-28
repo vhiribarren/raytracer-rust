@@ -25,22 +25,23 @@ SOFTWARE.
 mod sample_1;
 mod utils;
 
-use std::time::{Duration, Instant};
-use sdl2::event::{Event, WindowEvent};
-use sdl2::keyboard::Keycode;
-use sdl2::pixels::PixelFormatEnum;
 use crate::utils::canvas::none::NoCanvas;
 use crate::utils::canvas::sdl::WrapperCanvas;
 use crate::utils::monitor::ProgressionMonitor;
 use crate::utils::monitor::{NoMonitor, TermMonitor};
-use crate::utils::result::{RaytracingResult};
-use log::{info};
+use crate::utils::result::RaytracingResult;
+use crate::utils::canvas::DrawCanvas;
+use log::info;
 use raytracer::ray_algorithm::strategy::{
     RandomAntiAliasingRenderStrategy, StandardRenderStrategy,
 };
 use raytracer::ray_algorithm::AnyPixelRenderStrategy;
-use raytracer::renderer::{DrawCanvas, ProgressiveRendererIterator, RenderConfiguration, render_parallel};
+use raytracer::renderer::{render_parallel, RenderConfiguration, render_sequential, Pixel};
 use raytracer::scene::Scene;
+use sdl2::event::{Event, WindowEvent};
+use sdl2::keyboard::Keycode;
+use sdl2::pixels::PixelFormatEnum;
+use std::time::{Duration, Instant};
 
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 
@@ -82,6 +83,11 @@ pub fn main() -> RaytracingResult {
                 .help("Do not render in realtime in the window if GUI is activate (quicker)."),
         )
         .arg(
+            clap::Arg::with_name("no-parallel")
+                .long("no-parallel")
+                .help("Do not render use multithreading for parallel computation (slower)."),
+        )
+        .arg(
             clap::Arg::with_name("width")
                 .short("w")
                 .long("width")
@@ -105,6 +111,7 @@ pub fn main() -> RaytracingResult {
         )
         .get_matches();
 
+    // Generate scene to render
     let scene = sample_1::generate_test_scene();
 
     // Camera ratio
@@ -150,63 +157,57 @@ pub fn main() -> RaytracingResult {
     };
 
     // Build options
-    let render_options = RenderConfiguration {
+    let config = RenderConfiguration {
         canvas_width,
         canvas_height,
         render_strategy,
     };
 
+    // Sequential or parallel computation
+    let instant_start = Instant::now();
+    let render_iter: Box<dyn Iterator<Item=Result<Pixel, String>>> = if matches.is_present("no-parallel") {
+        Box::new(render_sequential(scene, config)?)
+    } else {
+        Box::new(render_parallel(scene, config)?)
+    };
+
+    // Launch the computation / rendering
     if matches.is_present("no-gui") {
-        render_no_gui_parallel(scene, render_options, monitor)?;
+        render_no_gui(render_iter, monitor, instant_start)?;
     } else {
         let progressive_rendering = !matches.is_present("no-progressive");
-        render_sdl(scene, render_options, monitor, progressive_rendering)?;
+        render_sdl(render_iter, monitor, canvas_width, canvas_height, camera_ratio, progressive_rendering, instant_start)?;
     }
 
     Ok(())
 }
 
 fn render_no_gui<M: AsRef<dyn ProgressionMonitor>>(
-    scene: &Scene,
-    render_options: &RenderConfiguration,
+    render_iter: impl Iterator<Item=Result<Pixel, String>>,
     monitor: M,
+    instant_start: Instant,
 ) -> utils::result::RaytracingResult {
     let monitor = monitor.as_ref();
-    let finally = || monitor.clean();
-    let render_iterator = ProgressiveRendererIterator::new_try(scene, render_options, finally)?;
     let mut canvas = NoCanvas;
-
-    for pixel in render_iterator {
+    info!("Rendering start...");
+    for pixel in render_iter {
         canvas.draw(pixel.unwrap())?;
         monitor.update();
     }
-    Ok(())
-}
-
-fn render_no_gui_parallel<M: AsRef<dyn ProgressionMonitor>>(
-    scene: Scene,
-    config: RenderConfiguration,
-    monitor: M,
-) -> utils::result::RaytracingResult {
-    let monitor = monitor.as_ref();
-    let mut canvas = NoCanvas;
-    let receiver = render_parallel(scene, config).unwrap();
-    for result in receiver {
-        canvas.draw(result.unwrap()).unwrap();
-        monitor.update();
-    }
     monitor.clean();
+    info!("Rendering done!");
+    info!("Rendering duration: {:.3} seconds",instant_start.elapsed().as_secs_f32());
     Ok(())
-
 }
 
 #[allow(clippy::while_let_on_iterator)]
 #[allow(clippy::collapsible_if)]
 fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
-    scene: Scene,
-    render_options: RenderConfiguration,
+    render_iter: impl Iterator<Item=Result<Pixel, String>>,
     monitor: M,
+    canvas_width: u32, canvas_height: u32, camera_ratio: f64,
     progressive_rendering: bool,
+    instance_start: Instant,
 ) -> utils::result::RaytracingResult {
     let monitor = monitor.as_ref();
     let sdl_context = sdl2::init()?;
@@ -215,17 +216,14 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
         .window(
             "RayTracer Test",
             WINDOW_WIDTH,
-            (WINDOW_WIDTH as f64 / scene.camera.size_ratio()) as u32,
+            (WINDOW_WIDTH as f64 / camera_ratio) as u32,
         )
         .position_centered()
         .resizable()
         .build()?;
 
-    let canvas_width = render_options.canvas_width;
-    let canvas_height = render_options.canvas_height;
-
     let mut window_canvas = window.into_canvas().build()?;
-    window_canvas.set_logical_size(render_options.canvas_width, render_options.canvas_height)?;
+    window_canvas.set_logical_size(canvas_width, canvas_height)?;
     window_canvas.set_draw_color(SDL_WINDOW_CLEAR_COLOR);
     // Paint and blit back buffer
     window_canvas.clear();
@@ -234,8 +232,8 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     let texture_creator = window_canvas.texture_creator();
 
     let mut render_canvas = sdl2::surface::Surface::new(
-        render_options.canvas_width,
-        render_options.canvas_height,
+        canvas_width,
+        canvas_height,
         PixelFormatEnum::RGBA32,
     )?
     .into_canvas()?;
@@ -244,10 +242,8 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     let finally = || {
         monitor.clean();
     };
-    let camera_size_ratio = scene.camera.size_ratio();
 
-    //let renderer_iterator = ProgressiveRendererIterator::new_try(scene, render_options, finally)?;
-    let mut renderer_iterator = render_parallel(scene, render_options).unwrap().peekable();
+    let mut render_iter = render_iter.peekable();
 
     let mut event_pump = sdl_context.event_pump()?;
     'event_loop: loop {
@@ -257,10 +253,10 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
                     win_event: WindowEvent::Resized(w, h),
                     ..
                 } => {
-                    let (new_w, new_h) = if w as f64 / h as f64 > camera_size_ratio {
-                        (w as u32, (w as f64 / camera_size_ratio) as u32)
+                    let (new_w, new_h) = if w as f64 / h as f64 > camera_ratio {
+                        (w as u32, (w as f64 / camera_ratio) as u32)
                     } else {
-                        ((h as f64 * camera_size_ratio) as u32, h as u32)
+                        ((h as f64 * camera_ratio) as u32, h as u32)
                     };
                     window_canvas.window_mut().set_size(new_w, new_h)?
                 }
@@ -278,11 +274,11 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
                 _ => {}
             }
         }
-        if renderer_iterator.peek().is_some() {
+        if render_iter.peek().is_some() {
             let instant = Instant::now();
             let mut wrapper_canvas = WrapperCanvas(&mut render_canvas);
 
-            while let Some(pixel) = renderer_iterator.next() {
+            while let Some(pixel) = render_iter.next() {
                 wrapper_canvas.draw(pixel.unwrap())?;
                 monitor.update();
                 if progressive_rendering {
