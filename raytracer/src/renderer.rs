@@ -30,6 +30,7 @@ use std::iter::from_fn;
 use std::time::Instant;
 use std::sync::mpsc::channel;
 use std::sync::mpsc;
+use std::thread::JoinHandle;
 
 pub trait DrawCanvas {
     fn draw(&mut self, pixel: Pixel) -> Result<(), String>;
@@ -53,11 +54,12 @@ pub struct RenderConfiguration {
     pub render_strategy: Box<dyn AnyPixelRenderStrategy>,
 }
 
-pub fn render_parallel_context<F>(
-    scene: &Scene,
-    config: &RenderConfiguration,
-    mut closure: F,
-) -> Result<(), String> where F :FnMut(&mpsc::Receiver<Result<Pixel, String>>) + Send {
+
+pub fn render_parallel(
+    scene: Scene,
+    config: RenderConfiguration,
+
+) -> Result<(mpsc::Receiver<Result<Pixel, String>>, JoinHandle<()>), String> {
     if cfg!(debug_assertions) {
         warn!("Debug compiled binary is used, performance will be low!");
     }
@@ -66,45 +68,46 @@ pub fn render_parallel_context<F>(
     if scene.lights.is_empty() {
         return Err(String::from("There is no light in the scene"));
     }
-    let instant_start = Instant::now();
 
-    let mut result: Result<(), String> = Ok(());
-    rayon::scope(|s| {
-        debug!("render: spawning rendering tasks...");
+    let (tx, rx) = channel();
+
+    let join_handle = std::thread::spawn(move || {
+
+        let instant_start = Instant::now();
+        let scene = &scene;
+        let config = &config;
         let pixel_width = 1.0 / config.canvas_width as f64;
         let pixel_height = 1.0 / config.canvas_height as f64;
-        let (tx, rx) = channel();
-        for x in 0..config.canvas_width {
-            for y in 0..config.canvas_height {
-                let tx = tx.clone();
-                s.spawn(move |_| {
-                    let canvas_x = x as f64 / (config.canvas_width as f64);
-                    let canvas_y = y as f64 / (config.canvas_width as f64);
-                    let res_color = config.render_strategy.render_pixel(scene, canvas_x, canvas_y, pixel_width, pixel_height);
-                    let pixel = match res_color {
-                        Ok(color) => Ok(Pixel::new(x, y, color)),
-                        Err(err) => Err(err),
-                    };
-                    tx.send(pixel).unwrap();
-                });
-            }
-        }
-        debug!("render; end of task preparation");
 
-        drop(tx); // We close the transmitter channel, so the closure knows there is no more data
-        closure(&rx);
+        rayon::scope(move |s| {
+            for y in 0..config.canvas_height {
+                for x in 0..config.canvas_width {
+                    let tx = tx.clone();
+                    s.spawn(move |_| {
+                        let canvas_x = x as f64 / (config.canvas_width as f64);
+                        let canvas_y = y as f64 / (config.canvas_height as f64);
+                        let res_color = config.render_strategy.render_pixel(&scene, canvas_x, canvas_y, pixel_width, pixel_height);
+                        let pixel = match res_color {
+                            Ok(color) => Ok(Pixel::new(x, y, color)),
+                            Err(err) => Err(err),
+                        };
+                        tx.send(pixel).unwrap();
+                    });
+                }
+            }
+        });
+
+        info!("render: done!");
+        info!(
+            "render: duration: {:.3} seconds",
+            instant_start.elapsed().as_secs_f32()
+        );
 
     });
 
-    info!("render: done!");
-    info!(
-        "render: duration: {:.3} seconds",
-        instant_start.elapsed().as_secs_f32()
-    );
-    result
+    Ok((rx, join_handle))
+
 }
-
-
 
 pub struct ProgressiveRenderer<'a> {
     scene: &'a Scene,

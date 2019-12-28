@@ -24,7 +24,7 @@ SOFTWARE.
 
 pub mod monitor {
     use log::warn;
-    pub trait ProgressionMonitor: Sync {
+    pub trait ProgressionMonitor: Send + Sync {
         fn update(&self);
         fn clean(&self);
     }

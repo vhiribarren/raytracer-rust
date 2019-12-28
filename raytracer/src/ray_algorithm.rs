@@ -31,7 +31,7 @@ use crate::UnitInterval;
 use rand::Rng;
 use std::f64;
 
-pub trait AnyPixelRenderStrategy: Sync {
+pub trait AnyPixelRenderStrategy: Send + Sync {
     fn render_pixel(
         &self,
         scene: &Scene,

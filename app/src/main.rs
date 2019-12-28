@@ -39,7 +39,7 @@ use raytracer::ray_algorithm::strategy::{
     RandomAntiAliasingRenderStrategy, StandardRenderStrategy,
 };
 use raytracer::ray_algorithm::AnyPixelRenderStrategy;
-use raytracer::renderer::{DrawCanvas, ProgressiveRendererIterator, RenderConfiguration, render_parallel_context};
+use raytracer::renderer::{DrawCanvas, ProgressiveRendererIterator, RenderConfiguration, render_parallel};
 use raytracer::scene::Scene;
 
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
@@ -157,10 +157,10 @@ pub fn main() -> RaytracingResult {
     };
 
     if matches.is_present("no-gui") {
-        render_no_gui_parallel(&scene, &render_options, monitor)?;
+        render_no_gui_parallel(scene, render_options, monitor)?;
     } else {
         let progressive_rendering = !matches.is_present("no-progressive");
-        render_sdl(&scene, &render_options, monitor, progressive_rendering)?;
+        render_sdl(scene, render_options, monitor, progressive_rendering)?;
     }
 
     Ok(())
@@ -184,27 +184,28 @@ fn render_no_gui<M: AsRef<dyn ProgressionMonitor>>(
 }
 
 fn render_no_gui_parallel<M: AsRef<dyn ProgressionMonitor>>(
-    scene: &Scene,
-    render_options: &RenderConfiguration,
+    scene: Scene,
+    config: RenderConfiguration,
     monitor: M,
 ) -> utils::result::RaytracingResult {
     let monitor = monitor.as_ref();
     let mut canvas = NoCanvas;
-    render_parallel_context(scene, render_options, |receiver|{
-        for result in receiver {
-            canvas.draw(result.unwrap()).unwrap();
-            monitor.update();
-        }
-        monitor.clean();
-    }).map_err(|e| e.into())
+    let (receiver, join_handle) = render_parallel(scene, config).unwrap();
+    for result in receiver {
+        canvas.draw(result.unwrap()).unwrap();
+        monitor.update();
+    }
+    monitor.clean();
+    join_handle.join();
+    Ok(())
 
 }
 
 #[allow(clippy::while_let_on_iterator)]
 #[allow(clippy::collapsible_if)]
 fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
-    scene: &Scene,
-    render_options: &RenderConfiguration,
+    scene: Scene,
+    render_options: RenderConfiguration,
     monitor: M,
     progressive_rendering: bool,
 ) -> utils::result::RaytracingResult {
@@ -220,6 +221,9 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
         .position_centered()
         .resizable()
         .build()?;
+
+    let canvas_width = render_options.canvas_width;
+    let canvas_height = render_options.canvas_height;
 
     let mut window_canvas = window.into_canvas().build()?;
     window_canvas.set_logical_size(render_options.canvas_width, render_options.canvas_height)?;
@@ -241,8 +245,11 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     let finally = || {
         monitor.clean();
     };
-    let renderer_iterator = ProgressiveRendererIterator::new_try(scene, render_options, finally)?;
-    let mut renderer_iterator = renderer_iterator.peekable();
+    let camera_size_ratio = scene.camera.size_ratio();
+
+    //let renderer_iterator = ProgressiveRendererIterator::new_try(scene, render_options, finally)?;
+    let ( renderer_iterator, ..) = render_parallel(scene, render_options).unwrap();
+    let mut renderer_iterator = renderer_iterator.into_iter().peekable();
 
     let mut event_pump = sdl_context.event_pump()?;
     'event_loop: loop {
@@ -252,10 +259,10 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
                     win_event: WindowEvent::Resized(w, h),
                     ..
                 } => {
-                    let (new_w, new_h) = if w as f64 / h as f64 > scene.camera.size_ratio() {
-                        (w as u32, (w as f64 / scene.camera.size_ratio()) as u32)
+                    let (new_w, new_h) = if w as f64 / h as f64 > camera_size_ratio {
+                        (w as u32, (w as f64 / camera_size_ratio) as u32)
                     } else {
-                        ((h as f64 * scene.camera.size_ratio()) as u32, h as u32)
+                        ((h as f64 * camera_size_ratio) as u32, h as u32)
                     };
                     window_canvas.window_mut().set_size(new_w, new_h)?
                 }
@@ -269,7 +276,7 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
                     ..
                 } => window_canvas
                     .window_mut()
-                    .set_size(render_options.canvas_width, render_options.canvas_height)?,
+                    .set_size(canvas_width, canvas_height)?,
                 _ => {}
             }
         }
