@@ -25,7 +25,7 @@ SOFTWARE.
 use crate::colors::Color;
 use crate::ray_algorithm::AnyPixelRenderStrategy;
 use crate::scene::Scene;
-use log::{debug, info, warn};
+use log::{debug, info, trace, warn};
 use std::iter::from_fn;
 use std::sync::mpsc;
 use std::time::Instant;
@@ -115,7 +115,9 @@ pub fn renderer_parallel(
                             Ok(color) => Ok(Pixel::new(x, y, color)),
                             Err(err) => Err(err),
                         };
-                        tx.send(pixel).unwrap();
+                        tx.send(pixel).unwrap_or_else(|err| {
+                            trace!("Error: {}", err);
+                        });
                     });
                 }
             }
