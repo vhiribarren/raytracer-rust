@@ -247,11 +247,6 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     render_canvas.clear();
     let mut texture = texture_creator.create_texture_from_surface(render_canvas.surface())?;
     let mut render_iter = render_iter.peekable();
-    let update_window_canvas = || {
-        window_canvas.clear();
-        window_canvas.copy(&texture, None, None)?;
-        window_canvas.present();
-    };
 
     let mut event_pump = sdl_context.event_pump()?;
     'event_loop: loop {
