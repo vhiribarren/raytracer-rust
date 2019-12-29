@@ -30,13 +30,14 @@ use crate::utils::canvas::sdl::WrapperCanvas;
 use crate::utils::canvas::DrawCanvas;
 use crate::utils::monitor::ProgressionMonitor;
 use crate::utils::monitor::{NoMonitor, TermMonitor};
-use crate::utils::result::RaytracingResult;
+use crate::utils::result::{AppError, VoidAppResult};
 use log::info;
 use raytracer::ray_algorithm::strategy::{
     RandomAntiAliasingRenderStrategy, StandardRenderStrategy,
 };
 use raytracer::ray_algorithm::AnyPixelRenderStrategy;
 use raytracer::renderer::{render_scene, Pixel, RenderConfiguration};
+use raytracer::result::Result;
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::PixelFormatEnum;
@@ -66,7 +67,7 @@ const SDL_WINDOW_CLEAR_COLOR: sdl2::pixels::Color = sdl2::pixels::Color {
     a: 255,
 };
 
-fn main() -> RaytracingResult {
+fn main() -> VoidAppResult {
     TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Mixed)
         .expect("Error while initializing logger");
 
@@ -128,15 +129,15 @@ fn main() -> RaytracingResult {
         match (matches.value_of(ARG_WIDTH), matches.value_of(ARG_HEIGHT)) {
             (Some(_), Some(_)) => unreachable!(),
             (Some(w), None) => {
-                let width = w
-                    .parse::<f64>()
-                    .map_err(|e| format!("Error when parsing width value: {}", e))?;
+                let width = w.parse::<f64>().map_err(|e| {
+                    AppError::BadArgument(format!("Error when parsing width value: {}", e))
+                })?;
                 (width as u32, (width / camera_ratio) as u32)
             }
             (None, Some(h)) => {
-                let height = h
-                    .parse::<f64>()
-                    .map_err(|e| format!("Error when parsing height value: {}", e))?;
+                let height = h.parse::<f64>().map_err(|e| {
+                    AppError::BadArgument(format!("Error when parsing height value: {}", e))
+                })?;
                 ((height * camera_ratio) as u32, height as u32)
             }
             (None, None) => {
@@ -145,15 +146,12 @@ fn main() -> RaytracingResult {
             }
         };
 
-    info!("Camera ratio; {:.2}", camera_ratio);
-    info!("Canvas size: {}x{}", canvas_width, canvas_height);
-
     // Ray casting strategy
     let render_strategy: Box<dyn AnyPixelRenderStrategy> =
         if let Some(strategy) = matches.value_of(ARG_STRATEGY_RANDOM) {
-            let rays_per_pixel: u32 = strategy
-                .parse()
-                .map_err(|e| format!("Error when parsing strategy value: {}", e))?;
+            let rays_per_pixel: u32 = strategy.parse().map_err(|e| {
+                AppError::BadArgument(format!("Error when parsing strategy value: {}", e))
+            })?;
             Box::new(RandomAntiAliasingRenderStrategy { rays_per_pixel })
         } else {
             Box::new(StandardRenderStrategy)
@@ -172,6 +170,9 @@ fn main() -> RaytracingResult {
         canvas_height,
         render_strategy,
     };
+
+    info!("Camera ratio; {:.2}", camera_ratio);
+    info!("Canvas size: {}x{}", canvas_width, canvas_height);
 
     // Sequential or parallel computation
     let render_iter = render_scene(scene, config, !matches.is_present(ARG_NO_PARALLEL), || {
@@ -197,9 +198,9 @@ fn main() -> RaytracingResult {
 }
 
 fn render_no_gui<M: AsRef<dyn ProgressionMonitor>>(
-    render_iter: impl Iterator<Item = Result<Pixel, String>>,
+    render_iter: impl Iterator<Item = Result<Pixel>>,
     monitor: M,
-) -> utils::result::RaytracingResult {
+) -> VoidAppResult {
     let monitor = monitor.as_ref();
     let mut canvas = NoCanvas;
     for pixel in render_iter {
@@ -212,19 +213,21 @@ fn render_no_gui<M: AsRef<dyn ProgressionMonitor>>(
 #[allow(clippy::while_let_on_iterator)]
 #[allow(clippy::collapsible_if)]
 fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
-    render_iter: impl Iterator<Item = Result<Pixel, String>>,
+    render_iter: impl Iterator<Item = Result<Pixel>>,
     monitor: M,
     canvas_width: u32,
     canvas_height: u32,
     camera_ratio: f64,
     progressive_rendering: bool,
-) -> utils::result::RaytracingResult {
+) -> VoidAppResult {
     let monitor = monitor.as_ref();
 
     let mut render_iter = render_iter.peekable();
     let mut render_canvas =
-        sdl2::surface::Surface::new(canvas_width, canvas_height, PixelFormatEnum::RGBA32)?
-            .into_canvas()?;
+        sdl2::surface::Surface::new(canvas_width, canvas_height, PixelFormatEnum::RGBA32)
+            .map_err(AppError::SdlError)?
+            .into_canvas()
+            .map_err(AppError::SdlError)?;
     render_canvas.set_draw_color(SDL_WINDOW_CLEAR_COLOR);
     render_canvas.clear();
 
@@ -237,8 +240,8 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
         }
     }
 
-    let sdl_context = sdl2::init()?;
-    let video_subsystem = sdl_context.video()?;
+    let sdl_context = sdl2::init().map_err(AppError::SdlError)?;
+    let video_subsystem = sdl_context.video().map_err(AppError::SdlError)?;
     let window = video_subsystem
         .window(
             "RayTracer Test",
@@ -259,7 +262,7 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     let texture_creator = window_canvas.texture_creator();
     let mut texture = texture_creator.create_texture_from_surface(render_canvas.surface())?;
 
-    let mut event_pump = sdl_context.event_pump()?;
+    let mut event_pump = sdl_context.event_pump().map_err(AppError::SdlError)?;
     'event_loop: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -303,11 +306,15 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
             }
             texture = texture_creator.create_texture_from_surface(render_canvas.surface())?;
             window_canvas.clear();
-            window_canvas.copy(&texture, None, None)?;
+            window_canvas
+                .copy(&texture, None, None)
+                .map_err(AppError::SdlError)?;
             window_canvas.present();
         } else {
             window_canvas.clear();
-            window_canvas.copy(&texture, None, None)?;
+            window_canvas
+                .copy(&texture, None, None)
+                .map_err(AppError::SdlError)?;
             window_canvas.present();
             std::thread::sleep(Duration::from_millis(100));
         }

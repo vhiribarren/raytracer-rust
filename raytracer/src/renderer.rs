@@ -25,6 +25,7 @@ SOFTWARE.
 use crate::colors::Color;
 use crate::ray_algorithm::strategy::StandardRenderStrategy;
 use crate::ray_algorithm::AnyPixelRenderStrategy;
+use crate::result::{RaytracerError, Result};
 use crate::scene::Scene;
 use log::{debug, info, trace, warn};
 use std::iter::from_fn;
@@ -64,7 +65,7 @@ pub fn render_scene<F>(
     config: RenderConfiguration,
     parallel: bool,
     mut finally: F,
-) -> Result<impl Iterator<Item = Result<Pixel, String>>, String>
+) -> Result<impl Iterator<Item = Result<Pixel>>>
 where
     F: FnMut(),
 {
@@ -74,7 +75,7 @@ where
     debug!("render: {} objects to process", scene.objects.len());
     debug!("render: {} lights to process", scene.lights.len());
     if scene.lights.is_empty() {
-        return Err(String::from("There is no light in the scene"));
+        return Err(RaytracerError::NoLight);
     }
     info!("Rendering start...");
     let instant_start = Instant::now();
@@ -87,10 +88,10 @@ where
         );
         None
     };
-    let render_iter: Box<dyn Iterator<Item = Result<Pixel, String>>> = if parallel {
-        Box::new(renderer_parallel(scene, config)?)
+    let render_iter: Box<dyn Iterator<Item = Result<Pixel>>> = if parallel {
+        Box::new(renderer_parallel(scene, config))
     } else {
-        Box::new(renderer_sequential(scene, config)?)
+        Box::new(renderer_sequential(scene, config))
     };
     let render_iter = render_iter.chain(from_fn(iter_end)).fuse();
     Ok(render_iter)
@@ -99,7 +100,7 @@ where
 pub fn renderer_parallel(
     scene: Scene,
     config: RenderConfiguration,
-) -> Result<impl Iterator<Item = Result<Pixel, String>>, String> {
+) -> impl Iterator<Item = Result<Pixel>> {
     let (tx, rx) = mpsc::channel();
 
     std::thread::spawn(move || {
@@ -135,14 +136,14 @@ pub fn renderer_parallel(
         });
     });
 
-    Ok(rx.into_iter())
+    rx.into_iter()
 }
 
 pub fn renderer_sequential(
     scene: Scene,
     config: RenderConfiguration,
-) -> Result<impl Iterator<Item = Result<Pixel, String>>, String> {
-    Ok(AreaRenderIterator::with_full_area(scene, config))
+) -> impl Iterator<Item = Result<Pixel>> {
+    AreaRenderIterator::with_full_area(scene, config)
 }
 
 pub struct AreaRenderIterator {
@@ -194,7 +195,7 @@ impl AreaRenderIterator {
 }
 
 impl Iterator for AreaRenderIterator {
-    type Item = Result<Pixel, String>;
+    type Item = Result<Pixel>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.area_y_current >= self.area_height {

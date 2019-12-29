@@ -25,6 +25,8 @@ SOFTWARE.
 use crate::colors::Color;
 use crate::lights::AnyLightObject;
 use crate::primitives::Ray;
+use crate::result::RaytracerError;
+use crate::result::Result;
 use crate::scene::{AnySceneObject, Scene};
 use crate::vector::Vec3;
 use crate::UnitInterval;
@@ -39,7 +41,7 @@ pub trait AnyPixelRenderStrategy: Send + Sync {
         canvas_y: UnitInterval,
         pixel_width: f64,
         pixel_height: f64,
-    ) -> Result<Color, String>;
+    ) -> Result<Color>;
 }
 
 pub mod strategy {
@@ -55,7 +57,7 @@ pub mod strategy {
             canvas_y: UnitInterval,
             pixel_width: f64,
             pixel_height: f64,
-        ) -> Result<Color, String> {
+        ) -> Result<Color> {
             let x_unit = pixel_width / 2.0 + canvas_x;
             let y_unit = pixel_height / 2.0 + canvas_y;
             let camera_ray = scene.camera.generate_ray(x_unit, y_unit);
@@ -75,7 +77,7 @@ pub mod strategy {
             canvas_y: UnitInterval,
             pixel_width: f64,
             pixel_height: f64,
-        ) -> Result<Color, String> {
+        ) -> Result<Color> {
             let mut rng = rand::thread_rng();
             let mut result_color = Color::BLACK;
             for _ in 0..self.rays_per_pixel {
@@ -90,25 +92,28 @@ pub mod strategy {
     }
 }
 
-fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, String> {
+fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color> {
     if depth > scene.config.maximum_light_recursion {
         return Ok(Color::BLACK);
     }
 
     // Check if there is an object to process for this pixel
-    let (nearest_object, collision_point) =
-        match search_object_collision(&camera_ray, &scene.objects) {
-            Some((object, point)) => (object, point),
-            None => {
-                return Ok(scene.config.world_color.clone());
-            }
-        };
+    let collision_context = match search_object_collision(&camera_ray, &scene.objects) {
+        Some(collision_context) => collision_context,
+        None => {
+            return Ok(scene.config.world_color.clone());
+        }
+    };
+    let CollisionContext {
+        object: nearest_object,
+        collision_point,
+        array_index,
+    } = collision_context;
 
     // After having found the nearest object, we launch a ray to the light
     let mut total_color = Color::BLACK;
     total_color += illumination_from_lights(
-        nearest_object,
-        collision_point,
+        &collision_context,
         &scene.lights,
         &scene.objects,
         &camera_ray,
@@ -118,7 +123,7 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, Strin
     if let Some(transparency) = &nearest_object.effects().transparency {
         let surface_normal = nearest_object
             .normal_at(collision_point)
-            .ok_or_else(|| String::from("No normal found"))?
+            .ok_or(RaytracerError::NormalNotFound(array_index))?
             .normalize();
         let n_ratio = scene.config.world_refractive_index / transparency.refractive_index;
         let cos_refraction = camera_ray.direction.dot_product(surface_normal);
@@ -127,9 +132,10 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, Strin
             - (n_ratio * cos_refraction + (1.0 - sin_square_refraction).sqrt()) * surface_normal;
         // Go up to object exterior
         let refraction_ray = Ray::new(collision_point, refraction_direction).shift_source();
-        if let Some((_, exit_point)) = search_object_collision(&refraction_ray, &scene.objects) {
+        if let Some(collision_context) = search_object_collision(&refraction_ray, &scene.objects) {
             // TODO only the nearest_object is necessary
             // launch new ray
+            let exit_point = collision_context.collision_point;
             let new_ray = Ray::new(exit_point, camera_ray.direction).shift_source();
             total_color += transparency.alpha * launch_ray(&new_ray, scene, depth + 1)?;
         }
@@ -139,7 +145,7 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, Strin
     if let Some(mirror) = &nearest_object.effects().mirror {
         let surface_normal = nearest_object
             .normal_at(collision_point)
-            .ok_or_else(|| String::from("No normal found"))?
+            .ok_or(RaytracerError::NormalNotFound(array_index))?
             .normalize();
         let ray_reflexion = Ray::new(
             collision_point,
@@ -157,16 +163,23 @@ fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color, Strin
     Ok(total_color)
 }
 
+pub struct CollisionContext<'a> {
+    pub object: &'a dyn AnySceneObject,
+    pub collision_point: Vec3,
+    pub array_index: usize,
+}
+
 fn search_object_collision<'a>(
     ray: &Ray,
     objects: &'a [Box<dyn AnySceneObject>],
-) -> Option<(&'a dyn AnySceneObject, Vec3)> {
+) -> Option<CollisionContext<'a>> {
     let mut shortest_distance: f64 = f64::MAX;
     let mut nearest_object_opt: Option<&Box<dyn AnySceneObject>> = None;
     let mut collision_point: Vec3 = Default::default();
+    let mut array_index = std::usize::MAX;
     // For each pixel, we search for collision with objects
     // We also take into account the nearest object, for now
-    for object_candidate in objects {
+    for (index, object_candidate) in objects.iter().enumerate() {
         if let Some(collision_point_candidate) = object_candidate.check_collision(&ray) {
             let distance = collision_point_candidate.distance(ray.source);
             if distance <= 1e-12 {
@@ -175,20 +188,26 @@ fn search_object_collision<'a>(
                 shortest_distance = distance;
                 nearest_object_opt = Some(object_candidate);
                 collision_point = collision_point_candidate;
+                array_index = index;
             }
         }
     }
-    nearest_object_opt.map(|n| (&**n, collision_point))
+    nearest_object_opt.map(|n| CollisionContext {
+        object: &**n,
+        collision_point,
+        array_index,
+    })
 }
 
 fn illumination_from_lights(
-    object: &dyn AnySceneObject,
-    surface_point: Vec3,
+    collision_context: &CollisionContext,
     lights: &[Box<dyn AnyLightObject>],
     objects: &[Box<dyn AnySceneObject>],
     camera_ray: &Ray,
-) -> Result<Color, String> {
+) -> Result<Color> {
     let mut total_color = Color::BLACK;
+    let surface_point = collision_context.collision_point;
+    let object = collision_context.object;
     for current_light in lights {
         let light_ray = Ray::ray_from_to(surface_point, current_light.source());
 
@@ -200,9 +219,12 @@ fn illumination_from_lights(
         // Build values needed for light computation
         let light_direction = light_ray.direction;
         let light_color = current_light.light_color_at(surface_point);
-        let surface_normal = object
-            .normal_at(surface_point)
-            .ok_or_else(|| String::from("No normal found"))?;
+        let surface_normal =
+            object
+                .normal_at(surface_point)
+                .ok_or(RaytracerError::NormalNotFound(
+                    collision_context.array_index,
+                ))?;
         let ray_reflexion = camera_ray.direction.reflect(surface_normal).normalize();
 
         // Diffuse reflection

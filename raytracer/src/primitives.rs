@@ -25,8 +25,9 @@ SOFTWARE.
 use crate::vector::{Mat3, Vec3};
 use crate::UnitInterval;
 use std::f64::consts::PI;
+use std::fmt::Debug;
 
-pub trait Shape {
+pub trait Shape: Debug {
     fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
     fn normal_at(&self, point: Vec3) -> Option<Vec3>;
     fn surface_mapping_at(&self, point: Vec3) -> Option<(UnitInterval, UnitInterval)>;

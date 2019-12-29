@@ -22,38 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use raytracer::cameras::PerspectiveCamera;
-use raytracer::colors::Color;
-use raytracer::lights::LightPoint;
-use raytracer::primitives::Sphere;
-use raytracer::scene::{Scene, SceneObject};
-use raytracer::textures::CheckedPattern;
-use raytracer::vector::Vec3;
-use std::f64::consts::PI;
+use std::fmt;
+use std::fmt::{Debug, Display};
 
-pub(crate) fn generate_test_scene() -> Scene {
-    let camera = PerspectiveCamera::new(
-        Vec3::new(0.0, 10.0, -10.0),
-        Vec3::new(0.0, 0.0, 30.0),
-        16.0 * 2.0,
-        9.0 * 2.0,
-        (PI / 8.0) as f64,
-    );
-    let light = LightPoint::with_color(Vec3::new(50.0, 100.0, -50.0), Color::new(0.8, 0.8, 0.8));
-    let primitive: Sphere = Sphere {
-        center: Vec3::new(0.0, 0.0, 0.0),
-        radius: 5.0,
-    };
-    let texture = <CheckedPattern as Default>::default();
-    let object = SceneObject {
-        primitive,
-        texture,
-        effects: Default::default(),
-    };
-    Scene {
-        camera: Box::new(camera),
-        lights: vec![Box::new(light)],
-        objects: vec![Box::new(object)],
-        config: Default::default(),
+pub type Result<T> = std::result::Result<T, RaytracerError>;
+
+#[derive(Debug)]
+pub enum RaytracerError {
+    NormalNotFound(usize),
+    NoLight,
+}
+
+impl Display for RaytracerError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RaytracerError::NormalNotFound(val) => {
+                write!(formatter, "Normal not found for object at index: {}", val)
+            }
+            RaytracerError::NoLight => write!(formatter, "There is no light in the scene"),
+        }
     }
 }

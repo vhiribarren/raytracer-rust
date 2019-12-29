@@ -28,6 +28,7 @@ pub mod lights;
 pub mod primitives;
 pub mod ray_algorithm;
 pub mod renderer;
+pub mod result;
 pub mod scene;
 pub mod textures;
 pub mod vector;
