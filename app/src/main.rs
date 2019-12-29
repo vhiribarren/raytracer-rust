@@ -220,6 +220,23 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     progressive_rendering: bool,
 ) -> utils::result::RaytracingResult {
     let monitor = monitor.as_ref();
+
+    let mut render_iter = render_iter.peekable();
+    let mut render_canvas =
+        sdl2::surface::Surface::new(canvas_width, canvas_height, PixelFormatEnum::RGBA32)?
+            .into_canvas()?;
+    render_canvas.set_draw_color(SDL_WINDOW_CLEAR_COLOR);
+    render_canvas.clear();
+
+    if !progressive_rendering {
+        // We prepare immediately the result before displaying it
+        let mut wrapper_canvas = WrapperCanvas(&mut render_canvas);
+        while let Some(pixel) = render_iter.next() {
+            wrapper_canvas.draw(pixel?)?;
+            monitor.update();
+        }
+    }
+
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
@@ -239,14 +256,8 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     window_canvas.clear();
     window_canvas.present();
 
-
     let texture_creator = window_canvas.texture_creator();
-    let mut render_canvas =
-        sdl2::surface::Surface::new(canvas_width, canvas_height, PixelFormatEnum::RGBA32)?
-            .into_canvas()?;
-    render_canvas.clear();
     let mut texture = texture_creator.create_texture_from_surface(render_canvas.surface())?;
-    let mut render_iter = render_iter.peekable();
 
     let mut event_pump = sdl_context.event_pump()?;
     'event_loop: loop {
