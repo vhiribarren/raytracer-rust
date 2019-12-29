@@ -49,6 +49,14 @@ const APP_NAME: &str = "raytracer-rust";
 const APP_ABOUT: &str = "Toy project to test Rust";
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+const ARG_NO_STATUS: &str = "no-status";
+const ARG_NO_GUI: &str = "no-gui";
+const ARG_NO_PROGRESSIVE: &str = "no-progressive";
+const ARG_NO_PARALLEL: &str = "no-parallel";
+const ARG_STRATEGY_RANDOM: &str = "strategy-random";
+const ARG_WIDTH: &str = "width";
+const ARG_HEIGHT: &str = "height";
+
 const WINDOW_WIDTH: u32 = 800;
 const CANVAS_WIDTH: u32 = 1024;
 const SDL_WINDOW_CLEAR_COLOR: sdl2::pixels::Color = sdl2::pixels::Color {
@@ -58,52 +66,53 @@ const SDL_WINDOW_CLEAR_COLOR: sdl2::pixels::Color = sdl2::pixels::Color {
     a: 255,
 };
 
-pub fn main() -> RaytracingResult {
-    TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Mixed).unwrap();
+fn main() -> RaytracingResult {
+    TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Mixed)
+        .expect("Error while initializing logger");
 
     let matches = clap::App::new(APP_NAME)
         .author(APP_AUTHOR)
         .about(APP_ABOUT)
         .version(APP_VERSION)
         .arg(
-            clap::Arg::with_name("no-status")
+            clap::Arg::with_name(ARG_NO_STATUS)
                 .long("no-status")
                 .help("Do not display textual progressive bar (quicker)."),
         )
         .arg(
-            clap::Arg::with_name("no-gui")
+            clap::Arg::with_name(ARG_NO_GUI)
                 .long("no-gui")
                 .help("Do not display the result of the rendering."),
         )
         .arg(
-            clap::Arg::with_name("no-progressive")
+            clap::Arg::with_name(ARG_NO_PROGRESSIVE)
                 .long("no-progressive")
-                .conflicts_with("no-gui")
+                .conflicts_with(ARG_NO_GUI)
                 .help("Do not render in realtime in the window if GUI is activate (quicker)."),
         )
         .arg(
-            clap::Arg::with_name("no-parallel")
+            clap::Arg::with_name(ARG_NO_PARALLEL)
                 .long("no-parallel")
-                .help("Do not render use multithreading for parallel computation (slower)."),
+                .help("Do not use multithreading for parallel computation (slower)."),
         )
         .arg(
-            clap::Arg::with_name("width")
+            clap::Arg::with_name(ARG_WIDTH)
                 .short("w")
                 .long("width")
                 .takes_value(true)
-                .conflicts_with("height")
+                .conflicts_with(ARG_HEIGHT)
                 .help(format!("Canvas width, default: {}.", CANVAS_WIDTH).as_str()),
         )
         .arg(
-            clap::Arg::with_name("height")
+            clap::Arg::with_name(ARG_HEIGHT)
                 .short("h")
                 .long("height")
                 .takes_value(true)
-                .conflicts_with("width")
+                .conflicts_with(ARG_WIDTH)
                 .help("Canvas height."),
         )
         .arg(
-            clap::Arg::with_name("strategy-random")
+            clap::Arg::with_name(ARG_STRATEGY_RANDOM)
                 .long("strategy-random")
                 .value_name("RAY_COUNT")
                 .help("Average of RAY_COUNT random rays sent."),
@@ -116,14 +125,18 @@ pub fn main() -> RaytracingResult {
     // Camera ratio
     let camera_ratio = scene.camera.size_ratio();
     let (canvas_width, canvas_height) =
-        match (matches.value_of("width"), matches.value_of("height")) {
+        match (matches.value_of(ARG_WIDTH), matches.value_of(ARG_HEIGHT)) {
             (Some(_), Some(_)) => unreachable!(),
             (Some(w), None) => {
-                let width = w.parse::<f64>().expect("A number is expected");
+                let width = w
+                    .parse::<f64>()
+                    .map_err(|e| format!("Error when parsing width value: {}", e))?;
                 (width as u32, (width / camera_ratio) as u32)
             }
             (None, Some(h)) => {
-                let height = h.parse::<f64>().expect("A number is expected");
+                let height = h
+                    .parse::<f64>()
+                    .map_err(|e| format!("Error when parsing height value: {}", e))?;
                 ((height * camera_ratio) as u32, height as u32)
             }
             (None, None) => {
@@ -136,20 +149,18 @@ pub fn main() -> RaytracingResult {
     info!("Canvas size: {}x{}", canvas_width, canvas_height);
 
     // Ray casting strategy
-    let render_strategy: Box<dyn AnyPixelRenderStrategy> = if matches.is_present("strategy-random")
-    {
-        let rays_per_pixel: u32 = matches
-            .value_of("strategy-random")
-            .unwrap()
-            .parse()
-            .expect("A number is expected");
-        Box::new(RandomAntiAliasingRenderStrategy { rays_per_pixel })
-    } else {
-        Box::new(StandardRenderStrategy)
-    };
+    let render_strategy: Box<dyn AnyPixelRenderStrategy> =
+        if let Some(strategy) = matches.value_of(ARG_STRATEGY_RANDOM) {
+            let rays_per_pixel: u32 = strategy
+                .parse()
+                .map_err(|e| format!("Error when parsing strategy value: {}", e))?;
+            Box::new(RandomAntiAliasingRenderStrategy { rays_per_pixel })
+        } else {
+            Box::new(StandardRenderStrategy)
+        };
 
     // Terminal progress bar
-    let monitor: Box<dyn ProgressionMonitor> = if matches.is_present("no-status") {
+    let monitor: Box<dyn ProgressionMonitor> = if matches.is_present(ARG_NO_STATUS) {
         Box::new(NoMonitor)
     } else {
         Box::new(TermMonitor::new((canvas_height * canvas_width) as u64))
@@ -163,15 +174,15 @@ pub fn main() -> RaytracingResult {
     };
 
     // Sequential or parallel computation
-    let render_iter = render_scene(scene, config, !matches.is_present("no-parallel"), || {
+    let render_iter = render_scene(scene, config, !matches.is_present(ARG_NO_PARALLEL), || {
         monitor.clean()
     })?;
 
     // Launch the computation / rendering
-    if matches.is_present("no-gui") {
+    if matches.is_present(ARG_NO_GUI) {
         render_no_gui(render_iter, &monitor)?;
     } else {
-        let progressive_rendering = !matches.is_present("no-progressive");
+        let progressive_rendering = !matches.is_present(ARG_NO_PROGRESSIVE);
         render_sdl(
             render_iter,
             &monitor,
@@ -192,7 +203,7 @@ fn render_no_gui<M: AsRef<dyn ProgressionMonitor>>(
     let monitor = monitor.as_ref();
     let mut canvas = NoCanvas;
     for pixel in render_iter {
-        canvas.draw(pixel.unwrap())?;
+        canvas.draw(pixel?)?;
         monitor.update();
     }
     Ok(())
@@ -271,7 +282,7 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
             let mut wrapper_canvas = WrapperCanvas(&mut render_canvas);
 
             while let Some(pixel) = render_iter.next() {
-                wrapper_canvas.draw(pixel.unwrap())?;
+                wrapper_canvas.draw(pixel?)?;
                 monitor.update();
                 if progressive_rendering {
                     if instant.elapsed().as_millis() > 20 {

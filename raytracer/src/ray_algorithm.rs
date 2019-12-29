@@ -178,10 +178,7 @@ fn search_object_collision<'a>(
             }
         }
     }
-    match nearest_object_opt {
-        Some(nearest_object) => Some((&**nearest_object, collision_point)),
-        _ => None,
-    }
+    nearest_object_opt.map(|n| (&**n, collision_point))
 }
 
 fn illumination_from_lights(

@@ -104,6 +104,12 @@ pub mod result {
         }
     }
 
+    impl From<&str> for AppError {
+        fn from(err: &str) -> Self {
+            RaytracingError(String::from(err))
+        }
+    }
+
     pub type RaytracingResult = std::result::Result<(), AppError>;
 
     #[derive(Debug)]
@@ -111,7 +117,6 @@ pub mod result {
         SdlError(String),
         RaytracingError(String),
         LoggerError(String),
-        MiscError(String),
     }
 
     impl Display for AppError {
@@ -120,7 +125,6 @@ pub mod result {
                 SdlError(val) => write!(formatter, "SDL: {}", val),
                 RaytracingError(val) => write!(formatter, "RayTracer: {}", val),
                 LoggerError(val) => write!(formatter, "Logger: {}", val),
-                MiscError(val) => write!(formatter, "Other: {}", val),
             }
         }
     }
