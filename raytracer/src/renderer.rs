@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 use crate::colors::Color;
+use crate::ray_algorithm::strategy::StandardRenderStrategy;
 use crate::ray_algorithm::AnyPixelRenderStrategy;
 use crate::scene::Scene;
 use log::{debug, info, trace, warn};
@@ -46,6 +47,16 @@ pub struct RenderConfiguration {
     pub canvas_width: u32,
     pub canvas_height: u32,
     pub render_strategy: Box<dyn AnyPixelRenderStrategy>,
+}
+
+impl Default for RenderConfiguration {
+    fn default() -> Self {
+        RenderConfiguration {
+            canvas_width: 1024,
+            canvas_height: 576,
+            render_strategy: Box::new(StandardRenderStrategy),
+        }
+    }
 }
 
 pub fn render_scene<F>(
