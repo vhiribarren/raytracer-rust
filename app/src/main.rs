@@ -239,14 +239,19 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
     window_canvas.clear();
     window_canvas.present();
 
-    let texture_creator = window_canvas.texture_creator();
 
+    let texture_creator = window_canvas.texture_creator();
     let mut render_canvas =
         sdl2::surface::Surface::new(canvas_width, canvas_height, PixelFormatEnum::RGBA32)?
             .into_canvas()?;
     render_canvas.clear();
-
+    let mut texture = texture_creator.create_texture_from_surface(render_canvas.surface())?;
     let mut render_iter = render_iter.peekable();
+    let update_window_canvas = || {
+        window_canvas.clear();
+        window_canvas.copy(&texture, None, None)?;
+        window_canvas.present();
+    };
 
     let mut event_pump = sdl_context.event_pump()?;
     'event_loop: loop {
@@ -290,11 +295,14 @@ fn render_sdl<M: AsRef<dyn ProgressionMonitor>>(
                     }
                 }
             }
-            let texture = texture_creator.create_texture_from_surface(render_canvas.surface())?;
+            texture = texture_creator.create_texture_from_surface(render_canvas.surface())?;
             window_canvas.clear();
             window_canvas.copy(&texture, None, None)?;
             window_canvas.present();
         } else {
+            window_canvas.clear();
+            window_canvas.copy(&texture, None, None)?;
+            window_canvas.present();
             std::thread::sleep(Duration::from_millis(100));
         }
     }
