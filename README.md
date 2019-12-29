@@ -12,21 +12,39 @@ the current result, feel free to contribute!
 
 ## How to start
 
-Tested under MacOS 10.14.6 with Rust 1.39.0.
+Tested under MacOS 10.14.6 with Rust 1.40.0.
 
-    cargo run
+    $ cargo run
 
 Default compilation option make the rendering process quite slow, you may also test the result using:
 
-    cargo run --release
-
-Some options are available in the boot binary:
-
-    cargo run -- --help
+    $ cargo run --release
 
 The `raytracing` directory contains the main engine. The `app` directory launches the engine with a sample scene.
 
-The sample scene is in `app/src/sample_1.rs`; it is currently the only way to define a scene.
+The sample scene is in `app/src/sample_1.rs`; **it is currently the only way to define a scene**.
+
+Some options are available in the boot binary:
+
+```
+$ cargo run -- --help
+
+USAGE:
+    app [FLAGS] [OPTIONS]
+
+FLAGS:
+        --help              Prints help information
+        --no-gui            Do not display the result of the rendering.
+        --no-parallel       Do not use multithreading for parallel computation (slower).
+        --no-progressive    Do not render in realtime in the window if GUI is activate (quicker).
+        --no-status         Do not display textual progressive bar (quicker).
+    -V, --version           Prints version information
+
+OPTIONS:
+    -h, --height <height>                Canvas height.
+        --strategy-random <RAY_COUNT>    Average of RAY_COUNT random rays sent.
+    -w, --width <width>                  Canvas width, default: 1024.
+```
 
 ## Features
 
