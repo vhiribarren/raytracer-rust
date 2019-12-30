@@ -48,15 +48,6 @@ pub struct Renderer {
 }
 
 #[wasm_bindgen]
-pub struct JsPixel {
-    pub x: u32,
-    pub y: u32,
-    pub r: u8,
-    pub g: u8,
-    pub b: u8
-}
-
-#[wasm_bindgen]
 impl Renderer {
     pub fn new() -> Self {
         let scene = test_scene::generate_test_scene();
@@ -68,7 +59,7 @@ impl Renderer {
         };
         let width = config.canvas_width;
         let height = config.canvas_height;
-        let img_buffer = vec![0; (config.canvas_width*config.canvas_height*3) as usize];
+        let img_buffer = vec![0; (config.canvas_width*config.canvas_height*4) as usize];
         let render_iterator = Box::new(render_scene(scene, config, false, ||{}).unwrap());
         Renderer { render_iterator, img_buffer, width, height }
     }
@@ -84,34 +75,21 @@ impl Renderer {
     pub fn height(&self) -> u32 {
         self.height
     }
-/*
+
     pub fn next(&mut self) -> bool {
         match self.render_iterator.next() {
             None => false,
-            Some(pixel) => {
-                let pixel = pixel.unwrap();
-                let index = (pixel.x + pixel.y * self.width) as usize;
+            Some(Ok(pixel)) => {
+                let index = 4*(pixel.x + pixel.y * self.width) as usize;
                 self.img_buffer[index] = (pixel.color.red() * 255.0) as u8;
                 self.img_buffer[index+1] = (pixel.color.green() * 255.0) as u8;
                 self.img_buffer[index+2] = (pixel.color.blue() * 255.0) as u8;
+                self.img_buffer[index+3] = 0xFF;
                 true
-            }
-        }
-    }
-    */
-    pub fn next(&mut self) -> Option<JsPixel> {
-        match self.render_iterator.next() {
-            None => None,
-            Some(pixel) => {
-                let pixel = pixel.unwrap();
-                let js_pixel = JsPixel {
-                    x: pixel.x,
-                    y: pixel.y,
-                    r: (pixel.color.red() * 255.0) as u8,
-                    g: (pixel.color.green() * 255.0) as u8,
-                    b: (pixel.color.blue() * 255.0) as u8
-                };
-                Some(js_pixel)
+            },
+            Some(Err(err)) => {
+                warn!("{}", err);
+                false
             }
         }
     }

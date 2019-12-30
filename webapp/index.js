@@ -22,70 +22,44 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import { wasm_init, Renderer } from '../raytracer/src/lib.rs';
-//import { memory } from "../raytracer/pkg/raytracer";
+import raytracer from '../raytracer/Cargo.toml';
 
-wasm_init();
 
-//console.log(memory);
+raytracer.wasm_init();
 
-//class ScreenSurface {
-//
-//    init(memory_buffer, memory_ptr, surface_width, surface_height) {
-//        this.video_buffer = new Uint8Array(memory.buffer, renderer.buffer_ptr(), surface_width * surface_height * 3);
-//        this.width = surface_width;
-//        this.height = surface_height;
-//    }
-//
-//    color_at(x, y) {
-//        const index = (y * this.width + x) * 3;
-//        const r = this.video_buffer[index];
-//        const g = this.video_buffer[index + 1];
-//        const b = this.video_buffer[index + 2];
-//        return `rgb(${r},${g},${b})`;
-//    }
-//
-//}
-
-const renderer = Renderer.new();
-//const screenSurface = new ScreenSurface(memory.buffer, renderer.buffer_ptr(), renderer.width(), renderer.height());
+const renderer = raytracer.Renderer.new();
+const canvas_width = renderer.width();
+const canvas_height = renderer.height();
+const video_buffer_size = canvas_width * canvas_height * 4;
 
 const canvas = document.getElementById("canvas");
-canvas.height = renderer.height();
-canvas.width = renderer.width();
+canvas.width = canvas_width;
+canvas.height = canvas_height;
 
 const ctx = canvas.getContext('2d');
 
+const drawScreen = () => {
+    const video_data = new Uint8ClampedArray(raytracer.wasm.memory.buffer, renderer.buffer_ptr(), video_buffer_size);
+    const img = new ImageData(video_data, canvas_width, canvas_height);
+    ctx.putImageData(img, 0, 0);
+}
+
 const instant_start = Date.now();
 const renderLoop = () => {
-
     const loop_start = Date.now()
     while(true) {
-        const pixel = renderer.next();
-        if (pixel == undefined) {
+        const has_next = renderer.next();
+        if (!has_next) {
             const duration = Date.now() - instant_start;
             console.log(`Rendering duration: ${duration/1000}s`)
-            return;
+            break;
         }
-        ctx.fillStyle = `rgb(${pixel.r},${pixel.g},${pixel.b})`;
-        ctx.fillRect( pixel.x, pixel.y, 1, 1 );
-        if (Date.now() - loop_start > 50) {
+        if (Date.now() - loop_start > 20) {
             requestAnimationFrame(renderLoop);
-            return;
+            break;
         }
     }
+    drawScreen();
 };
 
 renderLoop();
-
-
-/*
-  for(let y=0; y<renderer.height(); y++) {
-    for(let x=0; x<renderer.width(); x++) {
-        ctx.fillStyle = screenSurface.color_at(x, y);
-        ctx.fillRect( x, y, 1, 1 );
-    }
-  }
-*/
-
-  //requestAnimationFrame(renderLoop);

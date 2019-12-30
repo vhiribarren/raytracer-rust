@@ -4,7 +4,12 @@
 
 Toy project to test the Rust programming language and understand how a Ray Tracer works.
 
-It currently uses SDL2 to display the result, so it should work on all platforms.
+Used technologies:
+
+- Rust
+- SDL2
+- WebAssembly
+- Parcel.js
 
 Development can be very erratic since it is a toy project, however if you like how
 the current result, feel free to contribute!
@@ -46,6 +51,15 @@ OPTIONS:
     -w, --width <width>                  Canvas width, default: 1024.
 ```
 
+## Web Browser
+
+The raytracer is compatible with the WebAssembly technology. It can be launched as a web app
+instead of a native app.
+
+    $ cd webapp
+    $ npm install
+    $ npm start     # Start a local web server and launch a web page
+
 ## Features
 
 - [X] Primitives: sphere, plane, infinite plane
@@ -61,6 +75,7 @@ OPTIONS:
 - [X] Light refraction
 - [X] Ray launcher recursion for transparent/mirror texture
 - [X] Parallel computing
+- [X] WebAssembly compatibility
 
 ## To do
 
@@ -71,14 +86,20 @@ RayTracing:
 - [ ] Box primitive
 - [ ] Texture image mapping
 - [ ] Object transformation
+- [ ] Spot light
 - [ ] Perlin effect for bump mapping
 
 Rust:
 
-- [ ] More unit tests
 - [ ] Define a better abstraction for AnyLightObject trait
-- [ ] WebAssembly compatibility
 - [ ] Scene language/configuration description
+- [ ] More automatic tests
+
+WebAssembly:
+
+- [ ] API where the scene description can be provided
+- [ ] Multithreading
+- [ ] More automatic tests
 
 
 ## References
