@@ -78,14 +78,19 @@ where
         return Err(RaytracerError::NoLight);
     }
     info!("Rendering start...");
-    let instant_start = Instant::now();
+    let instant_start_opt = match cfg!(not(target_arch = "wasm32")) {
+        true => Some(Instant::now()),
+        false => None,
+    };
     let iter_end = move || {
         finally();
         info!("Rendering done!");
-        info!(
-            "Rendering duration: {:.3} seconds",
-            instant_start.elapsed().as_secs_f32()
-        );
+        if let Some(instant_start) = instant_start_opt {
+            info!(
+                "Rendering duration: {:.3} seconds",
+                instant_start.elapsed().as_secs_f32()
+            );
+        }
         None
     };
     let render_iter: Box<dyn Iterator<Item = Result<Pixel>>> = if parallel {

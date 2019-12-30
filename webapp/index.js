@@ -1,3 +1,4 @@
-import { greet } from '../raytracer/Cargo.toml';
+import { greet, test, wasm_init } from '../raytracer/Cargo.toml';
 
-console.log(greet());
+wasm_init();
+console.log(test());

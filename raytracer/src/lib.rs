@@ -38,12 +38,6 @@ mod utils;
 
 use wasm_bindgen::prelude::*;
 
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 #[wasm_bindgen]
 extern "C" {
     fn alert(s: &str);
@@ -60,11 +54,14 @@ pub fn greet() {
     println!("Hello, raytracer without wasm!");
 }
 
+/* Does not work for now
 #[wasm_bindgen(start)]
-pub fn wasm_init() -> Result<(), JsValue> {
-    utils::set_panic_hook();
+#[cfg(target_arch = "wasm32")]
+pub fn wasm_auto_init() -> Result<(), JsValue> {
+    wasm::wasm_init();
     Ok(())
 }
+*/
 
 /// For value between 0 and 1, inclusive
 pub type UnitInterval = f64;
