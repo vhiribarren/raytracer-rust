@@ -24,7 +24,10 @@ SOFTWARE.
 
 use wasm_bindgen::prelude::*;
 use log::*;
-use crate::renderer::{RenderConfiguration, render_scene};
+use crate::renderer::{render_scene, Pixel, RenderConfiguration};
+use crate::result::Result;
+use crate::colors::Color;
+use crate::ray_algorithm::strategy::{RandomAntiAliasingRenderStrategy, StandardRenderStrategy};
 
 
 #[cfg(target_arch = "wasm32")]
@@ -37,12 +40,84 @@ pub fn wasm_init() {
 }
 
 #[wasm_bindgen]
-pub fn test() -> usize {
-    let scene = test_scene::generate_test_scene();
-    let config = <RenderConfiguration as Default>::default();
-    let iter = render_scene(scene, config, false, ||{});
-    iter.unwrap().count()
+pub struct Renderer {
+    render_iterator: Box<dyn Iterator<Item=Result<Pixel>>>,
+    img_buffer: Vec<u8>,
+    width: u32,
+    height: u32,
 }
+
+#[wasm_bindgen]
+pub struct JsPixel {
+    pub x: u32,
+    pub y: u32,
+    pub r: u8,
+    pub g: u8,
+    pub b: u8
+}
+
+#[wasm_bindgen]
+impl Renderer {
+    pub fn new() -> Self {
+        let scene = test_scene::generate_test_scene();
+        //let config = <RenderConfiguration as Default>::default();
+        let config = RenderConfiguration {
+            canvas_width: 1024,
+            canvas_height: 576,
+            render_strategy: Box::new(StandardRenderStrategy),
+        };
+        let width = config.canvas_width;
+        let height = config.canvas_height;
+        let img_buffer = vec![0; (config.canvas_width*config.canvas_height*3) as usize];
+        let render_iterator = Box::new(render_scene(scene, config, false, ||{}).unwrap());
+        Renderer { render_iterator, img_buffer, width, height }
+    }
+
+    pub fn buffer_ptr(&self) -> *const u8 {
+        self.img_buffer.as_ptr()
+    }
+
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+/*
+    pub fn next(&mut self) -> bool {
+        match self.render_iterator.next() {
+            None => false,
+            Some(pixel) => {
+                let pixel = pixel.unwrap();
+                let index = (pixel.x + pixel.y * self.width) as usize;
+                self.img_buffer[index] = (pixel.color.red() * 255.0) as u8;
+                self.img_buffer[index+1] = (pixel.color.green() * 255.0) as u8;
+                self.img_buffer[index+2] = (pixel.color.blue() * 255.0) as u8;
+                true
+            }
+        }
+    }
+    */
+    pub fn next(&mut self) -> Option<JsPixel> {
+        match self.render_iterator.next() {
+            None => None,
+            Some(pixel) => {
+                let pixel = pixel.unwrap();
+                let js_pixel = JsPixel {
+                    x: pixel.x,
+                    y: pixel.y,
+                    r: (pixel.color.red() * 255.0) as u8,
+                    g: (pixel.color.green() * 255.0) as u8,
+                    b: (pixel.color.blue() * 255.0) as u8
+                };
+                Some(js_pixel)
+            }
+        }
+    }
+
+}
+
 
 // Test Scene
 /////////////
@@ -59,7 +134,6 @@ mod test_scene {
     };
     use crate::vector::Vec3;
     use std::f64::consts::PI;
-    use crate::renderer::{RenderConfiguration};
 
     pub(crate) fn generate_test_scene() -> Scene {
         let camera = PerspectiveCamera::new(

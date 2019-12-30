@@ -32,6 +32,7 @@ use std::iter::from_fn;
 use std::sync::mpsc;
 use std::time::Instant;
 
+#[derive(Debug)]
 pub struct Pixel {
     pub x: u32,
     pub y: u32,

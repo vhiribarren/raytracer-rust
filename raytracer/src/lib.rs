@@ -43,17 +43,6 @@ extern "C" {
     fn alert(s: &str);
 }
 
-#[wasm_bindgen]
-#[cfg(target_arch = "wasm32")]
-pub fn greet() {
-    alert("Hello, raytracer for wasm!");
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub fn greet() {
-    println!("Hello, raytracer without wasm!");
-}
-
 /* Does not work for now
 #[wasm_bindgen(start)]
 #[cfg(target_arch = "wasm32")]
