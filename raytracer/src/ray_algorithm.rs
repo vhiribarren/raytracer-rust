@@ -92,7 +92,7 @@ pub mod strategy {
     }
 }
 
-fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color> {
+pub(crate) fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<Color> {
     if depth > scene.config.maximum_light_recursion {
         return Ok(Color::BLACK);
     }

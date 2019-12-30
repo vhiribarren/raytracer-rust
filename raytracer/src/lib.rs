@@ -32,6 +32,7 @@ pub mod result;
 pub mod scene;
 pub mod textures;
 pub mod vector;
+pub mod wasm;
 
 mod utils;
 
