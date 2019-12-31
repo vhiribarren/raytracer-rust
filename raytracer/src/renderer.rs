@@ -27,10 +27,10 @@ use crate::ray_algorithm::strategy::StandardRenderStrategy;
 use crate::ray_algorithm::AnyPixelRenderStrategy;
 use crate::result::{RaytracerError, Result};
 use crate::scene::Scene;
+use instant::Instant;
 use log::{debug, info, trace, warn};
 use std::iter::from_fn;
 use std::sync::mpsc;
-use std::time::Instant;
 
 #[derive(Debug)]
 pub struct Pixel {
@@ -61,7 +61,15 @@ impl Default for RenderConfiguration {
     }
 }
 
-pub fn render_scene<F>(
+pub fn render_scene(
+    scene: Scene,
+    config: RenderConfiguration,
+    parallel: bool,
+) -> Result<impl Iterator<Item = Result<Pixel>>> {
+    render_scene_with_finally(scene, config, parallel, || {})
+}
+
+pub fn render_scene_with_finally<F>(
     scene: Scene,
     config: RenderConfiguration,
     parallel: bool,
@@ -79,19 +87,14 @@ where
         return Err(RaytracerError::NoLight);
     }
     info!("Rendering start...");
-    let instant_start_opt = match cfg!(not(target_arch = "wasm32")) {
-        true => Some(Instant::now()),
-        false => None,
-    };
+    let instant_start = Instant::now();
     let iter_end = move || {
         finally();
         info!("Rendering done!");
-        if let Some(instant_start) = instant_start_opt {
-            info!(
-                "Rendering duration: {:.3} seconds",
-                instant_start.elapsed().as_secs_f32()
-            );
-        }
+        info!(
+            "Rendering duration: {:.3} seconds",
+            instant_start.elapsed().as_secs_f32()
+        );
         None
     };
     let render_iter: Box<dyn Iterator<Item = Result<Pixel>>> = if parallel {

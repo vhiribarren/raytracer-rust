@@ -22,26 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use wasm_bindgen::prelude::*;
-use log::*;
+#![cfg(target_arch = "wasm32")]
+
 use crate::renderer::{render_scene, Pixel, RenderConfiguration};
 use crate::result::Result;
-use crate::colors::Color;
-use crate::ray_algorithm::strategy::{RandomAntiAliasingRenderStrategy, StandardRenderStrategy};
+use log::*;
+use wasm_bindgen::prelude::*;
 
+#[allow(unused_imports)]
+use crate::ray_algorithm::strategy::{RandomAntiAliasingRenderStrategy, StandardRenderStrategy};
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn wasm_init() {
     #[cfg(feature = "console_error_panic_hook")]
-        console_error_panic_hook::set_once();
+    console_error_panic_hook::set_once();
     #[cfg(feature = "console_log")]
-        console_log::init_with_level(Level::Trace).expect("error initializing log");
+    console_log::init_with_level(Level::Trace).expect("error initializing log");
 }
 
 #[wasm_bindgen]
 pub struct Renderer {
-    render_iterator: Box<dyn Iterator<Item=Result<Pixel>>>,
+    render_iterator: Box<dyn Iterator<Item = Result<Pixel>>>,
     img_buffer: Vec<u8>,
     width: u32,
     height: u32,
@@ -55,13 +57,18 @@ impl Renderer {
         let config = RenderConfiguration {
             canvas_width: 1024,
             canvas_height: 576,
-            render_strategy: Box::new(StandardRenderStrategy),
+            render_strategy: Box::new(RandomAntiAliasingRenderStrategy { rays_per_pixel: 50 }),
         };
         let width = config.canvas_width;
         let height = config.canvas_height;
-        let img_buffer = vec![0; (config.canvas_width*config.canvas_height*4) as usize];
-        let render_iterator = Box::new(render_scene(scene, config, false, ||{}).unwrap());
-        Renderer { render_iterator, img_buffer, width, height }
+        let img_buffer = vec![0; (config.canvas_width * config.canvas_height * 4) as usize];
+        let render_iterator = Box::new(render_scene(scene, config, false).unwrap());
+        Renderer {
+            render_iterator,
+            img_buffer,
+            width,
+            height,
+        }
     }
 
     pub fn buffer_ptr(&self) -> *const u8 {
@@ -80,22 +87,20 @@ impl Renderer {
         match self.render_iterator.next() {
             None => false,
             Some(Ok(pixel)) => {
-                let index = 4*(pixel.x + pixel.y * self.width) as usize;
+                let index = 4 * (pixel.x + pixel.y * self.width) as usize;
                 self.img_buffer[index] = (pixel.color.red() * 255.0) as u8;
-                self.img_buffer[index+1] = (pixel.color.green() * 255.0) as u8;
-                self.img_buffer[index+2] = (pixel.color.blue() * 255.0) as u8;
-                self.img_buffer[index+3] = 0xFF;
+                self.img_buffer[index + 1] = (pixel.color.green() * 255.0) as u8;
+                self.img_buffer[index + 2] = (pixel.color.blue() * 255.0) as u8;
+                self.img_buffer[index + 3] = 0xFF;
                 true
-            },
+            }
             Some(Err(err)) => {
                 warn!("{}", err);
                 false
             }
         }
     }
-
 }
-
 
 // Test Scene
 /////////////
@@ -121,8 +126,10 @@ mod test_scene {
             9.0 * 2.0,
             (PI / 8.0) as f64,
         );
-        let light_1 = LightPoint::with_color(Vec3::new(50.0, 100.0, -50.0), Color::new(0.8, 0.8, 0.8));
-        let light_2 = LightPoint::with_color(Vec3::new(-50.0, 20.0, -20.0), Color::new(0.8, 0.0, 0.0));
+        let light_1 =
+            LightPoint::with_color(Vec3::new(50.0, 100.0, -50.0), Color::new(0.8, 0.8, 0.8));
+        let light_2 =
+            LightPoint::with_color(Vec3::new(-50.0, 20.0, -20.0), Color::new(0.8, 0.0, 0.0));
         let primitive: Sphere = Sphere {
             center: Vec3::new(0.0, 0.0, 0.0),
             radius: 5.0,
@@ -216,5 +223,4 @@ mod test_scene {
             },
         }
     }
-
 }

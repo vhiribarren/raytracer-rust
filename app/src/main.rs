@@ -36,7 +36,7 @@ use raytracer::ray_algorithm::strategy::{
     RandomAntiAliasingRenderStrategy, StandardRenderStrategy,
 };
 use raytracer::ray_algorithm::AnyPixelRenderStrategy;
-use raytracer::renderer::{render_scene, Pixel, RenderConfiguration};
+use raytracer::renderer::{render_scene_with_finally, Pixel, RenderConfiguration};
 use raytracer::result::Result;
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
@@ -175,9 +175,10 @@ fn main() -> VoidAppResult {
     info!("Canvas size: {}x{}", canvas_width, canvas_height);
 
     // Sequential or parallel computation
-    let render_iter = render_scene(scene, config, !matches.is_present(ARG_NO_PARALLEL), || {
-        monitor.clean()
-    })?;
+    let render_iter =
+        render_scene_with_finally(scene, config, !matches.is_present(ARG_NO_PARALLEL), || {
+            monitor.clean()
+        })?;
 
     // Launch the computation / rendering
     if matches.is_present(ARG_NO_GUI) {

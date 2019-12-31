@@ -44,16 +44,9 @@ const drawScreen = () => {
     ctx.putImageData(img, 0, 0);
 }
 
-const instant_start = Date.now();
 const renderLoop = () => {
     const loop_start = Date.now()
-    while(true) {
-        const has_next = renderer.next();
-        if (!has_next) {
-            const duration = Date.now() - instant_start;
-            console.log(`Rendering duration: ${duration/1000}s`)
-            break;
-        }
+    while(renderer.next()) {
         if (Date.now() - loop_start > 20) {
             requestAnimationFrame(renderLoop);
             break;

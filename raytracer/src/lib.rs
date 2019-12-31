@@ -32,6 +32,8 @@ pub mod result;
 pub mod scene;
 pub mod textures;
 pub mod vector;
+
+#[cfg(target_arch = "wasm32")]
 pub mod wasm;
 
 mod utils;
@@ -43,6 +45,7 @@ extern "C" {
     fn alert(s: &str);
 }
 
+// TODO Fix this wasm autostart function
 /* Does not work for now
 #[wasm_bindgen(start)]
 #[cfg(target_arch = "wasm32")]

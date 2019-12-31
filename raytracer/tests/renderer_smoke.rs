@@ -35,7 +35,7 @@ fn scene_without_lights_is_error() {
         ..samples::generate_test_scene()
     };
     let config = <RenderConfiguration as Default>::default();
-    render_scene(scene, config, false, || {}).unwrap().count();
+    render_scene(scene, config, false).unwrap().count();
 }
 
 #[test]
@@ -43,7 +43,7 @@ fn smoke_sequential_rendering() {
     let scene = samples::generate_test_scene();
     let config = <RenderConfiguration as Default>::default();
     let expected_count = (config.canvas_height * config.canvas_width) as usize;
-    let render_iter = render_scene(scene, config, false, || {}).unwrap();
+    let render_iter = render_scene(scene, config, false).unwrap();
     let count = render_iter.count();
     assert_eq!(count, expected_count);
 }
@@ -53,7 +53,7 @@ fn smoke_parallel_rendering() {
     let scene = samples::generate_test_scene();
     let config = <RenderConfiguration as Default>::default();
     let expected_count = (config.canvas_height * config.canvas_width) as usize;
-    let render_iter = render_scene(scene, config, true, || {}).unwrap();
+    let render_iter = render_scene(scene, config, true).unwrap();
     let count = render_iter.count();
     assert_eq!(count, expected_count);
 }
