@@ -32,6 +32,7 @@ pub mod result;
 pub mod scene;
 pub mod textures;
 pub mod vector;
+pub(crate) mod parser;
 
 #[cfg(target_arch = "wasm32")]
 pub mod wasm;

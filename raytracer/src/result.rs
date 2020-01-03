@@ -30,6 +30,7 @@ pub type Result<T> = std::result::Result<T, RaytracerError>;
 #[derive(Debug)]
 pub enum RaytracerError {
     NormalNotFound(usize),
+    ParsingError(String),
     NoLight,
 }
 
@@ -40,6 +41,9 @@ impl Display for RaytracerError {
                 write!(formatter, "Normal not found for object at index: {}", val)
             }
             RaytracerError::NoLight => write!(formatter, "There is no light in the scene"),
+            RaytracerError::ParsingError(val) => {
+                write!(formatter, "Error while parsing scene: {}", val)
+            }
         }
     }
 }
