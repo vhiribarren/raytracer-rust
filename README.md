@@ -10,32 +10,33 @@ Used technologies:
 - SDL2
 - WebAssembly
 - Parcel.js
+- TOML
 
-Development can be very erratic since it is a toy project, however if you like how
-the current result, feel free to contribute!
+Development can be very erratic since it is a hobby project, however if you like how
+the current result is, feel free to contribute!
 
 
 ## How to start
 
 Tested under MacOS 10.14.6 with Rust 1.40.0.
 
-    $ cargo run
+    $ cargo run -- samples/show_room_1.toml
 
 Default compilation option make the rendering process quite slow, you may also test the result using:
 
-    $ cargo run --release
+    $ cargo run --release -- samples/show_room_1.toml
 
-The `raytracing` directory contains the main engine. The `app` directory launches the engine with a sample scene.
+The `raytracing` directory contains the main engine, as a Rust library.<br>
+The `app` directory is for a standalone app using the library.<br>
+The `samples` directory has some scene description file examples that can be used with the standalone app.
 
-The sample scene is in `app/src/sample_1.rs`; **it is currently the only way to define a scene**.
-
-Some options are available in the boot binary:
+Some options are available in the standalone app:
 
 ```
 $ cargo run -- --help
 
 USAGE:
-    app [FLAGS] [OPTIONS]
+    app [FLAGS] [OPTIONS] <INPUT_FILE>
 
 FLAGS:
         --help              Prints help information
@@ -44,11 +45,15 @@ FLAGS:
         --no-progressive    Do not render in realtime in the window if GUI is activate (quicker).
         --no-status         Do not display textual progressive bar (quicker).
     -V, --version           Prints version information
+    -v, --verbose           Verbosity of log messages (one for Debug level, two for Trace level)
 
 OPTIONS:
     -h, --height <height>                Canvas height.
         --strategy-random <RAY_COUNT>    Average of RAY_COUNT random rays sent.
     -w, --width <width>                  Canvas width, default: 1024.
+
+ARGS:
+    <INPUT_FILE>    TOML file describing the scene.
 ```
 
 ## Web Browser
@@ -76,6 +81,7 @@ instead of a native app.
 - [X] Ray launcher recursion for transparent/mirror texture
 - [X] Parallel computing
 - [X] WebAssembly compatibility
+- [X] TOML based scene language/configuration description
 
 ## To do
 
@@ -92,7 +98,7 @@ RayTracing:
 Rust:
 
 - [ ] Define a better abstraction for AnyLightObject trait
-- [ ] Scene language/configuration description
+
 - [ ] More automatic tests
 
 WebAssembly:
