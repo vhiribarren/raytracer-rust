@@ -92,7 +92,6 @@ impl From<ModelColor> for Color {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
-#[non_exhaustive]
 enum DescriptionLight {
     Point { source: Vec3, color: Color },
 }
@@ -103,7 +102,6 @@ impl DescriptionLight {
             DescriptionLight::Point { source, color } => {
                 Box::new(LightPoint::with_color(source, color))
             }
-            _ => panic!(),
         }
     }
 }
@@ -111,7 +109,6 @@ impl DescriptionLight {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
-#[non_exhaustive]
 enum DescriptionCamera {
     Perspective {
         screen_center: Vec3,
@@ -151,7 +148,6 @@ impl DescriptionCamera {
                 width,
                 height,
             } => Box::new(OrthogonalCamera::new(eye, look_at, width, height)),
-            _ => panic!(),
         }
     }
 }
@@ -178,7 +174,6 @@ impl DescriptionObject {
                 normal,
                 width,
             } => Box::new(SquarePlan::new(center, normal, width)),
-            _ => panic!(),
         };
         let texture = self.texture.into_texture();
         SceneObject {
@@ -192,7 +187,6 @@ impl DescriptionObject {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
-#[non_exhaustive]
 enum ObjectPrimitive {
     Sphere {
         center: Vec3,
