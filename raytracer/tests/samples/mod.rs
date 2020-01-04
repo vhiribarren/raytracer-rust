@@ -53,7 +53,7 @@ pub(crate) fn generate_test_scene() -> Scene {
     Scene {
         camera: Box::new(camera),
         lights: vec![Box::new(light)],
-        objects: vec![Box::new(object)],
+        objects: vec![object],
         config: Default::default(),
     }
 }

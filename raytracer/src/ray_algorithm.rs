@@ -171,10 +171,10 @@ pub struct CollisionContext<'a> {
 
 fn search_object_collision<'a>(
     ray: &Ray,
-    objects: &'a [Box<SceneObject>],
+    objects: &'a [SceneObject],
 ) -> Option<CollisionContext<'a>> {
     let mut shortest_distance: f64 = f64::MAX;
-    let mut nearest_object_opt: Option<&Box<SceneObject>> = None;
+    let mut nearest_object_opt: Option<&SceneObject> = None;
     let mut collision_point: Vec3 = Default::default();
     let mut array_index = std::usize::MAX;
     // For each pixel, we search for collision with objects
@@ -193,7 +193,7 @@ fn search_object_collision<'a>(
         }
     }
     nearest_object_opt.map(|n| CollisionContext {
-        object: &**n,
+        object: n,
         collision_point,
         array_index,
     })
@@ -202,7 +202,7 @@ fn search_object_collision<'a>(
 fn illumination_from_lights(
     collision_context: &CollisionContext,
     lights: &[Box<dyn AnyLightObject>],
-    objects: &[Box<SceneObject>],
+    objects: &[SceneObject],
     camera_ray: &Ray,
 ) -> Result<Color> {
     let mut total_color = Color::BLACK;
@@ -248,7 +248,7 @@ fn illumination_from_lights(
 }
 
 #[allow(clippy::if_same_then_else)]
-fn ray_encounter_obstacle(ray: &Ray, destination: &Vec3, objects: &[Box<SceneObject>]) -> bool {
+fn ray_encounter_obstacle(ray: &Ray, destination: &Vec3, objects: &[SceneObject]) -> bool {
     let source = ray.source;
     let light_distance = Vec3::between_points(source, *destination).norm();
     // Check of object obstruction between light and collision point

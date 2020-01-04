@@ -41,7 +41,7 @@ pub(crate) fn parse_scene_description(scene_str: &str) -> Result<Scene> {
     let config = root_document.config;
     let camera = root_document.camera.into_ray_emitter();
     let lights = root_document.light.into_iter().map(DescriptionLight::into_any_light_object).collect();
-    let objects = root_document.object.into_iter().map(DescriptionObject::into_any_scene_object).collect();
+    let objects = root_document.object.into_iter().map(DescriptionObject::into_scene_object).collect();
 
     Ok(Scene {
         camera,
@@ -158,7 +158,7 @@ struct DescriptionObject {
 }
 
 impl DescriptionObject {
-    fn into_any_scene_object(self) -> Box<SceneObject> {
+    fn into_scene_object(self) -> SceneObject {
         let shape: Box<dyn Shape> = match self.object_primitive {
             ObjectPrimitive::Sphere { center, radius } => Box::new(Sphere { center, radius }),
             ObjectPrimitive::InfinitePlan { center, normal } => {
@@ -172,11 +172,11 @@ impl DescriptionObject {
             _ => panic!(),
         };
         let texture = self.texture.into_texture();
-        Box::new(SceneObject {
+        SceneObject {
             texture,
             primitive: shape,
             effects: Default::default(),
-        })
+        }
     }
 }
 

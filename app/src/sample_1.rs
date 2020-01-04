@@ -131,11 +131,11 @@ pub(crate) fn generate_test_scene() -> Scene {
         camera: Box::new(camera),
         lights: vec![Box::new(light_1), Box::new(light_2)],
         objects: vec![
-            Box::new(object_1),
-            Box::new(object_2),
-            Box::new(object_3),
-            Box::new(object_4),
-            Box::new(object_5),
+            object_1,
+            object_2,
+            object_3,
+            object_4,
+            object_5,
         ],
         config: SceneConfiguration {
             ambient_light: Some(Color::new(0.0, 0.0, 0.2)),

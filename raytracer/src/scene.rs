@@ -89,7 +89,7 @@ pub trait RayEmitter: Send + Sync {
 pub struct Scene {
     pub camera: Box<dyn RayEmitter>,
     pub lights: Vec<Box<dyn AnyLightObject>>,
-    pub objects: Vec<Box<SceneObject>>,
+    pub objects: Vec<SceneObject>,
     pub config: SceneConfiguration,
 }
 
