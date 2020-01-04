@@ -1,16 +1,22 @@
 # Raytracer in Rust
 
+
+
+Hobby project to test the Rust programming language and understand how a Ray Tracer works.
+
+Used technologies: Rust, SDL2, WebAssembly, Parcel.js, TOML.
+
 ![Sample](./doc/images/sample_readme.jpg)
 
-Toy project to test the Rust programming language and understand how a Ray Tracer works.
+- [How to start](#how-to-start)
+- [Web Browser](#web-browser)
+- [Features](#features)
+- [Scene Description Language](#scene-description-language)
+- [To Do](#to-do)
+- [References](#references)
+- [License](#license)
 
-Used technologies:
 
-- Rust
-- SDL2
-- WebAssembly
-- Parcel.js
-- TOML
 
 Development can be very erratic since it is a hobby project, however if you like how
 the current result is, feel free to contribute!
@@ -82,6 +88,83 @@ instead of a native app.
 - [X] Parallel computing
 - [X] WebAssembly compatibility
 - [X] TOML based scene language/configuration description
+
+## Scene Description Language
+
+[TOML](https://github.com/toml-lang/toml) is currently used as a format to describe a ray tracing scene.
+It gives the following grammar and feeling:
+
+```
+description = "Show Room 1"
+
+[config]
+ambient_light = [0.0, 0.0, 0.2] # Red atmosphere
+
+[camera]
+type = "perspective"
+screen_center = [0.0, 10.0, -10.0]
+look_at = [0.0, 0.0, 30.0]
+width = 32
+height = 18
+
+[[light]]
+description = "Tiny red light on left"
+type = "point"
+source = [-50.0, 20.0, -20.0]
+color = [0.8, 0.0, 0.0]
+
+[[light]]
+description = "Global white light"
+type = "point"
+source = [50, 100, -50]
+color = [0.8, 0.8, 0.8]
+
+[[object]]
+description = "Center checked sphere"
+type = "sphere"
+center = [0, 0, 0]
+radius = 5
+texture.type = "checked_pattern"
+effect.phong = {}
+
+[[object]]
+description = "Green transparent sphere on the right"
+type = "sphere"
+center = [10, 3, 10]
+radius = 8
+texture.type = "plain_color"
+texture.color = "green"
+effect.phong = {}
+effect.transparency.refractive_index = 1.3
+
+[[object]]
+description = "Red mirror sphere on the left"
+type = "sphere"
+center = [-10, 3, 10]
+radius = 8
+texture.type = "plain_color"
+texture.color = "red"
+effect.phong = {}
+effect.mirror.coeff = 1.0
+
+[[object]]
+description = "Yellow transparent sphere behind"
+type = "sphere"
+center = [0, 10, 35]
+radius = 15
+texture.type = "plain_color"
+texture.color = "yellow"
+effect.phong = {}
+effect.transparency.refractive_index = 1.3
+
+[[object]]
+description = "Infinite plan"
+type = "infinite_plan"
+center = [0, -5, 0]
+normal =  [0, 1, 0]
+texture.type = "checked_pattern"
+effect.mirror.coeff = 0.8
+```
 
 ## To do
 
