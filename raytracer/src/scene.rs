@@ -55,22 +55,22 @@ impl Default for SceneConfiguration {
 
 pub struct SceneObject {
     pub texture: Box<dyn Texture>,
-    pub primitive: Box<dyn Shape>,
+    pub shape: Box<dyn Shape>,
     pub effects: TextureEffects,
 }
 
 impl SceneObject {
     pub fn color_at(&self, point: Vec3) -> Color {
-        let (u, v) = self.primitive.surface_mapping_at(point).unwrap();
+        let (u, v) = self.shape.surface_mapping_at(point).unwrap();
         self.texture.color_at(u, v)
     }
 
     pub fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
-        self.primitive.check_collision(ray)
+        self.shape.check_collision(ray)
     }
 
     pub fn normal_at(&self, point: Vec3) -> Option<Vec3> {
-        self.primitive.normal_at(point)
+        self.shape.normal_at(point)
     }
 
     pub fn effects(&self) -> &TextureEffects {

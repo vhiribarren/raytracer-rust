@@ -46,7 +46,7 @@ pub(crate) fn generate_test_scene() -> Scene {
     };
     let texture = <CheckedPattern as Default>::default();
     let object = SceneObject {
-        primitive: Box::new(primitive),
+        shape: Box::new(primitive),
         texture: Box::new(texture),
         effects: Default::default(),
     };

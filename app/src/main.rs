@@ -42,10 +42,10 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::PixelFormatEnum;
 use std::time::{Duration, Instant};
 
-use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 use raytracer::scene::Scene;
-use std::str::FromStr;
+use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 use std::fs;
+use std::str::FromStr;
 
 const APP_AUTHOR: &str = "Vincent Hiribarren";
 const APP_NAME: &str = "raytracer-rust";
@@ -72,7 +72,6 @@ const SDL_WINDOW_CLEAR_COLOR: sdl2::pixels::Color = sdl2::pixels::Color {
 };
 
 fn main() -> VoidAppResult {
-
     let matches = clap::App::new(APP_NAME)
         .author(APP_AUTHOR)
         .about(APP_ABOUT)
@@ -80,14 +79,14 @@ fn main() -> VoidAppResult {
         .arg(
             clap::Arg::with_name(ARG_FILE_INPUT)
                 .required(true)
-                .help("TOML file describing the scene.")
+                .help("TOML file describing the scene."),
         )
         .arg(
             clap::Arg::with_name(ARG_VERBOSE)
                 .short("v")
                 .long("verbose")
                 .multiple(true)
-                .help("Verbosity of log messages (one for Debug level, two for Trace level)")
+                .help("Verbosity of log messages (one for Debug level, two for Trace level)"),
         )
         .arg(
             clap::Arg::with_name(ARG_NO_STATUS)
@@ -138,7 +137,7 @@ fn main() -> VoidAppResult {
     let log_level = match matches.occurrences_of(ARG_VERBOSE) {
         0 => LevelFilter::Info,
         1 => LevelFilter::Debug,
-        _ =>  LevelFilter::Trace,
+        _ => LevelFilter::Trace,
     };
     TermLogger::init(log_level, Config::default(), TerminalMode::Mixed)
         .expect("Error while initializing logger");

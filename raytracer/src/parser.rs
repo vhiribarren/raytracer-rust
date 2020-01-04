@@ -182,7 +182,7 @@ impl DescriptionObject {
         let effects = self.effect.unwrap_or_default();
         SceneObject {
             texture,
-            primitive: shape,
+            shape,
             effects,
         }
     }

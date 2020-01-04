@@ -136,7 +136,7 @@ mod test_scene {
         };
         let texture = <CheckedPattern as Default>::default();
         let object_1 = SceneObject {
-            primitive,
+            shape: primitive,
             texture,
             effects: TextureEffects {
                 phong: Some(Default::default()),
@@ -150,7 +150,7 @@ mod test_scene {
         let color = Color::RED;
         let texture = PlainColorTexture { color };
         let object_2 = SceneObject {
-            primitive,
+            shape: primitive,
             texture,
             effects: TextureEffects {
                 phong: Some(Default::default()),
@@ -165,7 +165,7 @@ mod test_scene {
         let color = Color::GREEN;
         let texture = PlainColorTexture { color };
         let object_3 = SceneObject {
-            primitive,
+            shape: primitive,
             texture,
             effects: TextureEffects {
                 phong: Some(Default::default()),
@@ -183,7 +183,7 @@ mod test_scene {
         let color = Color::YELLOW;
         let texture = PlainColorTexture { color };
         let object_4 = SceneObject {
-            primitive,
+            shape: primitive,
             texture,
             effects: TextureEffects {
                 phong: Some(Default::default()),
@@ -198,7 +198,7 @@ mod test_scene {
         let plane = InfinitePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
         let texture = <CheckedPattern as Default>::default();
         let object_5 = SceneObject {
-            primitive: plane,
+            shape: plane,
             texture,
             effects: TextureEffects {
                 mirror: Some(Mirror { coeff: 0.8 }),
