@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 Vincent Hiribarren
+Copyright (c) 2019, 2020 Vincent Hiribarren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -117,110 +117,10 @@ mod test_scene {
     };
     use crate::vector::Vec3;
     use std::f64::consts::PI;
+    use std::str::FromStr;
 
     pub(crate) fn generate_test_scene() -> Scene {
-        let camera = PerspectiveCamera::new(
-            Vec3::new(0.0, 10.0, -10.0),
-            Vec3::new(0.0, 0.0, 30.0),
-            16.0 * 2.0,
-            9.0 * 2.0,
-            (PI / 8.0) as f64,
-        );
-        let light_1 =
-            LightPoint::with_color(Vec3::new(50.0, 100.0, -50.0), Color::new(0.8, 0.8, 0.8));
-        let light_2 =
-            LightPoint::with_color(Vec3::new(-50.0, 20.0, -20.0), Color::new(0.8, 0.0, 0.0));
-        let primitive: Sphere = Sphere {
-            center: Vec3::new(0.0, 0.0, 0.0),
-            radius: 5.0,
-        };
-        let texture = <CheckedPattern as Default>::default();
-        let object_1 = SceneObject {
-            shape: primitive,
-            texture,
-            effects: TextureEffects {
-                phong: Some(Default::default()),
-                ..Default::default()
-            },
-        };
-        let primitive: Sphere = Sphere {
-            center: Vec3::new(-10.0, 3.0, 10.0),
-            radius: 8.0,
-        };
-        let color = Color::RED;
-        let texture = PlainColorTexture { color };
-        let object_2 = SceneObject {
-            shape: primitive,
-            texture,
-            effects: TextureEffects {
-                phong: Some(Default::default()),
-                mirror: Some(Mirror { coeff: 1.0 }),
-                ..Default::default()
-            },
-        };
-        let primitive: Sphere = Sphere {
-            center: Vec3::new(10.0, 3.0, 10.0),
-            radius: 8.0,
-        };
-        let color = Color::GREEN;
-        let texture = PlainColorTexture { color };
-        let object_3 = SceneObject {
-            shape: primitive,
-            texture,
-            effects: TextureEffects {
-                phong: Some(Default::default()),
-                transparency: Some(Transparency {
-                    refractive_index: 1.3,
-                    ..Default::default()
-                }),
-                ..Default::default()
-            },
-        };
-        let primitive: Sphere = Sphere {
-            center: Vec3::new(0.0, 10.0, 35.0),
-            radius: 15.0,
-        };
-        let color = Color::YELLOW;
-        let texture = PlainColorTexture { color };
-        let object_4 = SceneObject {
-            shape: primitive,
-            texture,
-            effects: TextureEffects {
-                phong: Some(Default::default()),
-                transparency: Some(Transparency {
-                    refractive_index: 1.3,
-                    ..Default::default()
-                }),
-                ..Default::default()
-            },
-        };
-        //let plane = SquarePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0), 40.0);
-        let plane = InfinitePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
-        let texture = <CheckedPattern as Default>::default();
-        let object_5 = SceneObject {
-            shape: plane,
-            texture,
-            effects: TextureEffects {
-                mirror: Some(Mirror { coeff: 0.8 }),
-                ..Default::default()
-            },
-        };
-
-        Scene {
-            camera: Box::new(camera),
-            lights: vec![Box::new(light_1), Box::new(light_2)],
-            objects: vec![
-                Box::new(object_1),
-                Box::new(object_2),
-                Box::new(object_3),
-                Box::new(object_4),
-                Box::new(object_5),
-            ],
-            config: SceneConfiguration {
-                ambient_light: Some(Color::new(0.0, 0.0, 0.2)),
-                maximum_light_recursion: 2,
-                ..Default::default()
-            },
-        }
+        let scene_toml = include_str!("../../samples/show_room_1.toml");
+        Scene::from_str(scene_toml).unwrap()
     }
 }
