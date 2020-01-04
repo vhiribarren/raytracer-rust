@@ -179,10 +179,11 @@ impl DescriptionObject {
             } => Box::new(SquarePlan::new(center, normal, width)),
         };
         let texture = self.texture.into_texture();
+        let effects = self.effect.unwrap_or_default();
         SceneObject {
             texture,
             primitive: shape,
-            effects: Default::default(),
+            effects,
         }
     }
 }
