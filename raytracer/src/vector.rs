@@ -22,9 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::parser::ModelVector;
 use crate::utils::f64_eq;
+use serde::Deserialize;
 
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone, Deserialize)]
+#[serde(from = "ModelVector")]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,

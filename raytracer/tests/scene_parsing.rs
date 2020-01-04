@@ -22,39 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-pub mod cameras;
-pub mod colors;
-pub mod lights;
-pub(crate) mod parser;
-pub mod primitives;
-pub mod ray_algorithm;
-pub mod renderer;
-pub mod result;
-pub mod scene;
-pub mod textures;
-pub mod vector;
+use raytracer::scene::Scene;
+use std::fs;
+use std::iter;
+use std::path::PathBuf;
+use toml::Value;
 
-#[cfg(target_arch = "wasm32")]
-pub mod wasm;
+const SAMPLES_ROOT_DIR: [&str; 2] = ["tests", "samples"];
 
-mod utils;
-
-use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
+fn load_sample<T: AsRef<str>>(sample_file: T) -> String {
+    let sample_file = sample_file.as_ref();
+    let scene_path: PathBuf = SAMPLES_ROOT_DIR
+        .iter()
+        .chain(iter::once(&sample_file))
+        .collect();
+    fs::read_to_string(scene_path).unwrap()
 }
 
-// TODO Fix this wasm autostart function
-/* Does not work for now
-#[wasm_bindgen(start)]
-#[cfg(target_arch = "wasm32")]
-pub fn wasm_auto_init() -> Result<(), JsValue> {
-    wasm::wasm_init();
-    Ok(())
+#[test]
+fn load_basic_scene() {
+    let scene_string = load_sample("ok_basic.toml");
+    let scene_result = Scene::from_str(scene_string);
+    assert!(scene_result.is_ok());
 }
-*/
-
-/// For value between 0 and 1, inclusive
-pub type UnitInterval = f64;

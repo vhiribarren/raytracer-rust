@@ -25,6 +25,7 @@ SOFTWARE.
 use crate::colors::Color;
 use crate::utils::{f64_gt, f64_lt};
 use crate::UnitInterval;
+use serde::Deserialize;
 
 pub trait Texture: Sync + Send {
     fn color_at(&self, u: f64, v: f64) -> Color;
@@ -69,6 +70,8 @@ impl Texture for CheckedPattern {
     }
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(default)]
 pub struct TextureEffects {
     pub phong: Option<Phong>,
     pub transparency: Option<Transparency>,
@@ -85,6 +88,7 @@ impl Default for TextureEffects {
     }
 }
 
+#[derive(Deserialize, Debug)]
 pub struct Mirror {
     pub coeff: UnitInterval,
 }
@@ -95,6 +99,7 @@ impl Default for Mirror {
     }
 }
 
+#[derive(Deserialize, Debug)]
 pub struct Transparency {
     pub refractive_index: f64,
     pub alpha: UnitInterval,
@@ -109,6 +114,7 @@ impl Default for Transparency {
     }
 }
 
+#[derive(Deserialize, Debug)]
 pub struct Phong {
     pub size: u32,
     pub lum_coeff: UnitInterval,

@@ -288,7 +288,6 @@ mod tests {
         let result = sphere.check_collision(&ray);
         // There is a collision
         assert!(result.is_some());
-        println!("{:?}", result);
     }
 
     #[test]

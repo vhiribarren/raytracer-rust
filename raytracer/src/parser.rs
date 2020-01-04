@@ -22,165 +22,224 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE
 */
 
-
-use crate::lights::{LightPoint, AnyLightObject};
-use log::info;
-use toml::value::Table;
-use crate::scene::{Scene, SceneObject, SceneConfiguration, RayEmitter};
-use crate::result::RaytracerError;
-use toml::Value;
+use crate::cameras::{OrthogonalCamera, PerspectiveCamera};
 use crate::colors::Color;
-use crate::vector::Vec3;
-use crate::cameras::PerspectiveCamera;
+use crate::lights::{AnyLightObject, LightPoint};
+use crate::primitives::{InfinitePlan, Shape, Sphere, SquarePlan};
+use crate::result::RaytracerError;
 use crate::result::Result;
-use serde::{Deserialize};
-use crate::UnitInterval;
+use crate::scene::{RayEmitter, SceneConfiguration, SceneObject, Scene};
+use crate::textures::{CheckedPattern, PlainColorTexture, Texture, TextureEffects};
+use crate::vector::Vec3;
+use serde::Deserialize;
+use log::{trace};
 
+pub(crate) fn parse_scene_description(scene_str: &str) -> Result<Scene> {
+    let root_document = toml::from_str::<ModelRoot>(scene_str)
+        .map_err(|e| RaytracerError::ParsingError(e.to_string()))?;
+    trace!("Parsed scene description: {:#?}", root_document);
+    let config = root_document.config;
+    let camera = root_document.camera.into_ray_emitter();
+    let lights = root_document.light.into_iter().map(DescriptionLight::into_any_light_object).collect();
+    let objects = root_document.object.into_iter().map(DescriptionObject::into_any_scene_object).collect();
 
-#[derive(Debug,Deserialize)]
-pub(crate) struct Root {
+    Ok(Scene {
+        camera,
+        lights,
+        objects,
+        config
+    })
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ModelRoot {
     description: Option<String>,
-    config: Config,
-    camera: Camera,
-    object: Vec<Object>,
-    light: Vec<Light>,
+    #[serde(default)]
+    config: SceneConfiguration,
+    camera: DescriptionCamera,
+    object: Vec<DescriptionObject>,
+    light: Vec<DescriptionLight>,
 }
 
-#[derive(Debug,Deserialize)]
-pub struct Config {
-    world_color:  Option<ModelColor>,
-    #[serde(default = "default_world_refractive_index")]
-    world_refractive_index: f64,
-    ambient_light: Option<ModelColor>,
-    #[serde(default = "default_maximum_light_recursion")]
-    maximum_light_recursion: u8,
-}
+#[derive(Debug, Deserialize)]
+#[serde(transparent)]
+pub(crate) struct ModelVector([f64; 3]);
 
-fn default_world_refractive_index() -> f64 {
-    1.0
-}
-
-fn default_maximum_light_recursion() -> u8 {
-    4
-}
-
-#[derive(Debug,Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(tag = "type")]
-enum Light {
-    Point {
-        source: [f64; 3],
-        color: ModelColor,
+impl From<ModelVector> for Vec3 {
+    fn from(model_vector: ModelVector) -> Self {
+        Vec3::new(model_vector.0[0], model_vector.0[1], model_vector.0[2])
     }
 }
 
-#[derive(Debug,Deserialize)]
+impl From<ModelColor> for Color {
+    fn from(model_color: ModelColor) -> Self {
+        match model_color {
+            ModelColor::ByString(value) => Color::from_str(value).unwrap(),
+            ModelColor::ByRGB(rgb) => Color::new(rgb[0], rgb[1], rgb[2]),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
-enum Camera {
+#[non_exhaustive]
+enum DescriptionLight {
+    Point { source: Vec3, color: Color },
+}
+
+impl DescriptionLight {
+    fn into_any_light_object(self) -> Box<dyn AnyLightObject> {
+        match self {
+            DescriptionLight::Point { source, color } => {
+                Box::new(LightPoint::with_color(source, color))
+            }
+            _ => panic!(),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[serde(tag = "type")]
+#[non_exhaustive]
+enum DescriptionCamera {
     Perspective {
-        screen_center: [f64; 3],
-        look_at: [f64; 3],
+        screen_center: Vec3,
+        look_at: Vec3,
         width: f64,
         height: f64,
         #[serde(default = "default_perspective_angle")]
-        angle_degree: f64
+        angle_degree: f64,
     },
     Orthogonal {
-        eye: [f64; 3],
-        look_at: [f64; 3],
+        eye: Vec3,
+        look_at: Vec3,
         width: f64,
         height: f64,
     },
 }
 
-#[derive(Debug,Deserialize)]
-struct Object {
-    texture: Texture,
-    effect: Option<Effect>,
-    #[serde(flatten)]
-    _object_primitive: ObjectPrimitive,
+impl DescriptionCamera {
+    fn into_ray_emitter(self) -> Box<dyn RayEmitter> {
+        match self {
+            DescriptionCamera::Perspective {
+                screen_center,
+                look_at,
+                width,
+                height,
+                angle_degree,
+            } => Box::new(PerspectiveCamera::new(
+                screen_center,
+                look_at,
+                width,
+                height,
+                angle_degree,
+            )),
+            DescriptionCamera::Orthogonal {
+                eye,
+                look_at,
+                width,
+                height,
+            } => Box::new(OrthogonalCamera::new(eye, look_at, width, height)),
+            _ => panic!(),
+        }
+    }
 }
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug, Deserialize)]
+#[non_exhaustive]
+struct DescriptionObject {
+    texture: ModelTexture,
+    #[serde(default)]
+    effect: Option<TextureEffects>,
+    #[serde(flatten)]
+    object_primitive: ObjectPrimitive,
+}
+
+impl DescriptionObject {
+    fn into_any_scene_object(self) -> Box<SceneObject> {
+        let shape: Box<dyn Shape> = match self.object_primitive {
+            ObjectPrimitive::Sphere { center, radius } => Box::new(Sphere { center, radius }),
+            ObjectPrimitive::InfinitePlan { center, normal } => {
+                Box::new(InfinitePlan::new(center, normal))
+            }
+            ObjectPrimitive::SquarePlan {
+                center,
+                normal,
+                width,
+            } => Box::new(SquarePlan::new(center, normal, width)),
+            _ => panic!(),
+        };
+        let texture = self.texture.into_texture();
+        Box::new(SceneObject {
+            texture,
+            primitive: shape,
+            effects: Default::default(),
+        })
+    }
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
+#[non_exhaustive]
 enum ObjectPrimitive {
     Sphere {
-        center: [f64; 3],
+        center: Vec3,
         radius: f64,
     },
     InfinitePlan {
-        center: [f64; 3],
-        normal: [f64; 3],
+        center: Vec3,
+        normal: Vec3,
     },
     SquarePlan {
-        center: [f64; 3],
-        normal: [f64; 3],
+        center: Vec3,
+        normal: Vec3,
         width: f64,
-    }
+    },
 }
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
-enum Texture {
+enum ModelTexture {
     CheckedPattern {
-        primary_color: ModelColor,
-        secondary_color: ModelColor,
-        count: u32,
+        primary_color: Color,
+        secondary_color: Color,
+        count: f64,
     },
     PlainColor {
-        color: ModelColor,
+        color: Color,
+    },
+}
+
+impl ModelTexture {
+    fn into_texture(self) -> Box<dyn Texture> {
+        match self {
+            ModelTexture::CheckedPattern {
+                primary_color,
+                secondary_color,
+                count,
+            } => Box::new(CheckedPattern {
+                primary_color,
+                secondary_color,
+                count,
+            }),
+            ModelTexture::PlainColor { color } => Box::new(PlainColorTexture { color }),
+        }
     }
 }
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(untagged)]
-enum ModelColor {
+pub(crate) enum ModelColor {
     ByString(String),
     ByRGB([f64; 3]),
 }
 
-
-#[derive(Debug,Deserialize)]
-#[serde(rename_all = "snake_case")]
-struct Effect {
-    mirror: Option<Mirror>,
-    transparency: Option<Transparency>,
-    phong: Option<Phong>,
-}
-
-#[derive(Debug,Deserialize)]
-#[serde(rename_all = "snake_case")]
-struct Mirror {
-    coeff: UnitInterval,
-}
-
-#[derive(Debug,Deserialize)]
-#[serde(rename_all = "snake_case")]
-struct Transparency {
-    refractive_index: f64,
-    alpha: UnitInterval,
-}
-
-#[derive(Debug,Deserialize)]
-#[serde(rename_all = "snake_case")]
-struct Phong {
-    size: u32,
-    lum_coeff: UnitInterval,
-}
-
-
 fn default_perspective_angle() -> f64 {
     std::f64::consts::PI / 8.0
-}
-
-
-pub(crate) fn parse_scene_description(scene_str: &str) -> Result<Root>  {
-    let root_document = toml::from_str::<Root>(scene_str)
-        .map_err(|e| RaytracerError::ParsingError(e.to_string()))?;
-    Ok(root_document)
 }
 
 #[cfg(test)]
@@ -195,6 +254,4 @@ mod tests {
         let result = parse_scene_description(INVALID_TOML);
         assert!(result.is_err());
     }
-
-
 }

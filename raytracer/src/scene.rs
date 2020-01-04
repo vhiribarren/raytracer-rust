@@ -24,18 +24,16 @@ SOFTWARE.
 
 use crate::colors::Color;
 use crate::lights::AnyLightObject;
+use crate::parser;
 use crate::primitives::{Ray, Shape};
 use crate::textures::{Texture, TextureEffects};
 use crate::vector::Vec3;
 use crate::UnitInterval;
+use serde::Deserialize;
+use crate::result::Result;
 
-pub struct Scene {
-    pub camera: Box<dyn RayEmitter>,
-    pub lights: Vec<Box<dyn AnyLightObject>>,
-    pub objects: Vec<Box<SceneObject>>,
-    pub config: SceneConfiguration,
-}
-
+#[derive(Debug, Deserialize)]
+#[serde(default)]
 pub struct SceneConfiguration {
     pub world_color: Color,
     pub world_refractive_index: f64,
@@ -86,4 +84,17 @@ pub trait RayEmitter: Send + Sync {
         self.width() / self.height()
     }
     fn generate_ray(&self, canvas_x: UnitInterval, canvas_y: UnitInterval) -> Ray;
+}
+
+pub struct Scene {
+    pub camera: Box<dyn RayEmitter>,
+    pub lights: Vec<Box<dyn AnyLightObject>>,
+    pub objects: Vec<Box<SceneObject>>,
+    pub config: SceneConfiguration,
+}
+
+impl Scene {
+    pub fn from_str<T: AsRef<str>>(scene_str: T) -> Result<Scene> {
+        parser::parse_scene_description(scene_str.as_ref())
+    }
 }

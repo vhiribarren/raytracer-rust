@@ -27,7 +27,7 @@ use crate::lights::AnyLightObject;
 use crate::primitives::Ray;
 use crate::result::RaytracerError;
 use crate::result::Result;
-use crate::scene::{SceneObject, Scene};
+use crate::scene::{Scene, SceneObject};
 use crate::vector::Vec3;
 use crate::UnitInterval;
 use rand::Rng;
@@ -248,11 +248,7 @@ fn illumination_from_lights(
 }
 
 #[allow(clippy::if_same_then_else)]
-fn ray_encounter_obstacle(
-    ray: &Ray,
-    destination: &Vec3,
-    objects: &[Box<SceneObject>],
-) -> bool {
+fn ray_encounter_obstacle(ray: &Ray, destination: &Vec3, objects: &[Box<SceneObject>]) -> bool {
     let source = ray.source;
     let light_distance = Vec3::between_points(source, *destination).norm();
     // Check of object obstruction between light and collision point
