@@ -26,7 +26,7 @@ use raytracer::scene::Scene;
 use std::fs;
 use std::iter;
 use std::path::PathBuf;
-use toml::Value;
+use std::str::FromStr;
 
 const SAMPLES_ROOT_DIR: [&str; 2] = ["tests", "samples"];
 
@@ -42,6 +42,6 @@ fn load_sample<T: AsRef<str>>(sample_file: T) -> String {
 #[test]
 fn load_basic_scene() {
     let scene_string = load_sample("ok_basic.toml");
-    let scene_result = Scene::from_str(scene_string);
+    let scene_result = Scene::from_str(&scene_string);
     assert!(scene_result.is_ok());
 }

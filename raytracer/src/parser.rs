@@ -28,11 +28,12 @@ use crate::lights::{AnyLightObject, LightPoint};
 use crate::primitives::{InfinitePlan, Shape, Sphere, SquarePlan};
 use crate::result::RaytracerError;
 use crate::result::Result;
-use crate::scene::{RayEmitter, SceneConfiguration, SceneObject, Scene};
+use crate::scene::{RayEmitter, Scene, SceneConfiguration, SceneObject};
 use crate::textures::{CheckedPattern, PlainColorTexture, Texture, TextureEffects};
 use crate::vector::Vec3;
+use log::trace;
 use serde::Deserialize;
-use log::{trace};
+use std::str::FromStr;
 
 pub(crate) fn parse_scene_description(scene_str: &str) -> Result<Scene> {
     let root_document = toml::from_str::<ModelRoot>(scene_str)
@@ -40,14 +41,22 @@ pub(crate) fn parse_scene_description(scene_str: &str) -> Result<Scene> {
     trace!("Parsed scene description: {:#?}", root_document);
     let config = root_document.config;
     let camera = root_document.camera.into_ray_emitter();
-    let lights = root_document.light.into_iter().map(DescriptionLight::into_any_light_object).collect();
-    let objects = root_document.object.into_iter().map(DescriptionObject::into_scene_object).collect();
+    let lights = root_document
+        .light
+        .into_iter()
+        .map(DescriptionLight::into_any_light_object)
+        .collect();
+    let objects = root_document
+        .object
+        .into_iter()
+        .map(DescriptionObject::into_scene_object)
+        .collect();
 
     Ok(Scene {
         camera,
         lights,
         objects,
-        config
+        config,
     })
 }
 
@@ -74,7 +83,7 @@ impl From<ModelVector> for Vec3 {
 impl From<ModelColor> for Color {
     fn from(model_color: ModelColor) -> Self {
         match model_color {
-            ModelColor::ByString(value) => Color::from_str(value).unwrap(),
+            ModelColor::ByString(value) => Color::from_str(&value).unwrap(),
             ModelColor::ByRGB(rgb) => Color::new(rgb[0], rgb[1], rgb[2]),
         }
     }

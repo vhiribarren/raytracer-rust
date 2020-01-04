@@ -26,11 +26,12 @@ use crate::colors::Color;
 use crate::lights::AnyLightObject;
 use crate::parser;
 use crate::primitives::{Ray, Shape};
+use crate::result::{RaytracerError, Result};
 use crate::textures::{Texture, TextureEffects};
 use crate::vector::Vec3;
 use crate::UnitInterval;
 use serde::Deserialize;
-use crate::result::Result;
+use std::str::FromStr;
 
 #[derive(Debug, Deserialize)]
 #[serde(default)]
@@ -93,8 +94,10 @@ pub struct Scene {
     pub config: SceneConfiguration,
 }
 
-impl Scene {
-    pub fn from_str<T: AsRef<str>>(scene_str: T) -> Result<Scene> {
-        parser::parse_scene_description(scene_str.as_ref())
+impl FromStr for Scene {
+    type Err = RaytracerError;
+
+    fn from_str(scene_str: &str) -> Result<Scene> {
+        parser::parse_scene_description(scene_str)
     }
 }

@@ -26,6 +26,7 @@ use crate::parser::ModelColor;
 use crate::utils::unit_interval_clamp;
 use crate::UnitInterval;
 use serde::Deserialize;
+use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(from = "ModelColor")]
@@ -86,17 +87,20 @@ impl Color {
         green: 1.0,
         blue: 0.0,
     };
+}
 
-    // TODO use FromStr trait (and return a result, not an option)
-    pub fn from_str<T: AsRef<str>>(value: T) -> Option<Self> {
-        Some(match value.as_ref().to_lowercase().as_ref() {
+impl FromStr for Color {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s.to_lowercase().as_ref() {
             "black" => Self::BLACK,
             "white" => Self::WHITE,
             "red" => Self::RED,
             "green" => Self::GREEN,
             "blue" => Self::BLUE,
             "yellow" => Self::YELLOW,
-            _ => return None,
+            other => return Err(format!("{} is not a valid color reference", other)),
         })
     }
 }
