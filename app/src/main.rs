@@ -60,6 +60,7 @@ const ARG_NO_PARALLEL: &str = "no-parallel";
 const ARG_STRATEGY_RANDOM: &str = "strategy-random";
 const ARG_WIDTH: &str = "width";
 const ARG_HEIGHT: &str = "height";
+const ARG_VERBOSE: &str = "verbose";
 
 const WINDOW_WIDTH: u32 = 800;
 const CANVAS_WIDTH: u32 = 1024;
@@ -71,8 +72,6 @@ const SDL_WINDOW_CLEAR_COLOR: sdl2::pixels::Color = sdl2::pixels::Color {
 };
 
 fn main() -> VoidAppResult {
-    TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Mixed)
-        .expect("Error while initializing logger");
 
     let matches = clap::App::new(APP_NAME)
         .author(APP_AUTHOR)
@@ -82,6 +81,13 @@ fn main() -> VoidAppResult {
             clap::Arg::with_name(ARG_FILE_INPUT)
                 .required(true)
                 .help("TOML file describing the scene.")
+        )
+        .arg(
+            clap::Arg::with_name(ARG_VERBOSE)
+                .short("v")
+                .long("verbose")
+                .multiple(true)
+                .help("Verbosity of log messages (one for Debug level, two for Trace level)")
         )
         .arg(
             clap::Arg::with_name(ARG_NO_STATUS)
@@ -127,6 +133,15 @@ fn main() -> VoidAppResult {
                 .help("Average of RAY_COUNT random rays sent."),
         )
         .get_matches();
+
+    // Log level
+    let log_level = match matches.occurrences_of(ARG_VERBOSE) {
+        0 => LevelFilter::Info,
+        1 => LevelFilter::Debug,
+        _ =>  LevelFilter::Trace,
+    };
+    TermLogger::init(log_level, Config::default(), TerminalMode::Mixed)
+        .expect("Error while initializing logger");
 
     // Generate scene to render
     let scene = {
