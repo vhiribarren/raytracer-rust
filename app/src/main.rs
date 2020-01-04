@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-mod sample_1;
 mod utils;
 
 use crate::utils::canvas::none::NoCanvas;
@@ -44,12 +43,16 @@ use sdl2::pixels::PixelFormatEnum;
 use std::time::{Duration, Instant};
 
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
+use raytracer::scene::Scene;
+use std::str::FromStr;
+use std::fs;
 
 const APP_AUTHOR: &str = "Vincent Hiribarren";
 const APP_NAME: &str = "raytracer-rust";
 const APP_ABOUT: &str = "Toy project to test Rust";
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+const ARG_FILE_INPUT: &str = "INPUT_FILE";
 const ARG_NO_STATUS: &str = "no-status";
 const ARG_NO_GUI: &str = "no-gui";
 const ARG_NO_PROGRESSIVE: &str = "no-progressive";
@@ -75,6 +78,11 @@ fn main() -> VoidAppResult {
         .author(APP_AUTHOR)
         .about(APP_ABOUT)
         .version(APP_VERSION)
+        .arg(
+            clap::Arg::with_name(ARG_FILE_INPUT)
+                .required(true)
+                .help("TOML file describing the scene.")
+        )
         .arg(
             clap::Arg::with_name(ARG_NO_STATUS)
                 .long("no-status")
@@ -121,7 +129,10 @@ fn main() -> VoidAppResult {
         .get_matches();
 
     // Generate scene to render
-    let scene = sample_1::generate_test_scene();
+    let scene = {
+        let scene_content = fs::read_to_string(matches.value_of(ARG_FILE_INPUT).unwrap())?;
+        Scene::from_str(&scene_content)?
+    };
 
     // Camera ratio
     let camera_ratio = scene.camera.size_ratio();

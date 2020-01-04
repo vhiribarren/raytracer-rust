@@ -61,6 +61,7 @@ pub(crate) fn parse_scene_description(scene_str: &str) -> Result<Scene> {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ModelRoot {
     description: Option<String>,
     #[serde(default)]
@@ -92,6 +93,7 @@ impl From<ModelColor> for Color {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
+
 enum DescriptionLight {
     Point { source: Vec3, color: Color },
 }
@@ -109,6 +111,7 @@ impl DescriptionLight {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
+#[serde(deny_unknown_fields)]
 enum DescriptionCamera {
     Perspective {
         screen_center: Vec3,
@@ -153,8 +156,8 @@ impl DescriptionCamera {
 }
 
 #[derive(Debug, Deserialize)]
-#[non_exhaustive]
 struct DescriptionObject {
+    description: String,
     texture: ModelTexture,
     #[serde(default)]
     effect: Option<TextureEffects>,

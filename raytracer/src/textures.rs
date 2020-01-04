@@ -73,8 +73,11 @@ impl Texture for CheckedPattern {
 #[derive(Deserialize, Debug)]
 #[serde(default)]
 pub struct TextureEffects {
+    #[serde(default)]
     pub phong: Option<Phong>,
+    #[serde(default)]
     pub transparency: Option<Transparency>,
+    #[serde(default)]
     pub mirror: Option<Mirror>,
 }
 
@@ -89,6 +92,7 @@ impl Default for TextureEffects {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(default)]
 pub struct Mirror {
     pub coeff: UnitInterval,
 }
@@ -100,6 +104,7 @@ impl Default for Mirror {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(default)]
 pub struct Transparency {
     pub refractive_index: f64,
     pub alpha: UnitInterval,
@@ -115,6 +120,7 @@ impl Default for Transparency {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(default)]
 pub struct Phong {
     pub size: u32,
     pub lum_coeff: UnitInterval,

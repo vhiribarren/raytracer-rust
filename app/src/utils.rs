@@ -75,6 +75,7 @@ pub mod result {
     use sdl2::IntegerOrSdlError;
     use std::fmt::Result;
     use std::fmt::{Display, Formatter};
+    use std::io::Error;
 
     pub type AppResult<T> = std::result::Result<T, AppError>;
     pub type VoidAppResult = AppResult<()>;
@@ -97,6 +98,12 @@ pub mod result {
                 BadArgument(val) => write!(formatter, "Argument: {}", val),
                 DrawError(val) => write!(formatter, "DrawError: {}", val),
             }
+        }
+    }
+
+    impl From<std::io::Error> for AppError {
+        fn from(err: Error) -> Self {
+            BadArgument(err.to_string())
         }
     }
 

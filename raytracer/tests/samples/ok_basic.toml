@@ -1,74 +1,30 @@
-description = "Basic scene"
-
-[config]
-
-ambient_light = [0.0, 0.0, 0.2] # Red atmosphere
-
+description = """Basic scene 1"""
 
 [camera]
-
 type = "perspective"
-screen_center = [0.0, 5.0, -10.0]
-look_at = [0.0, 0.0, 15.0]
-width = 32.0
-height = 18.0
-angle = 90.0
-
+screen_center = [0, 5, -10]
+look_at = [0, 0, 15]
+width = 32
+height = 18
 
 [[light]]
-
-description = "Tiny red light on left"
 type = "point"
-source = [-50.0, 20.0, -20.0]
-color = [0.8, 0.0, 0.0]
-
-
-[[light]]
-
 description = "Global white light"
-type = "point"
-source = [50.0, 100.0, -50.0]
+source = [50, 100, -50]
 color = [0.8, 0.8, 0.8]
 
-
 [[object]]
-
 description = ""
 type = "sphere"
-center = [-10.0, 3.0, 10.0]
-radius = 8.0
+center = [0, 0, 0]
+radius = 5
 texture.type = "plain_color"
-texture.color = "red"
-
-
-[[object]]
-
-description = ""
-type = "sphere"
-center = [10.0, 3.0, 10.0]
-radius = 8.0
-texture.type = "plain_color"
-texture.color = "green"
-
+texture.color = "blue"
 
 [[object]]
-
-description = ""
-type = "sphere"
-center = [0.0, 0.0, 0.0]
-radius = 5.0
-texture.type = "checked_pattern"
-texture.primary_color = "black"
-texture.secondary_color = "white"
-texture.count = 10
-
-[[object]]
-
 description = ""
 type = "infinite_plan"
-center = [0.0, -5.0, 0.0]
-normal =  [0.0, 1.0, 0.0]
-texture.type = "checked_pattern"
-texture.primary_color = "black"
-texture.secondary_color = "white"
-texture.count = 10
+center = [0, -5, 0]
+normal =  [0, 1, 0]
+texture.type = "plain_color"
+texture.color = "white"
