@@ -31,7 +31,7 @@ use crate::result::Result;
 use crate::scene::{RayEmitter, Scene, SceneConfiguration, SceneObject};
 use crate::textures::{CheckedPattern, PlainColorTexture, Texture, TextureEffects};
 use crate::vector::Vec3;
-use log::trace;
+use log::{info,trace};
 use serde::Deserialize;
 use std::str::FromStr;
 
@@ -39,6 +39,9 @@ pub(crate) fn parse_scene_description(scene_str: &str) -> Result<Scene> {
     let root_document = toml::from_str::<ModelRoot>(scene_str)
         .map_err(|e| RaytracerError::ParsingError(e.to_string()))?;
     trace!("Parsed scene description: {:#?}", root_document);
+    if let Some(description) = root_document.description {
+        info!("Generating scene for: {}", description);
+    }
     let config = root_document.config;
     let camera = root_document.camera.into_ray_emitter();
     let lights = root_document
