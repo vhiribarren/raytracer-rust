@@ -26,7 +26,7 @@ use crate::colors::Color;
 use crate::utils::{f64_gt, f64_lt};
 use crate::UnitInterval;
 
-pub trait Texture {
+pub trait Texture: Sync + Send {
     fn color_at(&self, u: f64, v: f64) -> Color;
 }
 

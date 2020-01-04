@@ -57,8 +57,8 @@ pub(crate) fn generate_test_scene() -> Scene {
     };
     let texture = <CheckedPattern as Default>::default();
     let object_1 = SceneObject {
-        primitive,
-        texture,
+        primitive: Box::new(primitive),
+        texture: Box::new(texture),
         effects: TextureEffects {
             phong: Some(Default::default()),
             ..Default::default()
@@ -71,8 +71,8 @@ pub(crate) fn generate_test_scene() -> Scene {
     let color = Color::RED;
     let texture = PlainColorTexture { color };
     let object_2 = SceneObject {
-        primitive,
-        texture,
+        primitive: Box::new(primitive),
+        texture: Box::new(texture),
         effects: TextureEffects {
             phong: Some(Default::default()),
             mirror: Some(Mirror { coeff: 1.0 }),
@@ -86,8 +86,8 @@ pub(crate) fn generate_test_scene() -> Scene {
     let color = Color::GREEN;
     let texture = PlainColorTexture { color };
     let object_3 = SceneObject {
-        primitive,
-        texture,
+        primitive: Box::new(primitive),
+        texture: Box::new(texture),
         effects: TextureEffects {
             phong: Some(Default::default()),
             transparency: Some(Transparency {
@@ -104,8 +104,8 @@ pub(crate) fn generate_test_scene() -> Scene {
     let color = Color::YELLOW;
     let texture = PlainColorTexture { color };
     let object_4 = SceneObject {
-        primitive,
-        texture,
+        primitive: Box::new(primitive),
+        texture: Box::new(texture),
         effects: TextureEffects {
             phong: Some(Default::default()),
             transparency: Some(Transparency {
@@ -119,8 +119,8 @@ pub(crate) fn generate_test_scene() -> Scene {
     let plane = InfinitePlan::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
     let texture = <CheckedPattern as Default>::default();
     let object_5 = SceneObject {
-        primitive: plane,
-        texture,
+        primitive: Box::new(plane),
+        texture: Box::new(texture),
         effects: TextureEffects {
             mirror: Some(Mirror { coeff: 0.8 }),
             ..Default::default()

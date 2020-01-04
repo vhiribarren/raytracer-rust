@@ -32,7 +32,7 @@ use crate::UnitInterval;
 pub struct Scene {
     pub camera: Box<dyn RayEmitter>,
     pub lights: Vec<Box<dyn AnyLightObject>>,
-    pub objects: Vec<Box<dyn AnySceneObject>>,
+    pub objects: Vec<Box<SceneObject>>,
     pub config: SceneConfiguration,
 }
 
@@ -54,34 +54,27 @@ impl Default for SceneConfiguration {
     }
 }
 
-pub trait AnySceneObject: Send + Sync {
-    fn color_at(&self, point: Vec3) -> Color;
-    fn check_collision(&self, ray: &Ray) -> Option<Vec3>;
-    fn normal_at(&self, point: Vec3) -> Option<Vec3>;
-    fn effects(&self) -> &TextureEffects;
-}
-
-pub struct SceneObject<T: Texture + Sync, P: Shape + Sync> {
-    pub texture: T,
-    pub primitive: P,
+pub struct SceneObject {
+    pub texture: Box<dyn Texture>,
+    pub primitive: Box<dyn Shape>,
     pub effects: TextureEffects,
 }
 
-impl<T: Texture + Send + Sync, P: Shape + Send + Sync> AnySceneObject for SceneObject<T, P> {
-    fn color_at(&self, point: Vec3) -> Color {
+impl SceneObject {
+    pub fn color_at(&self, point: Vec3) -> Color {
         let (u, v) = self.primitive.surface_mapping_at(point).unwrap();
         self.texture.color_at(u, v)
     }
 
-    fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
+    pub fn check_collision(&self, ray: &Ray) -> Option<Vec3> {
         self.primitive.check_collision(ray)
     }
 
-    fn normal_at(&self, point: Vec3) -> Option<Vec3> {
+    pub fn normal_at(&self, point: Vec3) -> Option<Vec3> {
         self.primitive.normal_at(point)
     }
 
-    fn effects(&self) -> &TextureEffects {
+    pub fn effects(&self) -> &TextureEffects {
         &self.effects
     }
 }

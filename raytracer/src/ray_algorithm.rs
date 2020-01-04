@@ -27,7 +27,7 @@ use crate::lights::AnyLightObject;
 use crate::primitives::Ray;
 use crate::result::RaytracerError;
 use crate::result::Result;
-use crate::scene::{AnySceneObject, Scene};
+use crate::scene::{SceneObject, Scene};
 use crate::vector::Vec3;
 use crate::UnitInterval;
 use rand::Rng;
@@ -164,17 +164,17 @@ pub(crate) fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<C
 }
 
 pub struct CollisionContext<'a> {
-    pub object: &'a dyn AnySceneObject,
+    pub object: &'a SceneObject,
     pub collision_point: Vec3,
     pub array_index: usize,
 }
 
 fn search_object_collision<'a>(
     ray: &Ray,
-    objects: &'a [Box<dyn AnySceneObject>],
+    objects: &'a [Box<SceneObject>],
 ) -> Option<CollisionContext<'a>> {
     let mut shortest_distance: f64 = f64::MAX;
-    let mut nearest_object_opt: Option<&Box<dyn AnySceneObject>> = None;
+    let mut nearest_object_opt: Option<&Box<SceneObject>> = None;
     let mut collision_point: Vec3 = Default::default();
     let mut array_index = std::usize::MAX;
     // For each pixel, we search for collision with objects
@@ -202,7 +202,7 @@ fn search_object_collision<'a>(
 fn illumination_from_lights(
     collision_context: &CollisionContext,
     lights: &[Box<dyn AnyLightObject>],
-    objects: &[Box<dyn AnySceneObject>],
+    objects: &[Box<SceneObject>],
     camera_ray: &Ray,
 ) -> Result<Color> {
     let mut total_color = Color::BLACK;
@@ -251,7 +251,7 @@ fn illumination_from_lights(
 fn ray_encounter_obstacle(
     ray: &Ray,
     destination: &Vec3,
-    objects: &[Box<dyn AnySceneObject>],
+    objects: &[Box<SceneObject>],
 ) -> bool {
     let source = ray.source;
     let light_distance = Vec3::between_points(source, *destination).norm();

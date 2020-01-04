@@ -26,7 +26,7 @@ SOFTWARE
 use crate::lights::{LightPoint, AnyLightObject};
 use log::info;
 use toml::value::Table;
-use crate::scene::{Scene, AnySceneObject, SceneConfiguration, RayEmitter};
+use crate::scene::{Scene, SceneObject, SceneConfiguration, RayEmitter};
 use crate::result::RaytracerError;
 use toml::Value;
 use crate::colors::Color;
@@ -38,7 +38,7 @@ use crate::UnitInterval;
 
 
 #[derive(Debug,Deserialize)]
-struct Root {
+pub(crate) struct Root {
     description: Option<String>,
     config: Config,
     camera: Camera,
@@ -192,7 +192,7 @@ mod tests {
 
     #[test]
     fn invalid_toml_string() {
-        let result = parse_scene_description(invalid_toml);
+        let result = parse_scene_description(INVALID_TOML);
         assert!(result.is_err());
     }
 
