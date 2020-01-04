@@ -24,6 +24,7 @@ SOFTWARE.
 
 use crate::vector::{Mat3, Vec3};
 use crate::UnitInterval;
+use serde::Deserialize;
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
@@ -188,7 +189,7 @@ impl Shape for SquarePlan {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,

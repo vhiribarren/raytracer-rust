@@ -31,7 +31,7 @@ use crate::result::Result;
 use crate::scene::{RayEmitter, Scene, SceneConfiguration, SceneObject};
 use crate::textures::{CheckedPattern, PlainColorTexture, Texture, TextureEffects};
 use crate::vector::Vec3;
-use log::{info,trace};
+use log::{info, trace};
 use serde::Deserialize;
 use std::str::FromStr;
 
@@ -98,15 +98,13 @@ impl From<ModelColor> for Color {
 #[serde(tag = "type")]
 
 enum DescriptionLight {
-    Point { source: Vec3, color: Color },
+    Point(LightPoint),
 }
 
 impl DescriptionLight {
     fn into_any_light_object(self) -> Box<dyn AnyLightObject> {
         match self {
-            DescriptionLight::Point { source, color } => {
-                Box::new(LightPoint::with_color(source, color))
-            }
+            DescriptionLight::Point(val) => Box::new(val),
         }
     }
 }
@@ -165,23 +163,26 @@ struct DescriptionObject {
     #[serde(default)]
     effect: Option<TextureEffects>,
     #[serde(flatten)]
-    object_primitive: ObjectPrimitive,
+    shape: ModelShape,
 }
 
 impl DescriptionObject {
     fn into_scene_object(self) -> SceneObject {
-        let shape: Box<dyn Shape> = match self.object_primitive {
-            ObjectPrimitive::Sphere { center, radius } => Box::new(Sphere { center, radius }),
-            ObjectPrimitive::InfinitePlan { center, normal } => {
+        let shape: Box<dyn Shape> = match self.shape {
+            ModelShape::Sphere(val) => Box::new(val),
+            ModelShape::InfinitePlan { center, normal } => {
                 Box::new(InfinitePlan::new(center, normal))
             }
-            ObjectPrimitive::SquarePlan {
+            ModelShape::SquarePlan {
                 center,
                 normal,
                 width,
             } => Box::new(SquarePlan::new(center, normal, width)),
         };
-        let texture = self.texture.into_texture();
+        let texture: Box<dyn Texture> = match self.texture {
+            ModelTexture::CheckedPattern(val) => Box::new(val),
+            ModelTexture::PlainColor(val) => Box::new(val),
+        };
         let effects = self.effect.unwrap_or_default();
         SceneObject {
             texture,
@@ -194,11 +195,8 @@ impl DescriptionObject {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
-enum ObjectPrimitive {
-    Sphere {
-        center: Vec3,
-        radius: f64,
-    },
+enum ModelShape {
+    Sphere(Sphere),
     InfinitePlan {
         center: Vec3,
         normal: Vec3,
@@ -214,31 +212,8 @@ enum ObjectPrimitive {
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
 enum ModelTexture {
-    CheckedPattern {
-        primary_color: Color,
-        secondary_color: Color,
-        count: f64,
-    },
-    PlainColor {
-        color: Color,
-    },
-}
-
-impl ModelTexture {
-    fn into_texture(self) -> Box<dyn Texture> {
-        match self {
-            ModelTexture::CheckedPattern {
-                primary_color,
-                secondary_color,
-                count,
-            } => Box::new(CheckedPattern {
-                primary_color,
-                secondary_color,
-                count,
-            }),
-            ModelTexture::PlainColor { color } => Box::new(PlainColorTexture { color }),
-        }
-    }
+    CheckedPattern(CheckedPattern),
+    PlainColor(PlainColorTexture),
 }
 
 #[derive(Debug, Deserialize)]

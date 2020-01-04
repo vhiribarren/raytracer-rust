@@ -51,9 +51,6 @@ type = "sphere"
 center = [0, 0, 0]
 radius = 5
 texture.type = "checked_pattern"
-texture.primary_color = "white"
-texture.secondary_color = "black"
-texture.count = 10
 effect.phong = {}
 
 [[object]]
@@ -92,7 +89,4 @@ type = "infinite_plan"
 center = [0, -5, 0]
 normal =  [0, 1, 0]
 texture.type = "checked_pattern"
-texture.count = 10
-texture.primary_color = "white"
-texture.secondary_color = "black"
 effect.mirror.coeff = 0.8

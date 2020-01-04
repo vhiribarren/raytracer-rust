@@ -31,8 +31,18 @@ pub trait Texture: Sync + Send {
     fn color_at(&self, u: f64, v: f64) -> Color;
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(default)]
 pub struct PlainColorTexture {
     pub color: Color,
+}
+
+impl Default for PlainColorTexture {
+    fn default() -> Self {
+        PlainColorTexture {
+            color: Color::WHITE,
+        }
+    }
 }
 
 impl Texture for PlainColorTexture {
@@ -41,6 +51,8 @@ impl Texture for PlainColorTexture {
     }
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(default)]
 pub struct CheckedPattern {
     pub primary_color: Color,
     pub secondary_color: Color,

@@ -24,12 +24,14 @@ SOFTWARE.
 
 use crate::colors::Color;
 use crate::vector::Vec3;
+use serde::Deserialize;
 
 pub trait AnyLightObject: Send + Sync {
     fn source(&self) -> Vec3;
     fn light_color_at(&self, point: Vec3) -> Color;
 }
 
+#[derive(Debug, Deserialize)]
 pub struct LightPoint {
     pub source: Vec3,
     pub color: Color,
