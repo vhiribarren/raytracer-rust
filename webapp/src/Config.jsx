@@ -26,37 +26,41 @@ SOFTWARE.
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import SplitPane from 'react-split-pane'
-import { Layout, PageHeader, Button, Icon, Input, Form, Radio, Switch, Select, Progress, InputNumber } from 'antd';
-import {TitleBar} from "./TitleBar";
-import {Config} from "./Config";
+import { Button, Icon, Input, Form, Radio, Switch, Select, Progress, InputNumber } from 'antd';
 
-const { Header, Footer, Sider, Content } = Layout;
 const { TextArea } = Input;
 
-export class App extends React.Component {
+export class Config extends React.Component {
 
   render() {
     return (
-      <div>
-        <Layout>
-          <Header className="header">
-            <TitleBar />
-          </Header>
-          <Content className="content">
-            <SplitPane className="content__split" split="vertical" minSize="40%">
-              <TextArea className="editor" autoSize={false} />
-              <div className="renderer">
-                <canvas className="renderer__canvas" id="canvas"/>
-              </div>
-            </SplitPane>
-          </Content>
-          <Sider className="sider" trigger={null} collapsible>
-            <Config />
-          </Sider>
-          <Footer className="footer">Copyright (c) 2020 Vincent Hiribarren</Footer>
-        </Layout>
-      </div>
+        <Form className="config__item" layout="vertical">
+        {/*
+          <Form.Item className="config__item" label="Progressive Rendering">
+            <Switch />
+          </Form.Item>
+          <Form.Item className="config__item" label="Parallel Rendering">
+            <Switch />
+          </Form.Item>
+        */}
+          <Form.Item className="config__item" label="Width">
+            <Input placeholder="input placeholder" />
+          </Form.Item>
+          <Form.Item className="config__item" label="Height">
+            <Input placeholder="input placeholder" />
+          </Form.Item>
+          <Form.Item className="config__item" label="Rendering strategy" hasFeedback>
+            <Select placeholder="Please select a strategy">
+              <Option value="china">Normal</Option>
+              <Option value="usa">Random</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            className="config__item"
+            label="Number of rays">
+            <InputNumber min={8} max={12} />
+          </Form.Item>
+        </Form>
     );
   }
 }

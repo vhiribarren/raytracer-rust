@@ -22,41 +22,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
-
 import React from 'react';
 import ReactDOM from 'react-dom';
-import SplitPane from 'react-split-pane'
-import { Layout, PageHeader, Button, Icon, Input, Form, Radio, Switch, Select, Progress, InputNumber } from 'antd';
-import {TitleBar} from "./TitleBar";
-import {Config} from "./Config";
+import { PageHeader, Button, Icon, Progress } from 'antd';
 
-const { Header, Footer, Sider, Content } = Layout;
-const { TextArea } = Input;
+export class TitleBar extends React.Component {
 
-export class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      collapsed: false,
+    };
+  }
 
   render() {
     return (
-      <div>
-        <Layout>
-          <Header className="header">
-            <TitleBar />
-          </Header>
-          <Content className="content">
-            <SplitPane className="content__split" split="vertical" minSize="40%">
-              <TextArea className="editor" autoSize={false} />
-              <div className="renderer">
-                <canvas className="renderer__canvas" id="canvas"/>
-              </div>
-            </SplitPane>
-          </Content>
-          <Sider className="sider" trigger={null} collapsible>
-            <Config />
-          </Sider>
-          <Footer className="footer">Copyright (c) 2020 Vincent Hiribarren</Footer>
-        </Layout>
-      </div>
+        <PageHeader
+          title="Rust Ray Tracer"
+          subTitle="A Hobby Project"
+          extra={[
+            <Progress
+              className="titlebar__progress"
+              key="progress" percent={50}
+              status="active" />,
+            <Icon
+              className="trigger"
+              key="icon"
+              type={this.state.collapsed ? 'menu-unfold' : 'menu-fold'}
+              onClick={this.toggle} />,
+            <Button
+              key="button"
+              type="primary">Render</Button>,
+          ]}
+        ></PageHeader>
     );
   }
 }
