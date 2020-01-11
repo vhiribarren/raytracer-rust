@@ -30,31 +30,40 @@ export class TitleBar extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {
-      collapsed: false,
+    this.onActionConfigPanel = (e) => {
+      this.props.onActionConfigPanel();
+    };
+  }
+
+  static get defaultProps() {
+    return {
+      progressBarVisible: true,
+      progressBarPercent: 50
     };
   }
 
   render() {
+    const extraContent = [<Icon
+      className="trigger"
+      key="icon"
+      type={this.props.configPanelVisible ? 'menu-unfold' : 'menu-fold'}
+      onClick={this.onActionConfigPanel} />,
+    <Button
+      key="button"
+      type="primary">Render</Button>,];
+    if (this.props.progressBarVisible) {
+      extraContent.unshift(<Progress
+        className="titlebar__progress"
+        key="progress" percent={this.props.progressBarPercent}
+        status="active" />);
+    }
+
     return (
-        <PageHeader
-          title="Rust Ray Tracer"
-          subTitle="A Hobby Project"
-          extra={[
-            <Progress
-              className="titlebar__progress"
-              key="progress" percent={50}
-              status="active" />,
-            <Icon
-              className="trigger"
-              key="icon"
-              type={this.state.collapsed ? 'menu-unfold' : 'menu-fold'}
-              onClick={this.toggle} />,
-            <Button
-              key="button"
-              type="primary">Render</Button>,
-          ]}
-        ></PageHeader>
+      <PageHeader
+        title="Rust Ray Tracer"
+        subTitle="A Hobby Project"
+        extra={extraContent}
+      ></PageHeader>
     );
   }
 }

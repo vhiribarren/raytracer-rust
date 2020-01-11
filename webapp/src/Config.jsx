@@ -26,15 +26,13 @@ SOFTWARE.
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Button, Icon, Input, Form, Radio, Switch, Select, Progress, InputNumber } from 'antd';
-
-const { TextArea } = Input;
+import { Input, Form, Select, InputNumber } from 'antd';
 
 export class Config extends React.Component {
 
   render() {
     return (
-        <Form className="config__item" layout="vertical">
+      <Form className="config__item" layout="vertical">
         {/*
           <Form.Item className="config__item" label="Progressive Rendering">
             <Switch />
@@ -43,24 +41,24 @@ export class Config extends React.Component {
             <Switch />
           </Form.Item>
         */}
-          <Form.Item className="config__item" label="Width">
-            <Input placeholder="input placeholder" />
-          </Form.Item>
-          <Form.Item className="config__item" label="Height">
-            <Input placeholder="input placeholder" />
-          </Form.Item>
-          <Form.Item className="config__item" label="Rendering strategy" hasFeedback>
-            <Select placeholder="Please select a strategy">
-              <Option value="china">Normal</Option>
-              <Option value="usa">Random</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            className="config__item"
-            label="Number of rays">
-            <InputNumber min={8} max={12} />
-          </Form.Item>
-        </Form>
+        <Form.Item className="config__item" label="Width">
+          <Input placeholder="input placeholder" />
+        </Form.Item>
+        <Form.Item className="config__item" label="Height">
+          <Input placeholder="input placeholder" />
+        </Form.Item>
+        <Form.Item className="config__item" label="Rendering strategy" hasFeedback>
+          <Select placeholder="Please select a strategy">
+            <Option value="china">Normal</Option>
+            <Option value="usa">Random</Option>
+          </Select>
+        </Form.Item>
+        <Form.Item
+          className="config__item"
+          label="Number of rays">
+          <InputNumber min={8} max={12} />
+        </Form.Item>
+      </Form>
     );
   }
 }

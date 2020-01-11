@@ -27,9 +27,9 @@ SOFTWARE.
 import React from 'react';
 import ReactDOM from 'react-dom';
 import SplitPane from 'react-split-pane'
-import { Layout, PageHeader, Button, Icon, Input, Form, Radio, Switch, Select, Progress, InputNumber } from 'antd';
-import {TitleBar} from "./TitleBar";
-import {Config} from "./Config";
+import { Layout, Input } from 'antd';
+import { TitleBar } from "./TitleBar";
+import { Config } from "./Config";
 
 const { Header, Footer, Sider, Content } = Layout;
 const { TextArea } = Input;
@@ -39,22 +39,43 @@ const sample_scene = readFileSync("../samples/show_room_1.toml", 'utf8')
 
 export class App extends React.Component {
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      showConfigPanel: false
+    };
+
+    this.onActionConfigPanel = (e) => {
+      this.setState(state => ({
+        showConfigPanel: !state.showConfigPanel
+      }));
+    };
+
+    this.onActionRender = (e) => {
+    };
+  }
+
+
   render() {
     return (
       <div>
         <Layout>
           <Header className="header">
-            <TitleBar />
+            <TitleBar
+              onActionRender={this.onActionRender}
+              onActionConfigPanel={this.onActionConfigPanel}
+              configPanelVisible={this.state.showConfigPanel}
+              progressBarVisible={false} />
           </Header>
           <Content className="content">
             <SplitPane className="content__split" split="vertical" minSize="40%">
-              <TextArea className="editor" autoSize={false} defaultValue={sample_scene}/>
+              <TextArea className="editor" autoSize={false} defaultValue={sample_scene} />
               <div className="renderer">
-                <canvas className="renderer__canvas" id="canvas"/>
+                <canvas className="renderer__canvas" id="canvas" />
               </div>
             </SplitPane>
           </Content>
-          <Sider className="sider" trigger={null} collapsible>
+          <Sider className="sider" trigger={null} collapsible collapsed={!this.state.showConfigPanel} collapsedWidth={0}>
             <Config />
           </Sider>
           <Footer className="footer">Copyright (c) 2020 Vincent Hiribarren</Footer>
