@@ -34,6 +34,9 @@ import {Config} from "./Config";
 const { Header, Footer, Sider, Content } = Layout;
 const { TextArea } = Input;
 
+import { readFileSync } from "fs";
+const sample_scene = readFileSync("../samples/show_room_1.toml", 'utf8')
+
 export class App extends React.Component {
 
   render() {
@@ -45,7 +48,7 @@ export class App extends React.Component {
           </Header>
           <Content className="content">
             <SplitPane className="content__split" split="vertical" minSize="40%">
-              <TextArea className="editor" autoSize={false} />
+              <TextArea className="editor" autoSize={false} defaultValue={sample_scene}/>
               <div className="renderer">
                 <canvas className="renderer__canvas" id="canvas"/>
               </div>
