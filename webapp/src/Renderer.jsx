@@ -24,50 +24,60 @@ SOFTWARE.
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { PageHeader, Button, Icon, Progress } from 'antd';
+import raytracer from '../../raytracer/Cargo.toml';
 
-export class TitleBar extends React.Component {
+export class Renderer extends React.Component {
 
   constructor(props) {
     super(props);
-    this.onActionConfigPanel = (e) => {
-      this.props.onActionConfigPanel();
-    };
-    this.onActionRender = (e) => {
-      this.props.onActionRender();
-    };
+    raytracer.wasm_init();
   }
 
   static get defaultProps() {
     return {
-      progressBarVisible: true,
+      shouldRender: false,
       progressBarPercent: 50
     };
   }
 
-  render() {
-    const extraContent = [<Icon
-      className="trigger"
-      key="icon"
-      type={this.props.configPanelVisible ? 'menu-unfold' : 'menu-fold'}
-      onClick={this.onActionConfigPanel} />,
-    <Button
-      key="button"
-      onClick={this.onActionRender}
-      type="primary">Render</Button>,];
-    if (this.props.progressBarVisible) {
-      extraContent.unshift(<Progress
-        className="titlebar__progress"
-        key="progress" percent={this.props.progressBarPercent}
-        status="active" />);
+  renderScene() {
+    const renderer = raytracer.Renderer.new();
+    const canvas_width = renderer.width();
+    const canvas_height = renderer.height();
+    const video_buffer_size = canvas_width * canvas_height * 4;
+
+    const canvas = document.getElementById("canvas");
+    canvas.width = canvas_width;
+    canvas.height = canvas_height;
+
+    const ctx = canvas.getContext('2d');
+
+    const drawScreen = () => {
+      const video_data = new Uint8ClampedArray(raytracer.wasm.memory.buffer, renderer.buffer_ptr(), video_buffer_size);
+      const img = new ImageData(video_data, canvas_width, canvas_height);
+      ctx.putImageData(img, 0, 0);
     }
 
+    const renderLoop = () => {
+      const loop_start = Date.now()
+      while (renderer.next()) {
+        if (Date.now() - loop_start > 20) {
+          requestAnimationFrame(renderLoop);
+          break;
+        }
+      }
+      drawScreen();
+    };
+
+    renderLoop();
+  }
+
+  render() {
     return (
-      <PageHeader
-        title="Rust Ray Tracer"
-        subTitle="A Hobby Project"
-        extra={extraContent}
-      ></PageHeader>
+      <div className="renderer">
+        <canvas className="renderer__canvas" id="canvas" />
+      </div>
     );
   }
+
 }

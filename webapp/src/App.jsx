@@ -30,6 +30,7 @@ import SplitPane from 'react-split-pane'
 import { Layout, Input } from 'antd';
 import { TitleBar } from "./TitleBar";
 import { Config } from "./Config";
+import { Renderer } from "./Renderer";
 
 const { Header, Footer, Sider, Content } = Layout;
 const { TextArea } = Input;
@@ -44,6 +45,7 @@ export class App extends React.Component {
     this.state = {
       showConfigPanel: false
     };
+    this.rendererRef = React.createRef();
 
     this.onActionConfigPanel = (e) => {
       this.setState(state => ({
@@ -52,6 +54,7 @@ export class App extends React.Component {
     };
 
     this.onActionRender = (e) => {
+      this.rendererRef.current.renderScene();
     };
   }
 
@@ -70,9 +73,7 @@ export class App extends React.Component {
           <Content className="content">
             <SplitPane className="content__split" split="vertical" minSize="40%">
               <TextArea className="editor" autoSize={false} defaultValue={sample_scene} />
-              <div className="renderer">
-                <canvas className="renderer__canvas" id="canvas" />
-              </div>
+              <Renderer ref={this.rendererRef} />
             </SplitPane>
           </Content>
           <Sider className="sider" trigger={null} collapsible collapsed={!this.state.showConfigPanel} collapsedWidth={0}>
