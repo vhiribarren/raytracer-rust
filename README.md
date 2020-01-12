@@ -67,6 +67,8 @@ ARGS:
 The raytracer is compatible with the WebAssembly technology. It can be launched as a web app
 instead of a native app.
 
+![Sample](./doc/images/sample_webapp.jpg)
+
     $ cd webapp
     $ npm install
     $ npm start     # Start a local web server and launch a web page
@@ -181,12 +183,10 @@ RayTracing:
 Rust:
 
 - [ ] Define a better abstraction for AnyLightObject trait
-
 - [ ] More automatic tests
 
 WebAssembly:
 
-- [ ] API where the scene description can be provided
 - [ ] Multithreading
 - [ ] More automatic tests
 
