@@ -25,9 +25,9 @@ SOFTWARE.
 .header {
     background: #fff;
     position: fixed;
-    zIndex: 1;
+    z-index: 1;
     width: 100%;
-    boxShadow: 0 2px 8px #f0f1f2;
+    box-shadow: 0 2px 8px #ccc;
     padding: 0 5px;
 }
 
