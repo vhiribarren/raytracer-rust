@@ -47,6 +47,7 @@ export class App extends React.Component {
       sceneDescription: sample_scene,
       percentProgression: 0,
       isRendering: false,
+      config: null,
     };
     this.rendererRef = React.createRef();
 
@@ -61,7 +62,7 @@ export class App extends React.Component {
         this.rendererRef.current.stop();
       }
       else {
-        this.rendererRef.current.renderScene(this.state.sceneDescription);
+        this.rendererRef.current.renderScene(this.state.sceneDescription, this.state.config);
       }
     };
 
@@ -85,6 +86,12 @@ export class App extends React.Component {
     this.onPercentProgression = (percentProgression) => {
       this.setState(state => ({
         percentProgression
+      }));
+    }
+
+    this.onConfigChange = (config) => {
+      this.setState(state => ({
+        config
       }));
     }
   }
@@ -113,13 +120,26 @@ export class App extends React.Component {
           <Content className="content">
             <SplitPane className="content__split" split="vertical" minSize="40%">
               <div>
-                <TextArea className="editor" autoSize={false} value={this.state.sceneDescription} onChange={this.onEditorChange} />
+                <TextArea
+                  className="editor"
+                  autoSize={false}
+                  value={this.state.sceneDescription}
+                  onChange={this.onEditorChange} />
               </div>
-              <Renderer ref={this.rendererRef} onError={this.onRendererError} onRenderingChange={this.onRenderingChange} onPercentProgression={this.onPercentProgression}/>
+              <Renderer
+                ref={this.rendererRef}
+                onError={this.onRendererError}
+                onRenderingChange={this.onRenderingChange}
+                onPercentProgression={this.onPercentProgression}/>
             </SplitPane>
           </Content>
-          <Sider className="sider" trigger={null} collapsible collapsed={!this.state.showConfigPanel} collapsedWidth={0}>
-            <Config />
+          <Sider
+            className="sider"
+            trigger={null}
+            collapsible
+            collapsed={!this.state.showConfigPanel}
+            collapsedWidth={0}>
+            <Config onConfigChange={this.onConfigChange} />
           </Sider>
           <Footer className="footer">Copyright (c) 2020 Vincent Hiribarren</Footer>
         </Layout>

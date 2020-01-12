@@ -60,7 +60,7 @@ export class Renderer extends React.Component {
     }
   }
 
-  renderScene(sceneDescription) {
+  renderScene(sceneDescription, config) {
     this.shouldStop = false;
     let renderer;
     try {

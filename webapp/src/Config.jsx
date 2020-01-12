@@ -30,34 +30,79 @@ import { Input, Form, Select, InputNumber } from 'antd';
 
 export class Config extends React.Component {
 
+  static get defaultProps() {
+    return {
+      onConfigChange: (config) => {}
+    };
+  }
+
+  updateConfig() {
+    const config = {
+      canvas_width: this.state.canvas_width,
+      strategy: this.state.strategy,
+      ray_number: this.state.ray_number,
+    }
+    this.props.onConfigChange(config);
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      strategy: "normal",
+      ray_number: 50,
+      canvas_width: 1024,
+    };
+
+    this.onStrategySelect = (strategy) => {
+      this.setState(state => ({
+        strategy
+      }));
+      this.updateConfig()
+    };
+
+    this.onRayNumberChange = (ray_number) => {
+      if (!ray_number) {
+        return;
+      }
+      this.setState(state => ({
+        ray_number
+      }));
+      this.updateConfig()
+    };
+
+    this.onCanvasWidthChange = (canvas_width) => {
+      if (!canvas_width) {
+        return;
+      }
+      this.setState(state => ({
+        canvas_width
+      }));
+      this.updateConfig()
+    };
+
+  }
+
   render() {
     return (
       <Form className="config__item" layout="vertical">
-        {/*
-          <Form.Item className="config__item" label="Progressive Rendering">
-            <Switch />
-          </Form.Item>
-          <Form.Item className="config__item" label="Parallel Rendering">
-            <Switch />
-          </Form.Item>
-        */}
         <Form.Item className="config__item" label="Width">
-          <Input placeholder="input placeholder" />
+          <InputNumber min={1} value={this.state.canvas_width} onChange={this.onCanvasWidthChange} />
         </Form.Item>
-        <Form.Item className="config__item" label="Height">
-          <Input placeholder="input placeholder" />
-        </Form.Item>
-        <Form.Item className="config__item" label="Rendering strategy" hasFeedback>
-          <Select placeholder="Please select a strategy">
-            <Option value="china">Normal</Option>
-            <Option value="usa">Random</Option>
+        <Form.Item className="config__item" label="Ray generation strategy">
+          <Select value={this.state.strategy} onSelect={this.onStrategySelect}>
+            <Select.Option value="normal">Normal</Select.Option>
+            <Select.Option value="random">Random</Select.Option>
           </Select>
         </Form.Item>
-        <Form.Item
-          className="config__item"
-          label="Number of rays">
-          <InputNumber min={8} max={12} />
-        </Form.Item>
+        {this.state.strategy === "random" &&
+          <Form.Item
+            className="config__item"
+            label="Number of rays">
+            <InputNumber min={1} value={this.state.ray_number} onChange={this.onRayNumberChange} />
+          </Form.Item>
+        }
+
       </Form>
     );
   }
