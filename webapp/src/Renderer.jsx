@@ -32,19 +32,32 @@ export class Renderer extends React.Component {
     super(props);
     raytracer.wasm_init();
     this.shouldStop = false;
+    this.progressPercent = 0;
+    this.progressCurrent = 0;
+    this.progressMax = 0;
   }
 
   static get defaultProps() {
     return {
       shouldRender: false,
-      progressBarPercent: 50,
+      progressBarPercent: 0,
       onError: (msg) => {},
-      onRenderingChange: (isRendering) => {}
+      onRenderingChange: (isRendering) => {},
+      onPercentProgression: (percent) => {},
     };
   }
 
   stop() {
     this.shouldStop = true;
+  }
+
+  updateProgression() {
+    this.progressCurrent += 1;
+    const percentProgress = Math.trunc((100*(this.progressCurrent/this.progressMax)));
+    if (percentProgress != this.progressPercent) {
+      this.progressPercent = percentProgress;
+      this.props.onPercentProgression(percentProgress);
+    }
   }
 
   renderScene(sceneDescription) {
@@ -58,6 +71,9 @@ export class Renderer extends React.Component {
       this.props.onError(err);
       return;
     }
+    this.progressMax = renderer.width()*renderer.height();
+    this.progressPercent = 0;
+    this.progressCurrent = 0;
     const canvas_width = renderer.width();
     const canvas_height = renderer.height();
     const video_buffer_size = canvas_width * canvas_height * 4;
@@ -78,6 +94,7 @@ export class Renderer extends React.Component {
       const loop_start = Date.now()
       let hasNext;
       while (hasNext = renderer.next()) {
+        this.updateProgression();
         if (Date.now() - loop_start > 20) {
           if (this.shouldStop) {
             hasNext = false;

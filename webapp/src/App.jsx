@@ -45,6 +45,7 @@ export class App extends React.Component {
     this.state = {
       showConfigPanel: false,
       sceneDescription: sample_scene,
+      percentProgression: 0,
       isRendering: false,
     };
     this.rendererRef = React.createRef();
@@ -80,6 +81,12 @@ export class App extends React.Component {
         isRendering
       }));
     }
+
+    this.onPercentProgression = (percentProgression) => {
+      this.setState(state => ({
+        percentProgression
+      }));
+    }
   }
 
   openNotification(msg) {
@@ -100,6 +107,7 @@ export class App extends React.Component {
               onActionRender={this.onActionRender}
               onActionConfigPanel={this.onActionConfigPanel}
               configPanelVisible={this.state.showConfigPanel}
+              progressBarPercent={this.state.percentProgression}
               isRendering={this.state.isRendering} />
           </Header>
           <Content className="content">
@@ -107,7 +115,7 @@ export class App extends React.Component {
               <div>
                 <TextArea className="editor" autoSize={false} value={this.state.sceneDescription} onChange={this.onEditorChange} />
               </div>
-              <Renderer ref={this.rendererRef} onError={this.onRendererError} onRenderingChange={this.onRenderingChange}/>
+              <Renderer ref={this.rendererRef} onError={this.onRendererError} onRenderingChange={this.onRenderingChange} onPercentProgression={this.onPercentProgression}/>
             </SplitPane>
           </Content>
           <Sider className="sider" trigger={null} collapsible collapsed={!this.state.showConfigPanel} collapsedWidth={0}>
