@@ -84,6 +84,7 @@ SOFTWARE.
     text-align: center;
     position: fixed;
     bottom: 0;
+    padding: 6px 24px;
     width: 100%;
 }
 

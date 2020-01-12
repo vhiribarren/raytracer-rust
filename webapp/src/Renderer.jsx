@@ -31,6 +31,7 @@ export class Renderer extends React.Component {
   constructor(props) {
     super(props);
     raytracer.wasm_init();
+    this.shouldStop = false;
   }
 
   static get defaultProps() {
@@ -38,10 +39,16 @@ export class Renderer extends React.Component {
       shouldRender: false,
       progressBarPercent: 50,
       onError: (msg) => {},
+      onRenderingChange: (isRendering) => {}
     };
   }
 
+  stop() {
+    this.shouldStop = true;
+  }
+
   renderScene(sceneDescription) {
+    this.shouldStop = false;
     let renderer;
     try {
       renderer = raytracer.Renderer.new(sceneDescription);
@@ -69,15 +76,25 @@ export class Renderer extends React.Component {
 
     const renderLoop = () => {
       const loop_start = Date.now()
-      while (renderer.next()) {
+      let hasNext;
+      while (hasNext = renderer.next()) {
         if (Date.now() - loop_start > 20) {
-          requestAnimationFrame(renderLoop);
+          if (this.shouldStop) {
+            hasNext = false;
+          }
+          else {
+            requestAnimationFrame(renderLoop);
+          }
           break;
         }
+      }
+      if (!hasNext) {
+        this.props.onRenderingChange(false);
       }
       drawScreen();
     };
 
+    this.props.onRenderingChange(true);
     renderLoop();
   }
 

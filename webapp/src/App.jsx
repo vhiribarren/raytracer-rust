@@ -44,7 +44,8 @@ export class App extends React.Component {
     super(props);
     this.state = {
       showConfigPanel: false,
-      sceneDescription: sample_scene
+      sceneDescription: sample_scene,
+      isRendering: false,
     };
     this.rendererRef = React.createRef();
 
@@ -55,7 +56,12 @@ export class App extends React.Component {
     };
 
     this.onActionRender = (e) => {
-      this.rendererRef.current.renderScene(this.state.sceneDescription);
+      if (this.state.isRendering) {
+        this.rendererRef.current.stop();
+      }
+      else {
+        this.rendererRef.current.renderScene(this.state.sceneDescription);
+      }
     };
 
     this.onEditorChange = (e) => {
@@ -67,6 +73,12 @@ export class App extends React.Component {
 
     this.onRendererError = (msg) => {
       this.openNotification(msg);
+    }
+
+    this.onRenderingChange = (isRendering) => {
+      this.setState(state => ({
+        isRendering
+      }));
     }
   }
 
@@ -88,14 +100,14 @@ export class App extends React.Component {
               onActionRender={this.onActionRender}
               onActionConfigPanel={this.onActionConfigPanel}
               configPanelVisible={this.state.showConfigPanel}
-              progressBarVisible={false} />
+              isRendering={this.state.isRendering} />
           </Header>
           <Content className="content">
             <SplitPane className="content__split" split="vertical" minSize="40%">
               <div>
                 <TextArea className="editor" autoSize={false} value={this.state.sceneDescription} onChange={this.onEditorChange} />
               </div>
-              <Renderer ref={this.rendererRef} onError={this.onRendererError}/>
+              <Renderer ref={this.rendererRef} onError={this.onRendererError} onRenderingChange={this.onRenderingChange}/>
             </SplitPane>
           </Content>
           <Sider className="sider" trigger={null} collapsible collapsed={!this.state.showConfigPanel} collapsedWidth={0}>

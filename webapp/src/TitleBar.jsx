@@ -40,27 +40,30 @@ export class TitleBar extends React.Component {
 
   static get defaultProps() {
     return {
-      progressBarVisible: true,
       progressBarPercent: 50
     };
   }
 
   render() {
+    const progressBar = <Progress
+      className="titlebar__progress"
+      key="progress"
+      percent={this.props.progressBarPercent}
+      status="active" />;
     const extraContent = [
-    <Switch
-      checkedChildren="Settings"
-      unCheckedChildren="Settings"
-      onClick={this.onActionConfigPanel}
-      checked={this.props.configPanelVisible} />,
-    <Button
-      key="button"
-      onClick={this.onActionRender}
-      type="primary">Render</Button>,];
-    if (this.props.progressBarVisible) {
-      extraContent.unshift(<Progress
-        className="titlebar__progress"
-        key="progress" percent={this.props.progressBarPercent}
-        status="active" />);
+      <Switch
+        key="settings"
+        checkedChildren="Settings"
+        unCheckedChildren="Settings"
+        onClick={this.onActionConfigPanel}
+        checked={this.props.configPanelVisible} />,
+      <Button
+        key="render"
+        onClick={this.onActionRender}
+        type="primary">{this.props.isRendering ? "Stop" : "Render"}</Button>,
+    ];
+    if (this.props.isRendering) {
+      extraContent.unshift(progressBar);
     }
 
     return (
