@@ -28,9 +28,11 @@ use crate::renderer::{render_scene, Pixel, RenderConfiguration};
 use crate::result::Result;
 use log::*;
 use wasm_bindgen::prelude::*;
+use std::str::FromStr;
 
 #[allow(unused_imports)]
 use crate::ray_algorithm::strategy::{RandomAntiAliasingRenderStrategy, StandardRenderStrategy};
+use crate::scene::Scene;
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
@@ -51,8 +53,8 @@ pub struct Renderer {
 
 #[wasm_bindgen]
 impl Renderer {
-    pub fn new() -> Self {
-        let scene = test_scene::generate_test_scene();
+    pub fn new(scene_description: &str) -> std::result::Result<Renderer, JsValue> {
+        let scene = Scene::from_str(scene_description).map_err(|e| e.to_string())?;
         //let config = <RenderConfiguration as Default>::default();
         let config = RenderConfiguration {
             canvas_width: 1024,
@@ -63,12 +65,12 @@ impl Renderer {
         let height = config.canvas_height;
         let img_buffer = vec![0; (config.canvas_width * config.canvas_height * 4) as usize];
         let render_iterator = Box::new(render_scene(scene, config, false).unwrap());
-        Renderer {
+        Ok(Renderer {
             render_iterator,
             img_buffer,
             width,
             height,
-        }
+        })
     }
 
     pub fn buffer_ptr(&self) -> *const u8 {

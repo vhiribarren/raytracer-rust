@@ -41,11 +41,6 @@ mod utils;
 
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-}
-
 // TODO Fix this wasm autostart function
 /* Does not work for now
 #[wasm_bindgen(start)]

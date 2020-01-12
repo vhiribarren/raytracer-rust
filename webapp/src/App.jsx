@@ -43,7 +43,8 @@ export class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      showConfigPanel: false
+      showConfigPanel: false,
+      sceneDescription: sample_scene
     };
     this.rendererRef = React.createRef();
 
@@ -54,8 +55,15 @@ export class App extends React.Component {
     };
 
     this.onActionRender = (e) => {
-      this.rendererRef.current.renderScene();
+      this.rendererRef.current.renderScene(this.state.sceneDescription);
     };
+
+    this.onEditorChange = (e) => {
+      e.persist();
+      this.setState(state => ({
+        sceneDescription: e.target.value
+      }));
+    }
   }
 
 
@@ -72,7 +80,7 @@ export class App extends React.Component {
           </Header>
           <Content className="content">
             <SplitPane className="content__split" split="vertical" minSize="40%">
-              <TextArea className="editor" autoSize={false} defaultValue={sample_scene} />
+              <TextArea className="editor" autoSize={false} value={this.state.sceneDescription} onChange={this.onEditorChange} />
               <Renderer ref={this.rendererRef} />
             </SplitPane>
           </Content>

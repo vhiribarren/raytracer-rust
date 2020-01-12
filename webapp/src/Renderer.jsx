@@ -40,8 +40,8 @@ export class Renderer extends React.Component {
     };
   }
 
-  renderScene() {
-    const renderer = raytracer.Renderer.new();
+  renderScene(sceneDescription) {
+    const renderer = raytracer.Renderer.new(sceneDescription);
     const canvas_width = renderer.width();
     const canvas_height = renderer.height();
     const video_buffer_size = canvas_width * canvas_height * 4;
