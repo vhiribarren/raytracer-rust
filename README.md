@@ -4,7 +4,7 @@
 
 Hobby project to test the Rust programming language and understand how a Ray Tracer works.
 
-Used technologies: Rust, SDL2, WebAssembly, Parcel.js, TOML.
+Used technologies: Rust, SDL2, TOML, WebAssembly, Parcel.js, React, Antd.
 
 ![Sample](./doc/images/sample_readme.jpg)
 
