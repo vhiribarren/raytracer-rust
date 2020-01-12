@@ -27,7 +27,7 @@ SOFTWARE.
 import React from 'react';
 import ReactDOM from 'react-dom';
 import SplitPane from 'react-split-pane'
-import { Layout, Input } from 'antd';
+import { Layout, Input, notification } from 'antd';
 import { TitleBar } from "./TitleBar";
 import { Config } from "./Config";
 import { Renderer } from "./Renderer";
@@ -64,8 +64,20 @@ export class App extends React.Component {
         sceneDescription: e.target.value
       }));
     }
+
+    this.onRendererError = (msg) => {
+      this.openNotification(msg);
+    }
   }
 
+  openNotification(msg) {
+    notification.error({
+      message: 'Rendering error',
+      description: msg,
+      duration: 0,
+      top: 70,
+    });
+  }
 
   render() {
     return (
@@ -80,8 +92,10 @@ export class App extends React.Component {
           </Header>
           <Content className="content">
             <SplitPane className="content__split" split="vertical" minSize="40%">
-              <TextArea className="editor" autoSize={false} value={this.state.sceneDescription} onChange={this.onEditorChange} />
-              <Renderer ref={this.rendererRef} />
+              <div>
+                <TextArea className="editor" autoSize={false} value={this.state.sceneDescription} onChange={this.onEditorChange} />
+              </div>
+              <Renderer ref={this.rendererRef} onError={this.onRendererError}/>
             </SplitPane>
           </Content>
           <Sider className="sider" trigger={null} collapsible collapsed={!this.state.showConfigPanel} collapsedWidth={0}>

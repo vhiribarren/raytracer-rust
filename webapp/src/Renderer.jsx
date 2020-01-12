@@ -36,12 +36,21 @@ export class Renderer extends React.Component {
   static get defaultProps() {
     return {
       shouldRender: false,
-      progressBarPercent: 50
+      progressBarPercent: 50,
+      onError: (msg) => {},
     };
   }
 
   renderScene(sceneDescription) {
-    const renderer = raytracer.Renderer.new(sceneDescription);
+    let renderer;
+    try {
+      renderer = raytracer.Renderer.new(sceneDescription);
+    }
+    catch(err) {
+      console.log(err);
+      this.props.onError(err);
+      return;
+    }
     const canvas_width = renderer.width();
     const canvas_height = renderer.height();
     const video_buffer_size = canvas_width * canvas_height * 4;
