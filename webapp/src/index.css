@@ -43,7 +43,7 @@ SOFTWARE.
     margin-bottom: 0;
     padding: 10px;
     overflow: auto;
-    height: calc(100vh - 132px);
+    height: calc(100vh - 100px);
 }
 
 .config__item {
@@ -53,8 +53,8 @@ SOFTWARE.
 .content {
     background: #fff;
     margin-top: 64px;
-    margin-bottom: 64px;
-    height: calc(100vh - 132px);
+    margin-bottom: 32px;
+    height: calc(100vh - 100px);
 }
 
 .content__split {
@@ -64,7 +64,7 @@ SOFTWARE.
 .editor {
     padding: 10px;
     resize: none;
-    height: calc(100vh - 132px) !important;
+    height: calc(100vh - 100px) !important;
 }
 
 .renderer {
