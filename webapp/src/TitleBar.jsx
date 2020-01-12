@@ -24,7 +24,7 @@ SOFTWARE.
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { PageHeader, Button, Icon, Progress } from 'antd';
+import { PageHeader, Button, Progress, Switch } from 'antd';
 
 export class TitleBar extends React.Component {
 
@@ -46,11 +46,12 @@ export class TitleBar extends React.Component {
   }
 
   render() {
-    const extraContent = [<Icon
-      className="trigger"
-      key="icon"
-      type={this.props.configPanelVisible ? 'menu-unfold' : 'menu-fold'}
-      onClick={this.onActionConfigPanel} />,
+    const extraContent = [
+    <Switch
+      checkedChildren="Settings"
+      unCheckedChildren="Settings"
+      onClick={this.onActionConfigPanel}
+      checked={this.props.configPanelVisible} />,
     <Button
       key="button"
       onClick={this.onActionRender}
