@@ -39,10 +39,9 @@ pub mod wasm;
 
 mod utils;
 
-use wasm_bindgen::prelude::*;
-
 // TODO Fix this wasm autostart function
 /* Does not work for now
+use wasm_bindgen::prelude::*;
 #[wasm_bindgen(start)]
 #[cfg(target_arch = "wasm32")]
 pub fn wasm_auto_init() -> Result<(), JsValue> {

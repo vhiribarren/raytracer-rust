@@ -29,10 +29,12 @@ use crate::result::Result;
 use log::*;
 use wasm_bindgen::prelude::*;
 use std::str::FromStr;
-
-#[allow(unused_imports)]
+use serde::{Serialize, Deserialize};
 use crate::ray_algorithm::strategy::{RandomAntiAliasingRenderStrategy, StandardRenderStrategy};
 use crate::scene::Scene;
+use crate::ray_algorithm::AnyPixelRenderStrategy;
+use serde::de::Unexpected::Str;
+use std::convert::TryFrom;
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
@@ -44,6 +46,52 @@ pub fn wasm_init() {
 }
 
 #[wasm_bindgen]
+#[serde(default)]
+#[derive(Serialize, Deserialize)]
+pub struct JsConfig {
+    pub canvas_width: u32,
+    pub ray_number: u32,
+    pub strategy: Strategy,
+}
+
+impl JsConfig {
+    pub fn generate_strategy(&self) -> Box<dyn AnyPixelRenderStrategy> {
+        match self.strategy {
+            Strategy::Normal => Box::new(StandardRenderStrategy),
+            Strategy::Random => Box::new(RandomAntiAliasingRenderStrategy { rays_per_pixel: self.ray_number }),
+        }
+    }
+}
+
+impl Default for JsConfig {
+    fn default() -> Self {
+        JsConfig { canvas_width: 1024, ray_number: 50, strategy: Strategy::Normal}
+    }
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Copy)]
+#[derive(Serialize, Deserialize)]
+#[serde(try_from = "&str")]
+pub enum Strategy {
+    Normal,
+    Random,
+}
+
+impl TryFrom<&str> for Strategy {
+    type Error = String;
+
+    fn try_from(val: &str) -> std::result::Result<Self, Self::Error> {
+        let result = match val {
+            "random" => Strategy::Random,
+            "normal" => Strategy::Normal,
+            _ => return Err(String::from("Coud not convert rendering strategy value")),
+        };
+        Ok(result)
+    }
+}
+
+#[wasm_bindgen]
 pub struct Renderer {
     render_iterator: Box<dyn Iterator<Item = Result<Pixel>>>,
     img_buffer: Vec<u8>,
@@ -51,15 +99,16 @@ pub struct Renderer {
     height: u32,
 }
 
+
 #[wasm_bindgen]
 impl Renderer {
-    pub fn new(scene_description: &str) -> std::result::Result<Renderer, JsValue> {
+    pub fn new(scene_description: &str, js_config: JsValue) -> std::result::Result<Renderer, JsValue> {
         let scene = Scene::from_str(scene_description).map_err(|e| e.to_string())?;
-        //let config = <RenderConfiguration as Default>::default();
+        let js_config: JsConfig = js_config.into_serde().map_err(|e| e.to_string())?;
         let config = RenderConfiguration {
-            canvas_width: 1024,
-            canvas_height: 576,
-            render_strategy: Box::new(RandomAntiAliasingRenderStrategy { rays_per_pixel: 50 }),
+            canvas_width: js_config.canvas_width,
+            canvas_height: (js_config.canvas_width as f64 / scene.camera.size_ratio()) as u32,
+            render_strategy: js_config.generate_strategy(),
         };
         let width = config.canvas_width;
         let height = config.canvas_height;

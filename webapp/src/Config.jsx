@@ -57,8 +57,8 @@ export class Config extends React.Component {
     this.onStrategySelect = (strategy) => {
       this.setState(state => ({
         strategy
-      }));
-      this.updateConfig()
+      }),
+      this.updateConfig);
     };
 
     this.onRayNumberChange = (ray_number) => {
@@ -67,8 +67,8 @@ export class Config extends React.Component {
       }
       this.setState(state => ({
         ray_number
-      }));
-      this.updateConfig()
+      }),
+      this.updateConfig);
     };
 
     this.onCanvasWidthChange = (canvas_width) => {
@@ -77,8 +77,8 @@ export class Config extends React.Component {
       }
       this.setState(state => ({
         canvas_width
-      }));
-      this.updateConfig()
+      }),
+      this.updateConfig);
     };
 
   }

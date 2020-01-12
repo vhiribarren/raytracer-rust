@@ -61,10 +61,11 @@ export class Renderer extends React.Component {
   }
 
   renderScene(sceneDescription, config) {
+    console.log("Config for rendering: ", config);
     this.shouldStop = false;
     let renderer;
     try {
-      renderer = raytracer.Renderer.new(sceneDescription);
+      renderer = raytracer.Renderer.new(sceneDescription, config ? config : {});
     }
     catch(err) {
       console.log(err);
