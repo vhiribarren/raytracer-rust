@@ -23,12 +23,14 @@ SOFTWARE.
 */
 
 use crate::colors::Color;
+use crate::primitives::Ray;
 use crate::vector::Vec3;
 use serde::Deserialize;
+use std::f64::consts::PI;
 
 pub trait AnyLightObject: Send + Sync {
     fn source(&self) -> Vec3;
-    fn light_color_at(&self, point: Vec3) -> Color;
+    fn color_for_ray(&self, ray: Ray) -> Color;
 }
 
 #[derive(Debug, Deserialize)]
@@ -55,11 +57,70 @@ impl AnyLightObject for LightPoint {
         self.source
     }
 
-    fn light_color_at(&self, _point: Vec3) -> Color {
+    fn color_for_ray(&self, _ray: Ray) -> Color {
         self.color.clone()
     }
 }
 
 pub struct AmbientLight {
     pub power: f64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SpotLight {
+    pub source: Vec3,
+    pub color: Color,
+    pub direction: Vec3,
+    pub inner_angle: f64,
+    pub outer_angle: f64,
+    _use_constructor: (),
+}
+
+impl SpotLight {
+    pub fn new(
+        source: Vec3,
+        direction: Vec3,
+        inner_angle_degree: f64,
+        outer_angle_degree: f64,
+    ) -> Self {
+        SpotLight {
+            source,
+            direction: direction.normalize(),
+            color: Color::WHITE,
+            inner_angle: inner_angle_degree * 2.0 * PI / 360.0,
+            outer_angle: outer_angle_degree * 2.0 * PI / 360.0,
+            _use_constructor: (),
+        }
+    }
+
+    pub fn with_color(
+        source: Vec3,
+        direction: Vec3,
+        inner_angle_degree: f64,
+        outer_angle_degree: f64,
+        color: Color,
+    ) -> Self {
+        SpotLight {
+            color,
+            ..SpotLight::new(source, direction, inner_angle_degree, outer_angle_degree)
+        }
+    }
+}
+
+impl AnyLightObject for SpotLight {
+    fn source(&self) -> Vec3 {
+        self.source
+    }
+
+    fn color_for_ray(&self, ray: Ray) -> Color {
+        let angle = self.direction.dot_product(-ray.direction).acos();
+        if angle <= self.inner_angle {
+            self.color.clone()
+        } else if angle >= self.outer_angle {
+            Color::BLACK.clone()
+        } else {
+            let luminosity = 1.0 - (angle - self.inner_angle) / (self.outer_angle - self.inner_angle);
+            luminosity * self.color.clone()
+        }
+    }
 }

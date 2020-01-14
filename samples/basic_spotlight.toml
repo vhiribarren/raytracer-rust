@@ -1,0 +1,33 @@
+description = """Basic scene 1"""
+
+[camera]
+type = "perspective"
+screen_center = [0, 5, -10]
+look_at = [0, 0, 15]
+width = 32
+height = 18
+
+[[light]]
+type = "spot"
+description = "Spot white light"
+source = [0, 100, 0]
+color = [0.8, 0.8, 0.8]
+direction = [0, -1, 0]
+inner_angle_degree = 20
+outer_angle_degree = 40
+
+[[object]]
+description = ""
+type = "sphere"
+center = [0, 0, 0]
+radius = 5
+texture.type = "plain_color"
+texture.color = "blue"
+
+[[object]]
+description = ""
+type = "infinite_plan"
+center = [0, -5, 0]
+normal =  [0, 1, 0]
+texture.type = "plain_color"
+texture.color = "white"

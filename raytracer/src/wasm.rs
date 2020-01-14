@@ -24,17 +24,17 @@ SOFTWARE.
 
 #![cfg(target_arch = "wasm32")]
 
+use crate::ray_algorithm::strategy::{RandomAntiAliasingRenderStrategy, StandardRenderStrategy};
+use crate::ray_algorithm::AnyPixelRenderStrategy;
 use crate::renderer::{render_scene, Pixel, RenderConfiguration};
 use crate::result::Result;
-use log::*;
-use wasm_bindgen::prelude::*;
-use std::str::FromStr;
-use serde::{Serialize, Deserialize};
-use crate::ray_algorithm::strategy::{RandomAntiAliasingRenderStrategy, StandardRenderStrategy};
 use crate::scene::Scene;
-use crate::ray_algorithm::AnyPixelRenderStrategy;
+use log::*;
 use serde::de::Unexpected::Str;
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
+use std::str::FromStr;
+use wasm_bindgen::prelude::*;
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
@@ -58,20 +58,25 @@ impl JsConfig {
     pub fn generate_strategy(&self) -> Box<dyn AnyPixelRenderStrategy> {
         match self.strategy {
             Strategy::Normal => Box::new(StandardRenderStrategy),
-            Strategy::Random => Box::new(RandomAntiAliasingRenderStrategy { rays_per_pixel: self.ray_number }),
+            Strategy::Random => Box::new(RandomAntiAliasingRenderStrategy {
+                rays_per_pixel: self.ray_number,
+            }),
         }
     }
 }
 
 impl Default for JsConfig {
     fn default() -> Self {
-        JsConfig { canvas_width: 1024, ray_number: 50, strategy: Strategy::Normal}
+        JsConfig {
+            canvas_width: 1024,
+            ray_number: 50,
+            strategy: Strategy::Normal,
+        }
     }
 }
 
 #[wasm_bindgen]
-#[derive(Clone, Copy)]
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 #[serde(try_from = "&str")]
 pub enum Strategy {
     Normal,
@@ -99,10 +104,12 @@ pub struct Renderer {
     height: u32,
 }
 
-
 #[wasm_bindgen]
 impl Renderer {
-    pub fn new(scene_description: &str, js_config: JsValue) -> std::result::Result<Renderer, JsValue> {
+    pub fn new(
+        scene_description: &str,
+        js_config: JsValue,
+    ) -> std::result::Result<Renderer, JsValue> {
         let scene = Scene::from_str(scene_description).map_err(|e| e.to_string())?;
         let js_config: JsConfig = js_config.into_serde().map_err(|e| e.to_string())?;
         let config = RenderConfiguration {

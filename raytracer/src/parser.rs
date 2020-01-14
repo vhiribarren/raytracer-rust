@@ -24,7 +24,7 @@ SOFTWARE
 
 use crate::cameras::{OrthogonalCamera, PerspectiveCamera};
 use crate::colors::Color;
-use crate::lights::{AnyLightObject, LightPoint};
+use crate::lights::{AnyLightObject, LightPoint, SpotLight};
 use crate::primitives::{InfinitePlan, Shape, Sphere, SquarePlan};
 use crate::result::RaytracerError;
 use crate::result::Result;
@@ -99,12 +99,32 @@ impl From<ModelColor> for Color {
 
 enum DescriptionLight {
     Point(LightPoint),
+    Spot {
+        source: Vec3,
+        direction: Vec3,
+        color: Color,
+        inner_angle_degree: f64,
+        outer_angle_degree: f64,
+    },
 }
 
 impl DescriptionLight {
     fn into_any_light_object(self) -> Box<dyn AnyLightObject> {
         match self {
             DescriptionLight::Point(val) => Box::new(val),
+            DescriptionLight::Spot {
+                source,
+                direction,
+                color,
+                inner_angle_degree,
+                outer_angle_degree,
+            } => Box::new(SpotLight::with_color(
+                source,
+                direction,
+                inner_angle_degree,
+                outer_angle_degree,
+                color,
+            )),
         }
     }
 }

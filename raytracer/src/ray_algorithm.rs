@@ -218,7 +218,7 @@ fn illumination_from_lights(
 
         // Build values needed for light computation
         let light_direction = light_ray.direction;
-        let light_color = current_light.light_color_at(surface_point);
+        let light_color = current_light.color_for_ray(light_ray);
         let surface_normal =
             object
                 .normal_at(surface_point)

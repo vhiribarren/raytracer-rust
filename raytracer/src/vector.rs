@@ -91,6 +91,14 @@ impl std::cmp::PartialEq for Vec3 {
     }
 }
 
+impl std::ops::Neg for Vec3 {
+    type Output = Vec3;
+
+    fn neg(self) -> Self::Output {
+        Vec3::new(-self.x, -self.y, -self.z)
+    }
+}
+
 impl std::ops::Add<Vec3> for Vec3 {
     type Output = Vec3;
     fn add(self, other: Self) -> Self::Output {

@@ -77,7 +77,7 @@ instead of a native app.
 
 - [X] Primitives: sphere, plane, infinite plane
 - [X] Cameras: perspective, orthogonal
-- [X] Light: colored light point
+- [X] Light: colored light point, spot light
 - [X] Textures: plain color, procedural checked texture
 - [X] Effects: transparency, mirror
 - [X] Anti-aliasing: none, random strategy
@@ -177,12 +177,10 @@ RayTracing:
 - [ ] Box primitive
 - [ ] Texture image mapping
 - [ ] Object transformation
-- [ ] Spot light
 - [ ] Perlin effect for bump mapping
 
 Rust:
 
-- [ ] Define a better abstraction for AnyLightObject trait
 - [ ] More automatic tests
 
 WebAssembly:
