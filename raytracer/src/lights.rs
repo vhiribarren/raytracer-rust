@@ -35,8 +35,8 @@ pub trait AnyLightObject: Send + Sync {
 
 #[derive(Debug, Deserialize)]
 pub struct LightPoint {
-    pub source: Vec3,
-    pub color: Color,
+    source: Vec3,
+    color: Color,
 }
 
 impl LightPoint {
@@ -68,12 +68,11 @@ pub struct AmbientLight {
 
 #[derive(Debug, Deserialize)]
 pub struct SpotLight {
-    pub source: Vec3,
-    pub color: Color,
-    pub direction: Vec3,
-    pub inner_angle: f64,
-    pub outer_angle: f64,
-    _use_constructor: (),
+    source: Vec3,
+    color: Color,
+    direction: Vec3,
+    inner_angle: f64,
+    outer_angle: f64,
 }
 
 impl SpotLight {
@@ -89,7 +88,6 @@ impl SpotLight {
             color: Color::WHITE,
             inner_angle: inner_angle_degree * 2.0 * PI / 360.0,
             outer_angle: outer_angle_degree * 2.0 * PI / 360.0,
-            _use_constructor: (),
         }
     }
 
