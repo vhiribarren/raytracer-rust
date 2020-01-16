@@ -31,6 +31,10 @@ SOFTWARE.
     padding: 0 5px;
 }
 
+.titlebar__title {
+    padding-left: 50px;
+}
+
 .titlebar__progress {
     display: inline-block;
     width: 300px;

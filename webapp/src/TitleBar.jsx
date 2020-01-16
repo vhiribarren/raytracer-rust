@@ -70,10 +70,10 @@ export class TitleBar extends React.Component {
 
     return (
       <PageHeader
+        className="titlebar__title"
         title='Rust Ray Tracer Hobby Project'
         subTitle={(constants.APP_VERSION ? `v${constants.APP_VERSION}` : "")}
-        extra={extraContent}
-      ></PageHeader>
+        extra={extraContent}></PageHeader>
     );
   }
 }
