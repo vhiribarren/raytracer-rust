@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import * as constants from "./constants.js";
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { PageHeader, Button, Progress, Switch } from 'antd';
@@ -68,8 +70,8 @@ export class TitleBar extends React.Component {
 
     return (
       <PageHeader
-        title="Rust Ray Tracer"
-        subTitle="A Hobby Project"
+        title='Rust Ray Tracer Hobby Project'
+        subTitle={(constants.APP_VERSION ? `v${constants.APP_VERSION}` : "")}
         extra={extraContent}
       ></PageHeader>
     );

@@ -6,9 +6,9 @@
     "test": "tests"
   },
   "scripts": {
-    "start": "parcel index.html --open",
-    "build": "parcel build --no-source-maps --public-url './' index.html",
-    "clean": "rimraf dist"
+    "start": "APP_VERSION=$(git describe) parcel index.html --open",
+    "build": "APP_VERSION=$(git describe) parcel build --no-source-maps --public-url './' index.html",
+    "clean": "rimraf dist .cache"
   },
   "author": "",
   "license": "ISC",
