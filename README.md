@@ -71,7 +71,9 @@ instead of a native app.
 
     $ cd webapp
     $ npm install
-    $ npm start     # Start a local web server and launch a web page
+    $ npm start         # Start a local web server and launch a web page
+    $ npm run build     # Build files in the dist/ directory
+    $ npm run clean     # Remove the dist/ directory
 
 ## Features
 
