@@ -8,7 +8,8 @@
   "scripts": {
     "start": "APP_VERSION=$(git describe) parcel index.html --open",
     "build": "APP_VERSION=$(git describe) parcel build --no-source-maps --public-url './' index.html",
-    "clean": "rimraf dist .cache"
+    "clean": "rimraf dist .cache gh-pages",
+    "website": "./tools/publish.sh"
   },
   "author": "",
   "license": "ISC",
