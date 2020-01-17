@@ -25,7 +25,7 @@ SOFTWARE.
 import React from 'react';
 import ReactDOM from 'react-dom';
 import SplitPane from 'react-split-pane'
-import { Layout, Input, notification } from 'antd';
+import { Layout, Input, message, notification } from 'antd';
 import { TitleBar } from "./TitleBar";
 import { Config } from "./Config";
 import { Renderer } from "./Renderer";
@@ -71,8 +71,12 @@ export class App extends React.Component {
       }));
     }
 
-    this.onRendererError = (msg) => {
+    this.onRenderingError = (msg) => {
       this.openNotification(msg);
+    }
+
+    this.onRenderingSuccess = (time) => {
+      message.success(`Rendered in ${time/1000} seconds`, 3);
     }
 
     this.onRenderingChange = (isRendering) => {
@@ -126,8 +130,9 @@ export class App extends React.Component {
               </div>
               <Renderer
                 ref={this.rendererRef}
-                onError={this.onRendererError}
-                onRenderingChange={this.onRenderingChange}
+                onError={this.onRenderingError}
+                onChange={this.onRenderingChange}
+                onSuccess={this.onRenderingSuccess}
                 onPercentProgression={this.onPercentProgression}/>
             </SplitPane>
           </Content>

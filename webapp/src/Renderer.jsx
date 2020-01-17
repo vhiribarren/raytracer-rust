@@ -42,7 +42,8 @@ export class Renderer extends React.Component {
       shouldRender: false,
       progressBarPercent: 0,
       onError: (msg) => {},
-      onRenderingChange: (isRendering) => {},
+      onSuccess: (time) => {},
+      onChange: (isRendering) => {},
       onPercentProgression: (percent) => {},
     };
   }
@@ -107,12 +108,14 @@ export class Renderer extends React.Component {
         }
       }
       if (!hasNext) {
-        this.props.onRenderingChange(false);
+        this.props.onSuccess(Date.now() - startDate);
+        this.props.onChange(false);
       }
       drawScreen();
     };
 
-    this.props.onRenderingChange(true);
+    this.props.onChange(true);
+    const startDate = Date.now();
     renderLoop();
   }
 
