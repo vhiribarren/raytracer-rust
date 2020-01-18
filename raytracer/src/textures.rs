@@ -52,6 +52,18 @@ impl Texture for PlainColorTexture {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct GradientColorTexture {
+    pub start_color: Color,
+    pub end_color: Color,
+}
+
+impl Texture for GradientColorTexture {
+    fn color_at(&self, _: f64, v: f64) -> Color {
+        v* &self.start_color + (1.0-v) * &self.end_color
+    }
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(default)]
 pub struct CheckedPattern {
     pub primary_color: Color,

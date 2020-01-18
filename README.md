@@ -80,7 +80,7 @@ instead of a native app.
 - [X] Primitives: sphere, plane, infinite plane
 - [X] Cameras: perspective, orthogonal
 - [X] Light: colored light point, spot light
-- [X] Textures: plain color, procedural checked texture
+- [X] Textures: plain, gradient, procedural checked texture
 - [X] Effects: transparency, mirror
 - [X] Anti-aliasing: none, random strategy
 - [X] Shadow when object obstruction

@@ -29,7 +29,7 @@ use crate::primitives::{InfinitePlan, Shape, Sphere, SquarePlan};
 use crate::result::RaytracerError;
 use crate::result::Result;
 use crate::scene::{RayEmitter, Scene, SceneConfiguration, SceneObject};
-use crate::textures::{CheckedPattern, PlainColorTexture, Texture, TextureEffects};
+use crate::textures::{CheckedPattern, PlainColorTexture, Texture, TextureEffects, GradientColorTexture};
 use crate::vector::Vec3;
 use log::{info, trace};
 use serde::Deserialize;
@@ -202,6 +202,7 @@ impl DescriptionObject {
         let texture: Box<dyn Texture> = match self.texture {
             ModelTexture::CheckedPattern(val) => Box::new(val),
             ModelTexture::PlainColor(val) => Box::new(val),
+            ModelTexture::GradientColor(val) => Box::new(val),
         };
         let effects = self.effect.unwrap_or_default();
         SceneObject {
@@ -234,6 +235,7 @@ enum ModelShape {
 enum ModelTexture {
     CheckedPattern(CheckedPattern),
     PlainColor(PlainColorTexture),
+    GradientColor(GradientColorTexture),
 }
 
 #[derive(Debug, Deserialize)]
