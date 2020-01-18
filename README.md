@@ -128,7 +128,7 @@ description = "Center checked sphere"
 type = "sphere"
 center = [0, 0, 0]
 radius = 5
-texture.type = "checked_pattern"
+texture.type = "checked"
 effect.phong = {}
 
 [[object]]
@@ -136,7 +136,7 @@ description = "Green transparent sphere on the right"
 type = "sphere"
 center = [10, 3, 10]
 radius = 8
-texture.type = "plain_color"
+texture.type = "plain"
 texture.color = "green"
 effect.phong = {}
 effect.transparency.refractive_index = 1.3
@@ -146,7 +146,7 @@ description = "Red mirror sphere on the left"
 type = "sphere"
 center = [-10, 3, 10]
 radius = 8
-texture.type = "plain_color"
+texture.type = "plain"
 texture.color = "red"
 effect.phong = {}
 effect.mirror.coeff = 1.0
@@ -156,7 +156,7 @@ description = "Yellow transparent sphere behind"
 type = "sphere"
 center = [0, 10, 35]
 radius = 15
-texture.type = "plain_color"
+texture.type = "plain"
 texture.color = "yellow"
 effect.phong = {}
 effect.transparency.refractive_index = 1.3
@@ -166,7 +166,7 @@ description = "Infinite plan"
 type = "infinite_plan"
 center = [0, -5, 0]
 normal =  [0, 1, 0]
-texture.type = "checked_pattern"
+texture.type = "checked"
 effect.mirror.coeff = 0.8
 ```
 

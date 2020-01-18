@@ -21,7 +21,7 @@ description = ""
 type = "sphere"
 center = [0, 0, 0]
 radius = 5
-texture.type = "plain_color"
+texture.type = "plain"
 texture.color = "blue"
 
 [[object]]
@@ -29,5 +29,5 @@ description = ""
 type = "infinite_plan"
 center = [0, -5, 0]
 normal =  [0, 1, 0]
-texture.type = "plain_color"
+texture.type = "plain"
 texture.color = "white"

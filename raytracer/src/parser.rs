@@ -200,9 +200,9 @@ impl DescriptionObject {
             } => Box::new(SquarePlan::new(center, normal, width)),
         };
         let texture: Box<dyn Texture> = match self.texture {
-            ModelTexture::CheckedPattern(val) => Box::new(val),
-            ModelTexture::PlainColor(val) => Box::new(val),
-            ModelTexture::GradientColor(val) => Box::new(val),
+            ModelTexture::Checked(val) => Box::new(val),
+            ModelTexture::Plain(val) => Box::new(val),
+            ModelTexture::Gradient(val) => Box::new(val),
         };
         let effects = self.effect.unwrap_or_default();
         SceneObject {
@@ -233,9 +233,9 @@ enum ModelShape {
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
 enum ModelTexture {
-    CheckedPattern(CheckedPattern),
-    PlainColor(PlainColorTexture),
-    GradientColor(GradientColorTexture),
+    Checked(CheckedPattern),
+    Plain(PlainColorTexture),
+    Gradient(GradientColorTexture),
 }
 
 #[derive(Debug, Deserialize)]
