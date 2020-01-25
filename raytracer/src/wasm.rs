@@ -78,6 +78,7 @@ impl Default for JsConfig {
 #[wasm_bindgen]
 #[derive(Clone, Copy, Serialize, Deserialize)]
 #[serde(try_from = "&str")]
+#[serde(rename_all="snake_case")]
 pub enum Strategy {
     Normal,
     Random,
@@ -157,28 +158,5 @@ impl Renderer {
                 false
             }
         }
-    }
-}
-
-// Test Scene
-/////////////
-
-mod test_scene {
-
-    use crate::cameras::PerspectiveCamera;
-    use crate::colors::Color;
-    use crate::lights::LightPoint;
-    use crate::primitives::{InfinitePlan, Sphere};
-    use crate::scene::{Scene, SceneConfiguration, SceneObject};
-    use crate::textures::{
-        CheckedPattern, Mirror, PlainColorTexture, TextureEffects, Transparency,
-    };
-    use crate::vector::Vec3;
-    use std::f64::consts::PI;
-    use std::str::FromStr;
-
-    pub(crate) fn generate_test_scene() -> Scene {
-        let scene_toml = include_str!("../../samples/show_room_1.toml");
-        Scene::from_str(scene_toml).unwrap()
     }
 }

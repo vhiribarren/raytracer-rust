@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019, 2020 Vincent Hiribarren
+Copyright (c) 2020 Vincent Hiribarren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,17 +22,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+//! Test suite for the Web and headless browsers.
+
+#![cfg(target_arch = "wasm32")]
+
 mod samples;
 
-use raytracer::scene::Scene;
-use std::fs;
-use std::iter;
-use std::str::FromStr;
-use samples::SampleScene;
+extern crate wasm_bindgen_test;
+use wasm_bindgen_test::*;
+use raytracer::renderer::RenderConfiguration;
+use raytracer::wasm::JsConfig;
+use wasm_bindgen::JsValue;
 
-#[test]
-fn load_basic_scene() {
-    let scene_string = SampleScene::OkBasic.to_string();
-    let scene_result = Scene::from_str(&scene_string);
-    assert!(scene_result.is_ok());
+
+wasm_bindgen_test_configure!(run_in_browser);
+
+#[wasm_bindgen_test]
+fn smoke_wasm_rendering() {
+    let scene_toml = include_str!("samples/ok_basic.toml");
+    let config = JsValue::from_serde(&<JsConfig as Default>::default()).unwrap();
+    let mut renderer = raytracer::wasm::Renderer::new(&scene_toml, config).unwrap();
+    let expected_count = (renderer.width() * renderer.height()) as usize;
+    let count = {
+        let mut i = 0;
+        loop {
+            if ! renderer.next() {
+                break;
+            }
+            i += 1;
+        }
+        i
+    };
+    assert_eq!(count, expected_count);
 }

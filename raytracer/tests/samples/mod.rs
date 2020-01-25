@@ -30,8 +30,42 @@ use raytracer::scene::{Scene, SceneObject};
 use raytracer::textures::CheckedPattern;
 use raytracer::vector::Vec3;
 use std::f64::consts::PI;
+use std::fs;
+use std::iter;
+use std::path::PathBuf;
 
-pub(crate) fn generate_test_scene() -> Scene {
+
+
+pub enum SampleScene {
+    OkBasic
+}
+
+impl SampleScene {
+    const SAMPLES_ROOT_DIR: [&'static str; 2] = ["tests", "samples"];
+
+    pub fn to_string(&self) -> String {
+        let sample = match self {
+            SampleScene::OkBasic => "ok_basic.toml",
+        };
+        Self::load_sample_file(sample)
+    }
+
+    fn load_sample_file<T: AsRef<str>>(sample_file: T) -> String {
+        let sample_file = sample_file.as_ref();
+        let scene_path: PathBuf = SampleScene::SAMPLES_ROOT_DIR
+            .iter()
+            .chain(iter::once(&sample_file))
+            .collect();
+        fs::read_to_string(scene_path).unwrap()
+    }
+
+}
+
+
+
+
+
+pub fn generate_test_scene() -> Scene {
     let camera = PerspectiveCamera::new(
         Vec3::new(0.0, 10.0, -10.0),
         Vec3::new(0.0, 0.0, 30.0),

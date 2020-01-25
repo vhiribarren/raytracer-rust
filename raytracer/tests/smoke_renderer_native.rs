@@ -22,10 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+mod samples;
+
 use raytracer::renderer::{render_scene, RenderConfiguration};
 use raytracer::scene::Scene;
 
-mod samples;
+
 
 #[test]
 #[should_panic]
