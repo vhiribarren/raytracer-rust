@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 raytracer = { path = "../raytracer" }
-sdl2 = { version = "0.32.0", features = ["bundled"] }   # static-link feature does not work in this version
+sdl2 = { version = "0.33.0", features = ["bundled"] }  # static-link feature does not seem to work with Ubuntu
 log = "0.4.8"
 simplelog = "0.7.4"
 clap = "2.33.0"
