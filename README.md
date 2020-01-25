@@ -1,6 +1,6 @@
 # Raytracer in Rust
 
-
+![Build Raytracer](https://github.com/vhiribarren/raytracer-rust/workflows/Build%20Raytracer/badge.svg)
 
 Hobby project to test the Rust programming language and understand how a Ray Tracer works.
 
