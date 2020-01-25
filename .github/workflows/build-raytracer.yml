@@ -20,6 +20,9 @@ jobs:
         with:
           toolchain: stable
           default: true
+      - name: Install libsndio for Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install libsndio-dev
       - name: Build
         run: cargo build --verbose
       - name: Run tests
