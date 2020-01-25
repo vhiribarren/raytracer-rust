@@ -101,7 +101,9 @@ pub(crate) fn launch_ray(camera_ray: &Ray, scene: &Scene, depth: u8) -> Result<C
     let collision_context = match search_object_collision(&camera_ray, &scene.objects) {
         Some(collision_context) => collision_context,
         None => {
-            return Ok(scene.config.world_color.clone());
+            let u = 0.5*camera_ray.direction.x + 1.0;
+            let v =  0.5*camera_ray.direction.y + 1.0;
+            return Ok(scene.config.world_texture.color_at(u, v));
         }
     };
     let CollisionContext {

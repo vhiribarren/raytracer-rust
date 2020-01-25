@@ -27,25 +27,35 @@ use crate::lights::AnyLightObject;
 use crate::parser;
 use crate::primitives::{Ray, Shape};
 use crate::result::{RaytracerError, Result};
-use crate::textures::{Texture, TextureEffects};
+use crate::textures::{Texture, TextureEffects, PlainColorTexture};
 use crate::vector::Vec3;
 use crate::UnitInterval;
-use serde::Deserialize;
+use serde::{Deserialize};
 use std::str::FromStr;
+use std::fmt::Debug;
+use std::fmt::{Formatter, Error};
+use crate::parser::DescriptionConfig;
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 #[serde(default)]
+#[serde(from="DescriptionConfig")]
 pub struct SceneConfiguration {
-    pub world_color: Color,
+    pub world_texture: Box<dyn Texture>,
     pub world_refractive_index: f64,
     pub ambient_light: Option<Color>,
     pub maximum_light_recursion: u8,
 }
 
+impl Debug for SceneConfiguration {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::result::Result<(), Error> {
+        Ok(())
+    }
+}
+
 impl Default for SceneConfiguration {
     fn default() -> Self {
         SceneConfiguration {
-            world_color: Color::BLACK,
+            world_texture: Box::new(PlainColorTexture::new(Color::BLACK)),
             world_refractive_index: 1.0,
             ambient_light: Some(Color::new(0.2, 0.2, 0.2)),
             maximum_light_recursion: 2,

@@ -1,5 +1,10 @@
 description = """Basic scene 1"""
 
+[config]
+world_texture.type = "gradient"
+world_texture.start_color= "blue"
+world_texture.end_color= "red"
+
 [camera]
 type = "perspective"
 screen_center = [0, 5, -10]

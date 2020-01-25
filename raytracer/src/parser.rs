@@ -42,7 +42,7 @@ pub(crate) fn parse_scene_description(scene_str: &str) -> Result<Scene> {
     if let Some(description) = root_document.description {
         info!("Generating scene for: {}", description);
     }
-    let config = root_document.config;
+    let config = SceneConfiguration::from(root_document.config);
     let camera = root_document.camera.into_ray_emitter();
     let lights = root_document
         .light
@@ -68,7 +68,7 @@ pub(crate) fn parse_scene_description(scene_str: &str) -> Result<Scene> {
 pub struct ModelRoot {
     description: Option<String>,
     #[serde(default)]
-    config: SceneConfiguration,
+    config: DescriptionConfig,
     camera: DescriptionCamera,
     object: Vec<DescriptionObject>,
     light: Vec<DescriptionLight>,
@@ -92,6 +92,46 @@ impl From<ModelColor> for Color {
         }
     }
 }
+
+#[derive(Debug, Deserialize)]
+#[serde(default)]
+pub struct DescriptionConfig {
+    world_texture: ModelTexture,
+    world_refractive_index: f64,
+    ambient_light: Option<Color>,
+    maximum_light_recursion: u8,
+}
+
+impl Default for DescriptionConfig {
+    fn default() -> Self {
+        let default = <SceneConfiguration as Default>::default();
+        DescriptionConfig {
+            world_texture: ModelTexture::Plain(PlainColorTexture::new(Color::BLACK)),
+            world_refractive_index: default.world_refractive_index,
+            ambient_light: default.ambient_light,
+            maximum_light_recursion: default.maximum_light_recursion,
+        }
+    }
+}
+
+impl From<DescriptionConfig> for SceneConfiguration {
+    fn from(config: DescriptionConfig) -> Self {
+        let texture: Box<dyn Texture> = match config.world_texture{
+            ModelTexture::Checked(val) => Box::new(val),
+            ModelTexture::Plain(val) => Box::new(val),
+            ModelTexture::Gradient(val) => Box::new(val),
+        };
+
+       SceneConfiguration {
+           world_texture: texture,
+           world_refractive_index: config.world_refractive_index,
+           ambient_light: config.ambient_light,
+           maximum_light_recursion: config.maximum_light_recursion
+       }
+    }
+}
+
+
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]

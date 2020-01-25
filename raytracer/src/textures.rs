@@ -37,6 +37,12 @@ pub struct PlainColorTexture {
     pub color: Color,
 }
 
+impl PlainColorTexture {
+    pub fn new(color: Color) -> Self {
+        PlainColorTexture { color }
+    }
+}
+
 impl Default for PlainColorTexture {
     fn default() -> Self {
         PlainColorTexture {
